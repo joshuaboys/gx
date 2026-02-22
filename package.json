@@ -1,8 +1,17 @@
 {
   "name": "gx",
-  "module": "index.ts",
+  "version": "0.1.0",
+  "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "bin": {
+    "gx": "src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --compile --outfile gx",
+    "test": "bun test"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
