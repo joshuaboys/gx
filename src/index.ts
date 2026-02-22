@@ -1,2 +1,89 @@
 #!/usr/bin/env bun
-console.log("gx v0.1.0");
+import { join } from "path";
+import { homedir } from "os";
+import { loadConfig, getConfigPath } from "./lib/config.ts";
+import { cloneRepo } from "./commands/clone.ts";
+import { ls } from "./commands/ls.ts";
+import { resolve } from "./commands/resolve.ts";
+import { rebuild } from "./commands/rebuild.ts";
+import { showConfig, setConfig } from "./commands/config.ts";
+
+const VERSION = "0.1.0";
+
+function getIndexPath(): string {
+  return join(homedir(), ".config", "gx", "index.json");
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (!command || command === "--help" || command === "-h") {
+    console.log(`gx v${VERSION} — git project manager
+
+Usage:
+  gx <name>                Jump to project
+  gx clone <repo>          Clone and jump to repo
+  gx ls                    List indexed projects
+  gx rebuild               Rescan and rebuild index
+  gx config                Show config
+  gx config set <key> <v>  Set config value
+  gx resolve <name>        Resolve project name to path
+  gx resolve --list        List all project names`);
+    return;
+  }
+
+  if (command === "--version" || command === "-v") {
+    console.log(`gx v${VERSION}`);
+    return;
+  }
+
+  const configPath = getConfigPath();
+  const indexPath = getIndexPath();
+  const config = await loadConfig(configPath);
+
+  switch (command) {
+    case "clone": {
+      const repo = args[1];
+      if (!repo) {
+        console.error("Usage: gx clone <repo>");
+        process.exit(1);
+      }
+      const path = await cloneRepo(repo, config, indexPath);
+      console.log(path);
+      break;
+    }
+    case "ls":
+      await ls(indexPath);
+      break;
+    case "rebuild":
+      await rebuild(config, indexPath);
+      break;
+    case "config":
+      if (args[1] === "set" && args[2] && args[3]) {
+        await setConfig(configPath, args[2], args[3]);
+      } else {
+        await showConfig(configPath);
+      }
+      break;
+    case "resolve":
+      if (args[1] === "--list") {
+        await resolve("", indexPath, true);
+      } else if (args[1]) {
+        await resolve(args[1], indexPath);
+      } else {
+        console.error("Usage: gx resolve <name> | gx resolve --list");
+        process.exit(1);
+      }
+      break;
+    default:
+      // Default: treat as project name to resolve
+      await resolve(command, indexPath);
+      break;
+  }
+}
+
+main().catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});
