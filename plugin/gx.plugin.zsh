@@ -39,13 +39,13 @@ gx() {
             eval "$bin" --help
             ;;
         *)
-            # Default: jump to project
+            # Default: jump to project (with fuzzy matching fallback)
+            # Capture stdout (path) and let stderr (fuzzy info) flow to terminal
             local target
-            target=$(eval "$bin" resolve "$1" 2>/dev/null)
+            target=$(eval "$bin" resolve "$1")
             if [ -n "$target" ] && [ -d "$target" ]; then
                 cd "$target"
             else
-                echo "Project '$1' not found. Run 'gx rebuild' to update index."
                 return 1
             fi
             ;;
@@ -67,7 +67,7 @@ _gx() {
     elif (( CURRENT == 3 )) && [[ "${words[2]}" == "config" ]]; then
         compadd set
     elif (( CURRENT == 4 )) && [[ "${words[2]}" == "config" ]] && [[ "${words[3]}" == "set" ]]; then
-        compadd projectDir defaultHost structure shallow
+        compadd projectDir defaultHost structure shallow similarityThreshold
     fi
 }
 (( $+functions[compdef] )) && compdef _gx gx
