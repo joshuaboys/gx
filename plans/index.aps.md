@@ -44,6 +44,12 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [ ] `gx tui` provides interactive terminal UI for project navigation
 - [ ] `gx tutorial` walks new users through features interactively
 
+### v5 — Adoption & Reliability (Draft)
+
+- [ ] One-command install + GitHub release binaries for low-friction onboarding
+- [ ] Shell portability beyond zsh (bash + fish support)
+- [ ] `gx doctor` and index diagnostics/stats for trust at scale
+
 ## Constraints
 
 - TypeScript + Bun only (no Go, no Node)
@@ -69,6 +75,9 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [Templates](./modules/12-templates.aps.md) | Create new projects from template repositories | Future | v4 | Clone, Index |
 | [Interactive TUI](./modules/13-tui.aps.md) | Keyboard-navigable interactive terminal dashboard | Future | v4 | Dashboard, Tracking |
 | [Tutorial](./modules/14-tutorial.aps.md) | Interactive walkthrough teaching gx features | Future | v4 | All stable modules |
+| [Distribution & Install UX](./modules/15-distribution.aps.md) | Release binaries, installer, and doctor flow for easy adoption | Draft | v5 | CLI |
+| [Shell Portability](./modules/16-shell-portability.aps.md) | Bash/fish integration and completion parity | Draft | v5 | Shell Plugin, CLI |
+| [Index Reliability & Observability](./modules/17-index-observability.aps.md) | Index diagnostics, stats, and scan telemetry | Draft | v5 | Index, Tracking |
 
 ## Risks
 
