@@ -1,33 +1,44 @@
 # Distribution & Install UX
 
-| Field | Value |
-|-------|-------|
-| Module ID | DISTRIBUTION |
-| Status | Draft |
-| Version | v5 |
-| Owner | @joshuaboys |
-| Depends On | CLI |
+| ID | Owner | Status |
+|----|-------|--------|
+| DIST | @joshuaboys | Draft |
+
+- Version: v5
+- Depends on: CLI
 
 ## Purpose
 
 Make `gx` trivial to install and upgrade for first-time users.
 
-## Outcomes
+## In Scope
 
 - Prebuilt binaries published on GitHub Releases for Linux/macOS
-- Single-command install script
-- `gx doctor` verifies runtime, shell plugin, config paths
+- Simple, cross-platform install command that downloads a binary, verifies its checksum/signature, then installs
+- Clearly documented trust model (who signs releases, how checksums are distributed, how users verify)
+- `gx doctor` command to verify runtime, shell plugin, config paths
 
-## Work Items
+## Out of Scope
 
-### DIST-001: Release artifacts
-- Build and upload precompiled binaries in CI
-- Publish checksums and release notes
+- Package manager submissions (Homebrew, AUR, etc.) — deferred to a future module
+- Auto-update mechanism
 
-### DIST-002: One-line installer
-- `curl | bash` installer with platform detection
-- Safe fallback instructions when unsupported
+## Interfaces
 
-### DIST-003: Doctor command
-- Validate PATH, plugin wiring, config/index health
-- Return actionable fix suggestions
+**Depends on:**
+
+- CLI — command surface
+
+**Exposes:**
+
+- `gx doctor` — health check command (index diagnostics contributed by IDXOB module)
+
+## Ready Checklist
+
+- [ ] Purpose and scope are clear
+- [ ] Dependencies identified
+- [ ] At least one task defined
+
+## Tasks
+
+*No tasks yet — module is Draft*
