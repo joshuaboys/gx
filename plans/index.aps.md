@@ -13,15 +13,35 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 ## Success Criteria
 
+### v1 — Core CLI (Complete)
+
 - [x] `gx clone user/repo` clones to organized directory and cd's into it
 - [x] `gx <name>` jumps to any indexed project with tab completion
 - [x] `gx ls` lists all indexed projects
 - [x] Full URL support (HTTPS, SSH, git://, shorthand)
 - [x] Configurable directory structure (flat vs host-prefixed)
 - [x] Compiles to single binary via `bun build --compile`
+
+### v2 — Quality of Life (Draft)
+
 - [ ] `gx <name>` suggests fuzzy matches when exact match not found
 - [ ] `gx open <name>` opens project in preferred editor
 - [ ] `gx init` scaffolds AI agent configuration for a project
+
+### v3 — Project Awareness (Draft)
+
+- [ ] `gx recent` lists projects sorted by last visited
+- [ ] `gx resume <name>` jumps to project and prints context (branch, dirty files, last commit)
+- [ ] `gx dash` shows all projects grouped by git status (dirty, ahead, clean, stale)
+- [ ] Dashboard output is colored ANSI with group headers
+- [ ] Parallel git status queries complete within reasonable time for 50+ projects
+
+### v4 — Ecosystem (Future)
+
+- [ ] `.gx.json` hooks run on project entry with trust/allow safety
+- [ ] `gx new <name> --template <tpl>` creates projects from template repos
+- [ ] `gx tui` provides interactive terminal UI for project navigation
+- [ ] `gx tutorial` walks new users through features interactively
 
 ## Constraints
 
@@ -32,16 +52,22 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 ## Modules
 
-| Module | Purpose | Status | Dependencies |
-|--------|---------|--------|--------------|
-| [URL & Path](./modules/01-url.aps.md) | Parse git URLs and map to filesystem paths | Complete | — |
-| [Clone](./modules/02-clone.aps.md) | Clone repos to organized directories | Complete | URL |
-| [Index](./modules/03-index.aps.md) | Track projects and resolve names to paths | Complete | — |
-| [CLI](./modules/04-cli.aps.md) | Subcommand routing and argument parsing | Complete | URL, Clone, Index |
-| [Shell Plugin](./modules/05-shell.aps.md) | Zsh plugin for cd, completion, and shell integration | Complete | CLI |
-| [Fuzzy Matching](./modules/06-fuzzy.aps.md) | Suggest closest matches when exact project name not found | Draft | Index |
-| [Editor Integration](./modules/07-editor.aps.md) | Open projects in preferred editor | Draft | Index, CLI |
-| [Agent Scaffolding](./modules/08-agent.aps.md) | Scaffold AI agent configuration for projects | Draft | CLI |
+| Module | Purpose | Status | Version | Dependencies |
+|--------|---------|--------|---------|--------------|
+| [URL & Path](./modules/01-url.aps.md) | Parse git URLs and map to filesystem paths | Complete | v1 | — |
+| [Clone](./modules/02-clone.aps.md) | Clone repos to organized directories | Complete | v1 | URL |
+| [Index](./modules/03-index.aps.md) | Track projects and resolve names to paths | Complete | v1 | — |
+| [CLI](./modules/04-cli.aps.md) | Subcommand routing and argument parsing | Complete | v1 | URL, Clone, Index |
+| [Shell Plugin](./modules/05-shell.aps.md) | Zsh plugin for cd, completion, and shell integration | Complete | v1 | CLI |
+| [Fuzzy Matching](./modules/06-fuzzy.aps.md) | Suggest closest matches when exact project name not found | Draft | v2 | Index |
+| [Editor Integration](./modules/07-editor.aps.md) | Open projects in preferred editor | Draft | v2 | Index, CLI |
+| [Agent Scaffolding](./modules/08-agent.aps.md) | Scaffold AI agent configuration for projects | Draft | v2 | CLI |
+| [Tracking](./modules/09-tracking.aps.md) | Record project visits and enable recency-based navigation | Draft | v3 | Index |
+| [Dashboard](./modules/10-dashboard.aps.md) | Colored ANSI overview of all projects grouped by git status | Draft | v3 | Index, Tracking |
+| [Hooks](./modules/11-hooks.aps.md) | Per-project onEnter commands with trust/allow safety | Future | v4 | Shell Plugin |
+| [Templates](./modules/12-templates.aps.md) | Create new projects from template repositories | Future | v4 | Clone, Index |
+| [Interactive TUI](./modules/13-tui.aps.md) | Keyboard-navigable interactive terminal dashboard | Future | v4 | Dashboard, Tracking |
+| [Tutorial](./modules/14-tutorial.aps.md) | Interactive walkthrough teaching gx features | Future | v4 | All stable modules |
 
 ## Risks
 
@@ -53,6 +79,10 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | Fuzzy match false positives | Auto-jump to wrong project on weak match | Require high similarity threshold for auto-jump, confirm otherwise |
 | Editor detection fragility | `$EDITOR` not set or points to unknown binary | Maintain known-editor list, fall back to sensible default |
 | Template staleness | Scaffolded CLAUDE.md becomes outdated as conventions change | Keep templates minimal and project-type-specific, easy to regenerate |
+| Dashboard performance at scale | Git status across 100+ repos could be slow | Bounded concurrency (8 parallel), timeout per repo, cache recent results |
+| Index schema migration | Adding `lastVisited` field to existing entries | Make field optional, null = never visited, no migration step required |
+| Hook security surface | Malicious `.gx.json` could run arbitrary commands | direnv-style trust/allow — hooks never run until user explicitly trusts project |
+| TUI terminal compatibility | Escape sequences differ across terminals | Target xterm-256color, degrade gracefully, always provide non-interactive fallback |
 
 ## Open Questions
 
@@ -63,6 +93,12 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [ ] Which fuzzy matching algorithm? (Levenshtein, Jaro-Winkler, or substring containment)
 - [ ] Should `gx open` support opening specific files within a project?
 - [ ] Should `gx init` overwrite existing `.claude/CLAUDE.md` or merge?
+- [ ] Should `gx recent` show a configurable default count or always show all?
+- [ ] What git commands should `gx resume` run for context? (`git status --short`, `git log -1 --oneline`, `git branch --show-current`)
+- [ ] Should `gx dash` fetch remotes before reporting ahead/behind, or use local state only?
+- [ ] What stale threshold default? (30 days proposed)
+- [ ] Should hook trust be per-project or per-file-hash (re-trust on `.gx.json` change)?
+- [ ] Which TUI library for interactive mode? (ink, blessed, raw ANSI, or Bun-native)
 
 ## Decisions
 
@@ -70,3 +106,6 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - **D-002:** github.com as default host for shorthand `user/repo` — *accepted*
 - **D-003:** Binary + zsh plugin architecture — *accepted*
 - **D-004:** `gx <name>` as default action (jump to project) — *accepted*
+- **D-005:** Dashboard uses local git state only — no remote fetch on `gx dash` (too slow for multi-project scan) — *proposed*
+- **D-006:** `lastVisited` is an optional field on IndexEntry — backward compatible, no migration needed — *proposed*
+- **D-007:** v3 before v4 — tracking and dashboard provide immediate value and inform TUI design — *proposed*
