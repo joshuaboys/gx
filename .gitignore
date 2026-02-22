@@ -1,2 +1,5 @@
 # APS session baseline (ephemeral)
 .claude/.aps-session-baseline
+
+# Compiled binary
+/gx
