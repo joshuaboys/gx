@@ -33,17 +33,17 @@ export async function resolve(
     process.exit(1);
   }
 
-  if (matches.length === 1 && matches[0].score >= AUTO_JUMP_THRESHOLD) {
-    // Single high-confidence match: auto-jump
-    console.error(`Fuzzy match: '${name}' -> '${matches[0].name}' (${(matches[0].score * 100).toFixed(0)}%)`);
-    console.log(matches[0].path);
+  const first = matches[0];
+  if (matches.length === 1 && first && first.score >= AUTO_JUMP_THRESHOLD) {
+    console.error(`Fuzzy match: '${name}' -> '${first.name}' (${(first.score * 100).toFixed(0)}%)`);
+    console.log(first.path);
     return;
   }
 
   // Multiple candidates or single low-confidence match: show list
   console.error(`No exact match for '${name}'. Did you mean:`);
-  for (let i = 0; i < matches.length; i++) {
-    console.error(`  ${i + 1}. ${matches[i].name} (${(matches[i].score * 100).toFixed(0)}%)`);
+  for (const [i, m] of matches.entries()) {
+    console.error(`  ${i + 1}. ${m.name} (${(m.score * 100).toFixed(0)}%)`);
   }
   process.exit(1);
 }

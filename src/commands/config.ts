@@ -21,24 +21,25 @@ export async function setConfig(
   }
 
   const k = key as keyof Config;
+  const record = config as unknown as Record<string, unknown>;
   if (key === "structure") {
     if (!VALID_STRUCTURES.has(value)) {
       console.error(`Invalid structure value: ${value}`);
       console.error(`Valid values: flat, host`);
       process.exit(1);
     }
-    (config as Record<string, unknown>)[key] = value;
+    record[key] = value;
   } else if (typeof config[k] === "boolean") {
-    (config as Record<string, unknown>)[key] = value === "true";
+    record[key] = value === "true";
   } else if (typeof config[k] === "number") {
     const num = Number(value);
     if (Number.isNaN(num)) {
       console.error(`Value for '${key}' must be a number`);
       process.exit(1);
     }
-    (config as Record<string, unknown>)[key] = num;
+    record[key] = num;
   } else {
-    (config as Record<string, unknown>)[key] = value;
+    record[key] = value;
   }
 
   await saveConfig(configPath, config);

@@ -64,13 +64,13 @@ describe("fuzzyMatch", () => {
     const results = fuzzyMatch("gc", entries);
     expect(results.length).toBeGreaterThan(0);
     // "gclone" scores higher than "gx" for "gc" because "gc" is a prefix of "gclone"
-    expect(results[0].name).toBe("gclone");
+    expect(results[0]!.name).toBe("gclone");
   });
 
   test("returns gclone ranked first for 'gclon' query", () => {
     const results = fuzzyMatch("gclon", entries);
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].name).toBe("gclone");
+    expect(results[0]!.name).toBe("gclone");
   });
 
   test("returns empty array for no matches above threshold", () => {
@@ -81,7 +81,7 @@ describe("fuzzyMatch", () => {
   test("returns cockpit for 'cock' query", () => {
     const results = fuzzyMatch("cock", entries);
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].name).toBe("cockpit");
+    expect(results[0]!.name).toBe("cockpit");
   });
 
   test("respects custom threshold", () => {
@@ -97,14 +97,14 @@ describe("fuzzyMatch", () => {
   test("results are sorted by score descending", () => {
     const results = fuzzyMatch("g", entries, 0.4);
     for (let i = 1; i < results.length; i++) {
-      expect(results[i - 1].score).toBeGreaterThanOrEqual(results[i].score);
+      expect(results[i - 1]!.score).toBeGreaterThanOrEqual(results[i]!.score);
     }
   });
 
   test("each result includes name, score, and path", () => {
     const results = fuzzyMatch("gclone", entries);
     expect(results.length).toBeGreaterThan(0);
-    const first = results[0];
+    const first = results[0]!;
     expect(first).toHaveProperty("name");
     expect(first).toHaveProperty("score");
     expect(first).toHaveProperty("path");

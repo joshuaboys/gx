@@ -16,42 +16,42 @@ function validateSegments(owner: string, repo: string): void {
   }
 }
 
+function extract(match: RegExpMatchArray): [string, string] {
+  return [match[1] ?? "", match[2] ?? ""];
+}
+
 export function parseUrl(input: string, defaultHost = "github.com"): ParsedRepo {
   const trimmed = input.trim();
   if (!trimmed) throw new Error("Empty repository URL");
 
-  let host: string;
-  let path: string;
-
-  // Try each pattern
   let match = trimmed.match(HTTPS_RE);
   if (match) {
-    [, host, path] = match;
-    return buildParsed(host!, path!, trimmed);
+    const [host, path] = extract(match);
+    return buildParsed(host, path, trimmed);
   }
 
   match = trimmed.match(GIT_RE);
   if (match) {
-    [, host, path] = match;
-    return buildParsed(host!, path!, trimmed);
+    const [host, path] = extract(match);
+    return buildParsed(host, path, trimmed);
   }
 
   match = trimmed.match(SSH_RE);
   if (match) {
-    [, host, path] = match;
-    return buildParsed(host!, path!, trimmed);
+    const [host, path] = extract(match);
+    return buildParsed(host, path, trimmed);
   }
 
   match = trimmed.match(SHORTHAND_RE);
   if (match) {
-    const [, owner, repo] = match;
-    const cleanRepo = repo!.replace(/\/$/, "");
-    validateSegments(owner!, cleanRepo);
+    const [owner, rawRepo] = extract(match);
+    const repo = rawRepo.replace(/\/$/, "");
+    validateSegments(owner, repo);
     return {
       host: defaultHost,
-      owner: owner!,
-      repo: cleanRepo,
-      originalUrl: `https://${defaultHost}/${owner}/${repo}`,
+      owner,
+      repo,
+      originalUrl: `https://${defaultHost}/${owner}/${rawRepo}`,
     };
   }
 

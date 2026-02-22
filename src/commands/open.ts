@@ -42,16 +42,17 @@ export async function openProject(
       const entries = idx.list().map((e) => ({ name: e.name, path: e.path }));
       const matches = fuzzyMatch(name, entries, config.similarityThreshold);
 
-      if (matches.length === 1 && matches[0].score >= AUTO_JUMP_THRESHOLD) {
+      const first = matches[0];
+      if (matches.length === 1 && first && first.score >= AUTO_JUMP_THRESHOLD) {
         console.error(
-          `Fuzzy match: '${name}' -> '${matches[0].name}' (${(matches[0].score * 100).toFixed(0)}%)`,
+          `Fuzzy match: '${name}' -> '${first.name}' (${(first.score * 100).toFixed(0)}%)`,
         );
-        resolved = matches[0].path;
+        resolved = first.path;
       } else if (matches.length > 0) {
         console.error(`No exact match for '${name}'. Did you mean:`);
-        for (let i = 0; i < matches.length; i++) {
+        for (const [i, m] of matches.entries()) {
           console.error(
-            `  ${i + 1}. ${matches[i].name} (${(matches[i].score * 100).toFixed(0)}%)`,
+            `  ${i + 1}. ${m.name} (${(m.score * 100).toFixed(0)}%)`,
           );
         }
         process.exit(1);
