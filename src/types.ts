@@ -4,6 +4,7 @@ export interface Config {
   structure: "flat" | "host";
   shallow: boolean;
   similarityThreshold: number;
+  editor: string;
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -12,6 +13,7 @@ export const DEFAULT_CONFIG: Config = {
   structure: "flat",
   shallow: false,
   similarityThreshold: 0.7,
+  editor: "",
 };
 
 export interface ParsedRepo {

@@ -7,6 +7,7 @@ import { ls } from "./commands/ls.ts";
 import { resolve } from "./commands/resolve.ts";
 import { rebuild } from "./commands/rebuild.ts";
 import { showConfig, setConfig } from "./commands/config.ts";
+import { openProject } from "./commands/open.ts";
 
 const VERSION = "0.1.0";
 
@@ -24,12 +25,16 @@ async function main() {
 Usage:
   gx <name>                Jump to project
   gx clone <repo>          Clone and jump to repo
+  gx open [name]           Open project in editor
   gx ls                    List indexed projects
   gx rebuild               Rescan and rebuild index
   gx config                Show config
   gx config set <key> <v>  Set config value
   gx resolve <name>        Resolve project name to path
-  gx resolve --list        List all project names`);
+  gx resolve --list        List all project names
+
+Options:
+  gx open --editor <name>  Override editor for this invocation`);
     return;
   }
 
@@ -66,6 +71,18 @@ Usage:
         await showConfig(configPath);
       }
       break;
+    case "open": {
+      const editorFlag = args.indexOf("--editor");
+      const editor = editorFlag >= 0 ? args[editorFlag + 1] : undefined;
+      const name = args.find(
+        (a, i) =>
+          i > 0 &&
+          a !== "--editor" &&
+          (editorFlag < 0 || i !== editorFlag + 1),
+      );
+      await openProject(name, config, indexPath, editor);
+      break;
+    }
     case "resolve":
       if (args[1] === "--list") {
         await resolve("", indexPath, config, true);
