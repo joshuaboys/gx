@@ -89,7 +89,14 @@ Options:
     }
     case "init": {
       const typeFlag = args.indexOf("--type");
-      const type = typeFlag >= 0 ? args[typeFlag + 1] : undefined;
+      let type: string | undefined;
+      if (typeFlag >= 0) {
+        type = args[typeFlag + 1];
+        if (!type || type.startsWith("--")) {
+          console.error("Usage: gx init --type <type>");
+          process.exit(1);
+        }
+      }
       const force = args.includes("--force");
       await initAgent(process.cwd(), { type, force });
       break;

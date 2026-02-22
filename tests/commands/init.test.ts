@@ -59,9 +59,9 @@ describe("initAgent", () => {
 
   test("refuses to overwrite without --force", async () => {
     await initAgent(tmpDir, {});
-    expect(async () => {
-      await initAgent(tmpDir, {});
-    }).toThrow();
+    await expect(initAgent(tmpDir, {})).rejects.toThrow(
+      "already exists",
+    );
   });
 
   test("overwrites with --force flag", async () => {
@@ -81,8 +81,8 @@ describe("initAgent", () => {
   });
 
   test("rejects invalid --type value", async () => {
-    expect(async () => {
-      await initAgent(tmpDir, { type: "invalid-type" });
-    }).toThrow();
+    await expect(initAgent(tmpDir, { type: "invalid-type" })).rejects.toThrow(
+      "Unknown project type",
+    );
   });
 });

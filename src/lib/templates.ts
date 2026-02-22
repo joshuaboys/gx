@@ -58,6 +58,7 @@ const TYPESCRIPT_NODE_TEMPLATE = `# Project Context
 - Test: \`npm test\`
 - Build: \`npm run build\`
 - Install: \`npm install\`
+- Lint/Format: \`npx eslint . && npx prettier --write .\`
 
 ## Conventions
 - Follow existing test framework conventions in the project
@@ -123,13 +124,13 @@ const PYTHON_TEMPLATE = `# Project Context
 const GENERIC_TEMPLATE = `# Project Context
 
 ## Stack
-<!-- Describe the project stack here -->
+- TODO: Describe the project stack here
 
 ## Commands
-<!-- Add common commands: build, test, lint, run -->
+- TODO: Add common commands (build, test, lint, run)
 
 ## Conventions
-<!-- Add project-specific conventions and guidelines -->
+- TODO: Add project-specific conventions and guidelines
 `;
 
 const PLAN_COMMAND = `Review the codebase and create a detailed implementation plan for:
