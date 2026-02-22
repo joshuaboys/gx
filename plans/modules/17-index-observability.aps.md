@@ -1,30 +1,44 @@
 # Index Reliability & Observability
 
-| Field | Value |
-|-------|-------|
-| Module ID | INDEXOBS |
-| Status | Draft |
-| Version | v5 |
-| Owner | @joshuaboys |
-| Depends On | Index, Tracking |
+| ID | Owner | Status |
+|----|-------|--------|
+| IDXOB | @joshuaboys | Draft |
+
+- Version: v5
+- Depends on: Index, Tracking
 
 ## Purpose
 
-Increase trust in `gx` behavior at scale with diagnostics and stats.
+Increase trust in `gx` behaviour at scale with diagnostics and stats.
 
-## Outcomes
+## In Scope
 
 - `gx index stats` (size, collisions, stale paths, last rebuild)
-- `gx doctor` index diagnostics (missing dirs, broken links, invalid entries)
+- Index diagnostics checks contributed to global `gx doctor` (missing dirs, broken links, invalid entries)
 - Optional debug output and timing telemetry for scans/rebuilds
 
-## Work Items
+## Out of Scope
 
-### INDEXOBS-001: Stats command
-- Human + machine-readable index statistics
+- The `gx doctor` command itself (owned by DIST module); this module contributes index-specific checks
 
-### INDEXOBS-002: Diagnostics
-- Detect and report index/path inconsistency with fix hints
+## Interfaces
 
-### INDEXOBS-003: Scan telemetry
-- Capture scan duration and bottlenecks for large project trees
+**Depends on:**
+
+- Index — index data structures
+- Tracking — activity data for telemetry
+
+**Exposes:**
+
+- Index diagnostics checks (consumed by `gx doctor`)
+- `gx index stats` subcommand
+
+## Ready Checklist
+
+- [ ] Purpose and scope are clear
+- [ ] Dependencies identified
+- [ ] At least one task defined
+
+## Tasks
+
+*No tasks yet — module is Draft*
