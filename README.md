@@ -1,10 +1,10 @@
 # gx
 
-A fast git project manager for cloning, navigating, and organizing repositories. Built with TypeScript and Bun.
+A fast git project manager for cloning, navigating, and organising repositories. Built with TypeScript and Bun.
 
 ## Features
 
-- **Organized cloning** --- `gx clone user/repo` clones to a structured directory and cd's into it
+- **Organised cloning** --- `gx clone user/repo` clones to a structured directory and cd's into it
 - **Instant navigation** --- `gx <name>` jumps to any indexed project with tab completion
 - **Fuzzy matching** --- misspell a project name and gx suggests the closest match
 - **Editor integration** --- `gx open <name>` opens a project in your preferred editor
