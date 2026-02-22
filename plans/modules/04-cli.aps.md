@@ -2,7 +2,7 @@
 
 | ID | Owner | Status |
 |----|-------|--------|
-| CLI | @joshuaboys | Draft |
+| CLI | @joshuaboys | Complete |
 
 ## Purpose
 
@@ -43,14 +43,31 @@ Entry point for the `gx` binary. Routes subcommands, parses arguments, and orche
 
 Change status to **Ready** when:
 
-- [ ] Purpose and scope are clear
-- [ ] Dependencies identified
-- [ ] At least one task defined
+- [x] Purpose and scope are clear
+- [x] Dependencies identified
+- [x] At least one task defined
 
 ## Work Items
 
-*No tasks yet — module is Draft*
+### CLI-001: Implement subcommand routing and argument parsing
 
-## Execution *(optional)*
+| Field | Value |
+|-------|-------|
+| Status | Complete: 2026-02-23 |
+| Confidence | high |
 
-Steps: [../execution/CLI.steps.md](../execution/CLI.steps.md)
+- **Intent:** Route CLI arguments to the correct command handlers with proper error handling and exit codes
+- **Expected Outcome:** `gx clone`, `gx ls`, `gx rebuild`, `gx config`, and `gx resolve` all dispatch correctly, with help text and version output
+- **Validation:** `bun test tests/types.test.ts`
+- **Files:** `src/index.ts`, `src/commands/clone.ts`, `src/commands/ls.ts`, `src/commands/rebuild.ts`, `src/commands/config.ts`, `src/commands/resolve.ts`
+
+### CLI-002: Compile to standalone binary
+
+| Field | Value |
+|-------|-------|
+| Status | Complete: 2026-02-23 |
+| Confidence | high |
+
+- **Intent:** Produce a single executable binary via `bun build --compile` that can be placed on PATH
+- **Expected Outcome:** Running `bun build --compile` produces a working `gx` binary with all subcommands functional
+- **Validation:** `bun build --compile src/index.ts --outfile gx && ./gx --help`

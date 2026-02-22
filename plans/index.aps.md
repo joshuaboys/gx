@@ -2,9 +2,10 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Draft |
+| Status | Complete |
 | Owner | @joshuaboys |
 | Created | 2026-02-22 |
+| Completed | 2026-02-23 |
 
 ## Problem
 
@@ -12,12 +13,12 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 ## Success Criteria
 
-- [ ] `gx clone user/repo` clones to organized directory and cd's into it
-- [ ] `gx <name>` jumps to any indexed project with tab completion
-- [ ] `gx ls` lists all indexed projects
-- [ ] Full URL support (HTTPS, SSH, git://, shorthand)
-- [ ] Configurable directory structure (flat vs host-prefixed)
-- [ ] Compiles to single binary via `bun build --compile`
+- [x] `gx clone user/repo` clones to organized directory and cd's into it
+- [x] `gx <name>` jumps to any indexed project with tab completion
+- [x] `gx ls` lists all indexed projects
+- [x] Full URL support (HTTPS, SSH, git://, shorthand)
+- [x] Configurable directory structure (flat vs host-prefixed)
+- [x] Compiles to single binary via `bun build --compile`
 
 ## Constraints
 
@@ -30,11 +31,11 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 | Module | Purpose | Status | Dependencies |
 |--------|---------|--------|--------------|
-| [URL & Path](./modules/01-url.aps.md) | Parse git URLs and map to filesystem paths | Draft | — |
-| [Clone](./modules/02-clone.aps.md) | Clone repos to organized directories | Draft | URL |
-| [Index](./modules/03-index.aps.md) | Track projects and resolve names to paths | Draft | — |
-| [CLI](./modules/04-cli.aps.md) | Subcommand routing and argument parsing | Draft | URL, Clone, Index |
-| [Shell Plugin](./modules/05-shell.aps.md) | Zsh plugin for cd, completion, and shell integration | Draft | CLI |
+| [URL & Path](./modules/01-url.aps.md) | Parse git URLs and map to filesystem paths | Complete | — |
+| [Clone](./modules/02-clone.aps.md) | Clone repos to organized directories | Complete | URL |
+| [Index](./modules/03-index.aps.md) | Track projects and resolve names to paths | Complete | — |
+| [CLI](./modules/04-cli.aps.md) | Subcommand routing and argument parsing | Complete | URL, Clone, Index |
+| [Shell Plugin](./modules/05-shell.aps.md) | Zsh plugin for cd, completion, and shell integration | Complete | CLI |
 
 ## Risks
 
@@ -49,7 +50,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [x] Which language? — TypeScript/Bun
 - [x] Directory structure? — Flat (user/repo) by default, configurable
 - [x] Default host? — github.com
-- [ ] Should `gx rebuild` run automatically on a schedule or only manually?
+- [x] Should `gx rebuild` run automatically on a schedule or only manually? — Manual only for v1
 
 ## Decisions
 

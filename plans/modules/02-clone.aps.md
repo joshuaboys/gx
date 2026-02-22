@@ -2,7 +2,7 @@
 
 | ID | Owner | Status |
 |----|-------|--------|
-| CLN | @joshuaboys | Draft |
+| CLN | @joshuaboys | Complete |
 
 ## Purpose
 
@@ -38,14 +38,20 @@ Clone git repositories into organized directory structures, creating parent dire
 
 Change status to **Ready** when:
 
-- [ ] Purpose and scope are clear
-- [ ] Dependencies identified
-- [ ] At least one task defined
+- [x] Purpose and scope are clear
+- [x] Dependencies identified
+- [x] At least one task defined
 
 ## Work Items
 
-*No tasks yet — module is Draft*
+### CLN-001: Implement clone command with directory creation and index update
 
-## Execution *(optional)*
+| Field | Value |
+|-------|-------|
+| Status | Complete: 2026-02-23 |
+| Confidence | high |
 
-Steps: [../execution/CLN.steps.md](../execution/CLN.steps.md)
+- **Intent:** Clone repositories to organized paths, creating directories as needed, skipping duplicates, and registering in the project index
+- **Expected Outcome:** `gx clone user/repo` clones to the correct directory, skips already-cloned repos, and updates the index
+- **Validation:** `bun test tests/commands/clone.test.ts`
+- **Files:** `src/commands/clone.ts`, `tests/commands/clone.test.ts`

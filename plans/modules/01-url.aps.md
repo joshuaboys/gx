@@ -2,7 +2,7 @@
 
 | ID | Owner | Status |
 |----|-------|--------|
-| URL | @joshuaboys | Draft |
+| URL | @joshuaboys | Complete |
 
 ## Purpose
 
@@ -37,14 +37,32 @@ Parse git repository URLs in all common formats and convert them to consistent f
 
 Change status to **Ready** when:
 
-- [ ] Purpose and scope are clear
-- [ ] Dependencies identified
-- [ ] At least one task defined
+- [x] Purpose and scope are clear
+- [x] Dependencies identified
+- [x] At least one task defined
 
 ## Work Items
 
-*No tasks yet — module is Draft*
+### URL-001: Implement URL parser for all git formats
 
-## Execution *(optional)*
+| Field | Value |
+|-------|-------|
+| Status | Complete: 2026-02-23 |
+| Confidence | high |
 
-Steps: [../execution/URL.steps.md](../execution/URL.steps.md)
+- **Intent:** Parse HTTPS, SSH, git://, and shorthand URLs into a consistent `ParsedRepo` structure
+- **Expected Outcome:** `parseUrl()` correctly extracts host, user, and repo from all supported formats
+- **Validation:** `bun test tests/lib/url.test.ts`
+- **Files:** `src/lib/url.ts`, `src/types.ts`, `tests/lib/url.test.ts`
+
+### URL-002: Implement path mapping from parsed URLs
+
+| Field | Value |
+|-------|-------|
+| Status | Complete: 2026-02-23 |
+| Confidence | high |
+
+- **Intent:** Convert parsed repo info to filesystem paths supporting both flat and host-prefixed structures
+- **Expected Outcome:** `toPath()` produces correct directory paths based on config structure setting
+- **Validation:** `bun test tests/lib/path.test.ts`
+- **Files:** `src/lib/path.ts`, `tests/lib/path.test.ts`
