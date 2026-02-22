@@ -68,9 +68,9 @@ Usage:
       break;
     case "resolve":
       if (args[1] === "--list") {
-        await resolve("", indexPath, true);
+        await resolve("", indexPath, config, true);
       } else if (args[1]) {
-        await resolve(args[1], indexPath);
+        await resolve(args[1], indexPath, config);
       } else {
         console.error("Usage: gx resolve <name> | gx resolve --list");
         process.exit(1);
@@ -78,7 +78,7 @@ Usage:
       break;
     default:
       // Default: treat as project name to resolve
-      await resolve(command, indexPath);
+      await resolve(command, indexPath, config);
       break;
   }
 }

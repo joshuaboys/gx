@@ -3,6 +3,7 @@ export interface Config {
   defaultHost: string;
   structure: "flat" | "host";
   shallow: boolean;
+  similarityThreshold: number;
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -10,6 +11,7 @@ export const DEFAULT_CONFIG: Config = {
   defaultHost: "github.com",
   structure: "flat",
   shallow: false,
+  similarityThreshold: 0.7,
 };
 
 export interface ParsedRepo {
