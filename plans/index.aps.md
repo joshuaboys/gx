@@ -6,6 +6,7 @@
 | Owner | @joshuaboys |
 | Created | 2026-02-22 |
 | v1 Completed | 2026-02-23 |
+| v2 Completed | 2026-02-23 |
 
 ## Problem
 
@@ -22,11 +23,11 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [x] Configurable directory structure (flat vs host-prefixed)
 - [x] Compiles to single binary via `bun build --compile`
 
-### v2 — Quality of Life (Draft)
+### v2 — Quality of Life (Complete)
 
-- [ ] `gx <name>` suggests fuzzy matches when exact match not found
-- [ ] `gx open <name>` opens project in preferred editor
-- [ ] `gx init` scaffolds AI agent configuration for a project
+- [x] `gx <name>` suggests fuzzy matches when exact match not found
+- [x] `gx open <name>` opens project in preferred editor
+- [x] `gx init` scaffolds AI agent configuration for a project
 
 ### v3 — Project Awareness (Draft)
 
@@ -59,9 +60,9 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [Index](./modules/03-index.aps.md) | Track projects and resolve names to paths | Complete | v1 | — |
 | [CLI](./modules/04-cli.aps.md) | Subcommand routing and argument parsing | Complete | v1 | URL, Clone, Index |
 | [Shell Plugin](./modules/05-shell.aps.md) | Zsh plugin for cd, completion, and shell integration | Complete | v1 | CLI |
-| [Fuzzy Matching](./modules/06-fuzzy.aps.md) | Suggest closest matches when exact project name not found | Draft | v2 | Index |
-| [Editor Integration](./modules/07-editor.aps.md) | Open projects in preferred editor | Draft | v2 | Index, CLI |
-| [Agent Scaffolding](./modules/08-agent.aps.md) | Scaffold AI agent configuration for projects | Draft | v2 | CLI |
+| [Fuzzy Matching](./modules/06-fuzzy.aps.md) | Suggest closest matches when exact project name not found | Complete | v2 | Index |
+| [Editor Integration](./modules/07-editor.aps.md) | Open projects in preferred editor | Complete | v2 | Index, CLI |
+| [Agent Scaffolding](./modules/08-agent.aps.md) | Scaffold AI agent configuration for projects | Complete | v2 | CLI |
 | [Tracking](./modules/09-tracking.aps.md) | Record project visits and enable recency-based navigation | Draft | v3 | Index |
 | [Dashboard](./modules/10-dashboard.aps.md) | Colored ANSI overview of all projects grouped by git status | Draft | v3 | Index, Tracking |
 | [Hooks](./modules/11-hooks.aps.md) | Per-project onEnter commands with trust/allow safety | Future | v4 | Shell Plugin |
