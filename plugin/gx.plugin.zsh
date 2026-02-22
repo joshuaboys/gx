@@ -29,7 +29,7 @@ gx() {
                 eval "$bin" clone "${@:2}"
             fi
             ;;
-        ls|rebuild|config|open|--help|-h|--version|-v)
+        ls|rebuild|config|open|init|--help|-h|--version|-v)
             eval "$bin" "$@"
             ;;
         resolve)
@@ -58,7 +58,7 @@ _gx() {
     bin=$(_gx_bin)
 
     local -a commands projects
-    commands=(clone ls rebuild config resolve open --help --version)
+    commands=(clone ls rebuild config resolve open init --help --version)
 
     if (( CURRENT == 2 )); then
         # First arg: commands + project names

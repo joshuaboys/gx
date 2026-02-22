@@ -8,6 +8,7 @@ import { resolve } from "./commands/resolve.ts";
 import { rebuild } from "./commands/rebuild.ts";
 import { showConfig, setConfig } from "./commands/config.ts";
 import { openProject } from "./commands/open.ts";
+import { initAgent } from "./commands/init.ts";
 
 const VERSION = "0.1.0";
 
@@ -30,11 +31,14 @@ Usage:
   gx rebuild               Rescan and rebuild index
   gx config                Show config
   gx config set <key> <v>  Set config value
+  gx init                  Scaffold .claude/ agent config
   gx resolve <name>        Resolve project name to path
   gx resolve --list        List all project names
 
 Options:
-  gx open --editor <name>  Override editor for this invocation`);
+  gx open --editor <name>  Override editor for this invocation
+  gx init --type <type>    Override project type detection
+  gx init --force          Overwrite existing CLAUDE.md`);
     return;
   }
 
@@ -81,6 +85,13 @@ Options:
           (editorFlag < 0 || i !== editorFlag + 1),
       );
       await openProject(name, config, indexPath, editor);
+      break;
+    }
+    case "init": {
+      const typeFlag = args.indexOf("--type");
+      const type = typeFlag >= 0 ? args[typeFlag + 1] : undefined;
+      const force = args.includes("--force");
+      await initAgent(process.cwd(), { type, force });
       break;
     }
     case "resolve":
