@@ -1,6 +1,9 @@
-import { join } from "path";
-import { mkdir, readdir } from "fs/promises";
+import { join, basename } from "path";
+import { mkdir, readdir, realpath } from "fs/promises";
 import type { Index, IndexEntry } from "../types.ts";
+
+const MAX_SCAN_DEPTH = 10;
+const SKIP_DIRS = new Set(["node_modules", "vendor", "target", ".build", "dist", "build"]);
 
 export class ProjectIndex {
   private data: Index;
@@ -13,13 +16,26 @@ export class ProjectIndex {
     try {
       const file = Bun.file(path);
       const raw = await file.json();
-      return new ProjectIndex(raw as Index);
+      if (
+        typeof raw === "object" &&
+        raw !== null &&
+        "projects" in raw &&
+        typeof (raw as Record<string, unknown>).projects === "object"
+      ) {
+        return new ProjectIndex(raw as Index);
+      }
+      return new ProjectIndex({ projects: {} });
     } catch {
       return new ProjectIndex({ projects: {} });
     }
   }
 
   add(name: string, entry: IndexEntry): void {
+    if (this.data.projects[name] && this.data.projects[name].path !== entry.path) {
+      console.error(
+        `Warning: project name '${name}' collision — overwriting ${this.data.projects[name].path} with ${entry.path}`,
+      );
+    }
     this.data.projects[name] = entry;
   }
 
@@ -39,17 +55,38 @@ export class ProjectIndex {
 
   async rebuild(projectDir: string): Promise<void> {
     this.data.projects = {};
-    await this.scanForRepos(projectDir);
+    const visited = new Set<string>();
+    await this.scanForRepos(projectDir, 0, visited);
   }
 
-  private async scanForRepos(dir: string): Promise<void> {
-    const entries = await readdir(dir, { withFileTypes: true });
+  private async scanForRepos(
+    dir: string,
+    depth: number,
+    visited: Set<string>,
+  ): Promise<void> {
+    if (depth > MAX_SCAN_DEPTH) return;
+
+    // Resolve symlinks to detect cycles
+    let realDir: string;
+    try {
+      realDir = await realpath(dir);
+    } catch {
+      return; // Broken symlink or permission denied
+    }
+    if (visited.has(realDir)) return;
+    visited.add(realDir);
+
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return; // Permission denied or missing directory
+    }
+
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
-      const fullPath = join(dir, entry.name);
       if (entry.name === ".git") {
-        // Parent directory is the repo
-        const name = dir.split("/").pop()!;
+        const name = basename(dir);
         this.data.projects[name] = {
           path: dir,
           url: "",
@@ -58,10 +95,12 @@ export class ProjectIndex {
         return; // Don't descend into .git or sibling dirs of a repo
       }
     }
+
     // No .git found at this level, recurse into subdirectories
     for (const entry of entries) {
       if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
-      await this.scanForRepos(join(dir, entry.name));
+      if (SKIP_DIRS.has(entry.name)) continue;
+      await this.scanForRepos(join(dir, entry.name), depth + 1, visited);
     }
   }
 

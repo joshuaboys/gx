@@ -1,5 +1,9 @@
 import { ProjectIndex } from "../lib/index.ts";
+import { fuzzyMatch } from "../lib/fuzzy.ts";
 import type { Config } from "../types.ts";
+import { which } from "bun";
+
+const AUTO_JUMP_THRESHOLD = 0.85;
 
 export const EDITORS: Record<string, { cmd: string; gui: boolean }> = {
   code: { cmd: "code", gui: true },
@@ -31,10 +35,30 @@ export async function openProject(
 
   if (name) {
     const idx = await ProjectIndex.load(indexPath);
-    const resolved = idx.resolve(name);
+    let resolved = idx.resolve(name);
+
+    // Fuzzy matching fallback (consistent with resolve command)
     if (!resolved) {
-      console.error(`Project '${name}' not found`);
-      process.exit(1);
+      const entries = idx.list().map((e) => ({ name: e.name, path: e.path }));
+      const matches = fuzzyMatch(name, entries, config.similarityThreshold);
+
+      if (matches.length === 1 && matches[0].score >= AUTO_JUMP_THRESHOLD) {
+        console.error(
+          `Fuzzy match: '${name}' -> '${matches[0].name}' (${(matches[0].score * 100).toFixed(0)}%)`,
+        );
+        resolved = matches[0].path;
+      } else if (matches.length > 0) {
+        console.error(`No exact match for '${name}'. Did you mean:`);
+        for (let i = 0; i < matches.length; i++) {
+          console.error(
+            `  ${i + 1}. ${matches[i].name} (${(matches[i].score * 100).toFixed(0)}%)`,
+          );
+        }
+        process.exit(1);
+      } else {
+        console.error(`Project '${name}' not found`);
+        process.exit(1);
+      }
     }
     projectPath = resolved;
   } else {
@@ -43,6 +67,12 @@ export async function openProject(
 
   const editorName = resolveEditor(config, editorOverride);
   const editorInfo = EDITORS[editorName] ?? { cmd: editorName, gui: false };
+
+  // Verify editor binary exists
+  if (!which(editorInfo.cmd)) {
+    console.error(`Editor '${editorInfo.cmd}' not found on PATH`);
+    process.exit(1);
+  }
 
   if (editorInfo.gui) {
     // Spawn detached for GUI editors — don't block the terminal

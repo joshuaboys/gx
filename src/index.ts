@@ -9,8 +9,9 @@ import { rebuild } from "./commands/rebuild.ts";
 import { showConfig, setConfig } from "./commands/config.ts";
 import { openProject } from "./commands/open.ts";
 import { initAgent } from "./commands/init.ts";
+import pkg from "../package.json";
 
-const VERSION = "0.1.0";
+const VERSION = pkg.version;
 
 function getIndexPath(): string {
   return join(homedir(), ".config", "gx", "index.json");
@@ -77,7 +78,14 @@ Options:
       break;
     case "open": {
       const editorFlag = args.indexOf("--editor");
-      const editor = editorFlag >= 0 ? args[editorFlag + 1] : undefined;
+      let editor: string | undefined;
+      if (editorFlag >= 0) {
+        editor = args[editorFlag + 1];
+        if (!editor || editor.startsWith("--")) {
+          console.error("Usage: gx open [name] --editor <name>");
+          process.exit(1);
+        }
+      }
       const name = args.find(
         (a, i) =>
           i > 0 &&
