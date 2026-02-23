@@ -1,7 +1,17 @@
+import { resolve as resolvePath } from "path";
+
 const SUPPORTED_SHELLS = ["zsh", "bash", "fish"] as const;
 type Shell = (typeof SUPPORTED_SHELLS)[number];
 
 function detectShell(): Shell | null {
+  // Check parent process name first (actual running shell),
+  // fall back to $SHELL (login shell) if unavailable
+  const parentName = process.env.GX_SHELL_OVERRIDE;
+  if (parentName) {
+    if (parentName.endsWith("/zsh") || parentName === "zsh") return "zsh";
+    if (parentName.endsWith("/bash") || parentName === "bash") return "bash";
+    if (parentName.endsWith("/fish") || parentName === "fish") return "fish";
+  }
   const shell = process.env.SHELL ?? "";
   if (shell.endsWith("/zsh")) return "zsh";
   if (shell.endsWith("/bash")) return "bash";
@@ -9,31 +19,40 @@ function detectShell(): Shell | null {
   return null;
 }
 
+function resolveGxBin(): string {
+  // Embed the absolute path to the current gx binary so the generated
+  // wrapper works even when gx is not on PATH (e.g. oh-my-zsh plugin)
+  return resolvePath(process.argv[0] ?? "gx");
+}
+
 function zshInit(): string {
+  const bin = resolveGxBin();
   return `# gx — git project manager shell integration
 # Add to ~/.zshrc: eval "$(gx shell-init)"
+
+_GX_BIN="${bin}"
 
 gx() {
     case "$1" in
         clone)
             local output
-            output=$(command gx clone "\${@:2}")
+            output=$("$_GX_BIN" clone "\${@:2}")
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
             fi
             ;;
         ls|rebuild|config|open|init|shell-init|--help|-h|--version|-v)
-            command gx "$@"
+            "$_GX_BIN" "$@"
             ;;
         resolve)
-            command gx "$@"
+            "$_GX_BIN" "$@"
             ;;
         "")
-            command gx --help
+            "$_GX_BIN" --help
             ;;
         *)
             local target
-            target=$(command gx resolve "$1")
+            target=$("$_GX_BIN" resolve "$1")
             if [ -n "$target" ] && [ -d "$target" ]; then
                 cd "$target"
             else
@@ -49,7 +68,7 @@ _gx() {
     commands=(clone ls rebuild config resolve open init shell-init --help --version)
 
     if (( CURRENT == 2 )); then
-        projects=($(command gx resolve --list 2>/dev/null))
+        projects=($("$_GX_BIN" resolve --list 2>/dev/null))
         compadd "\${commands[@]}" "\${projects[@]}"
     elif (( CURRENT == 3 )) && [[ "\${words[2]}" == "config" ]]; then
         compadd set
@@ -61,30 +80,33 @@ _gx() {
 }
 
 function bashInit(): string {
+  const bin = resolveGxBin();
   return `# gx — git project manager shell integration
 # Add to ~/.bashrc: eval "$(gx shell-init)"
+
+_GX_BIN="${bin}"
 
 gx() {
     case "$1" in
         clone)
             local output
-            output=$(command gx clone "\${@:2}")
+            output=$("$_GX_BIN" clone "\${@:2}")
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
             fi
             ;;
         ls|rebuild|config|open|init|shell-init|--help|-h|--version|-v)
-            command gx "$@"
+            "$_GX_BIN" "$@"
             ;;
         resolve)
-            command gx "$@"
+            "$_GX_BIN" "$@"
             ;;
         "")
-            command gx --help
+            "$_GX_BIN" --help
             ;;
         *)
             local target
-            target=$(command gx resolve "$1")
+            target=$("$_GX_BIN" resolve "$1")
             if [ -n "$target" ] && [ -d "$target" ]; then
                 cd "$target"
             else
@@ -102,7 +124,7 @@ _gx_completions() {
     if [ "\$COMP_CWORD" -eq 1 ]; then
         local commands="clone ls rebuild config resolve open init shell-init --help --version"
         local projects
-        projects=$(command gx resolve --list 2>/dev/null)
+        projects=$("$_GX_BIN" resolve --list 2>/dev/null)
         COMPREPLY=($(compgen -W "$commands $projects" -- "$cur"))
     elif [ "\$COMP_CWORD" -eq 2 ] && [ "$prev" = "config" ]; then
         COMPREPLY=($(compgen -W "set" -- "$cur"))
@@ -114,24 +136,27 @@ complete -F _gx_completions gx`;
 }
 
 function fishInit(): string {
+  const bin = resolveGxBin();
   return `# gx — git project manager shell integration
 # Add to ~/.config/fish/conf.d/gx.fish: gx shell-init | source
+
+set -g _GX_BIN "${bin}"
 
 function gx
     switch $argv[1]
         case clone
-            set -l output (command gx clone $argv[2..])
+            set -l output ($_GX_BIN clone $argv[2..])
             if test -n "$output" -a -d "$output"
-                cd $output
+                cd "$output"
             end
         case ls rebuild config open init shell-init --help -h --version -v resolve
-            command gx $argv
+            $_GX_BIN $argv
         case ''
-            command gx --help
+            $_GX_BIN --help
         case '*'
-            set -l target (command gx resolve $argv[1])
+            set -l target ($_GX_BIN resolve $argv[1])
             if test -n "$target" -a -d "$target"
-                cd $target
+                cd "$target"
             else
                 return 1
             end
@@ -141,7 +166,7 @@ end
 # Tab completion
 complete -c gx -f
 complete -c gx -n "__fish_use_subcommand" -a "clone ls rebuild config resolve open init shell-init --help --version"
-complete -c gx -n "__fish_use_subcommand" -a "(command gx resolve --list 2>/dev/null)"
+complete -c gx -n "__fish_use_subcommand" -a "($_GX_BIN resolve --list 2>/dev/null)"
 complete -c gx -n "__fish_seen_subcommand_from config" -a "set"
 complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost structure shallow similarityThreshold editor"`;
 }
