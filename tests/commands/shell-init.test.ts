@@ -1,4 +1,4 @@
-import { test, expect, describe, beforeEach, afterEach } from "bun:test";
+import { test, expect, describe, beforeEach, afterEach, spyOn } from "bun:test";
 import { shellInit } from "../../src/commands/shell-init.ts";
 
 // Capture stdout by temporarily replacing console.log
@@ -163,29 +163,32 @@ describe("shellInit", () => {
 });
 
 describe("resolveGxBin PATH lookup", () => {
-  test("embeds a path containing 'gx' that is never a runtime", () => {
-    const output = captureOutput(() => shellInit("zsh"));
-    const match = output.match(/_GX_BIN="([^"]+)"/);
-    expect(match).toBeTruthy();
-    const binPath = match![1]!;
-    // Must reference gx (absolute path or bare "gx" fallback), never a runtime
-    expect(binPath).toMatch(/gx$/);
-    expect(binPath).not.toContain("/bun");
-    expect(binPath).not.toContain("/node");
+  let whichSpy: ReturnType<typeof spyOn>;
+
+  afterEach(() => {
+    whichSpy?.mockRestore();
   });
 
-  test("when gx is on PATH, _GX_BIN is absolute and exists on disk", () => {
+  test("when gx is on PATH, _GX_BIN is the absolute path from which()", () => {
+    whichSpy = spyOn(Bun, "which").mockReturnValue("/usr/local/bin/gx");
     const output = captureOutput(() => shellInit("zsh"));
     const match = output.match(/_GX_BIN="([^"]+)"/);
     expect(match).toBeTruthy();
-    const binPath = match![1]!;
-    // On CI, gx may not be installed — bare "gx" fallback is valid
-    if (binPath.startsWith("/")) {
-      const file = Bun.file(binPath);
-      expect(file.size).toBeGreaterThan(0);
-    } else {
-      // Bare fallback: must be exactly "gx"
-      expect(binPath).toBe("gx");
-    }
+    expect(match![1]).toBe("/usr/local/bin/gx");
+  });
+
+  test("when gx is not on PATH, _GX_BIN falls back to bare 'gx'", () => {
+    whichSpy = spyOn(Bun, "which").mockReturnValue(null as unknown as string);
+    const output = captureOutput(() => shellInit("zsh"));
+    const match = output.match(/_GX_BIN="([^"]+)"/);
+    expect(match).toBeTruthy();
+    expect(match![1]).toBe("gx");
+  });
+
+  test("_GX_BIN never contains a runtime path", () => {
+    whichSpy = spyOn(Bun, "which").mockReturnValue("/usr/local/bin/gx");
+    const output = captureOutput(() => shellInit("zsh"));
+    expect(output).not.toMatch(/_GX_BIN=".*\/bun"/);
+    expect(output).not.toMatch(/_GX_BIN=".*\/node"/);
   });
 });
