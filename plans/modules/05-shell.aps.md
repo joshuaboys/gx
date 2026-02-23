@@ -54,3 +54,15 @@ Change status to **Ready** when:
 - **Expected Outcome:** `gx <name>` changes directory, `gx clone <repo>` clones and changes directory, tab completion lists indexed projects
 - **Validation:** `source plugin/gx.plugin.zsh && type gx | head -1` outputs "gx is a shell function"
 - **Files:** `plugin/gx.plugin.zsh`
+
+### SHL-002: Fix resolveGxBin() producing invalid path in dev mode
+
+| Field | Value |
+|-------|-------|
+| Status | Complete: 2026-02-23 |
+| Confidence | high |
+
+- **Intent:** `gx shell-init` run via `bun src/index.ts` baked `_GX_BIN` as `$cwd/bun` instead of the compiled binary path, breaking all shell commands
+- **Expected Outcome:** `resolveGxBin()` detects dev mode (argv[0] is `bun`/`node`) and falls back to `Bun.which("gx")` to find the compiled binary on PATH
+- **Validation:** `bun run src/index.ts shell-init | grep _GX_BIN` outputs the compiled binary path, not a cwd-relative bun path
+- **Files:** `src/commands/shell-init.ts`
