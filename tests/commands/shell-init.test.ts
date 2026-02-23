@@ -18,7 +18,7 @@ describe("shellInit", () => {
   let origShell: string | undefined;
   let origOverride: string | undefined;
   let origExit: typeof process.exit;
-  let origArgv0: string;
+  let origArgv0: string | undefined;
 
   beforeEach(() => {
     origShell = process.env.SHELL;
@@ -39,7 +39,7 @@ describe("shellInit", () => {
       delete process.env.GX_SHELL_OVERRIDE;
     }
     process.exit = origExit;
-    process.argv[0] = origArgv0;
+    process.argv[0] = origArgv0!;
   });
 
   test("explicit zsh outputs zsh integration", () => {
