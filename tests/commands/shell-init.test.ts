@@ -144,11 +144,12 @@ describe("shellInit", () => {
     expect(output).toContain('cd "$target"');
   });
 
-  test("output embeds absolute binary path", () => {
+  test("output embeds binary path", () => {
+    // In dev mode (bun test), argv[0] is "bun" and gx may not be on PATH,
+    // so _GX_BIN falls back to "gx". With a compiled binary, it's absolute.
     const output = captureOutput(() => shellInit("zsh"));
     expect(output).toContain("_GX_BIN=");
-    // Should be an absolute path
-    expect(output).toMatch(/_GX_BIN="\/.*"/);
+    expect(output).toMatch(/_GX_BIN=".*gx.*"/);
   });
 
   test("all shells use $_GX_BIN instead of command gx", () => {
