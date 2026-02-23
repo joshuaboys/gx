@@ -124,7 +124,7 @@ build_from_source() {
   info "Building..."
   cd "$tmpdir/gx"
   bun install --frozen-lockfile || bun install || error "bun install failed"
-  bun run build
+  bun run build || error "bun build failed"
 
   mkdir -p "$INSTALL_DIR"
   cp gx "$GX_BIN"
