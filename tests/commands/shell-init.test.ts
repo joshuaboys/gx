@@ -177,12 +177,19 @@ describe("resolveGxBin PATH lookup", () => {
     expect(match![1]).toBe("/usr/local/bin/gx");
   });
 
-  test("when gx is not on PATH, _GX_BIN falls back to bare 'gx'", () => {
+  test("when gx is not on PATH, _GX_BIN falls back to bare 'gx' and warns", () => {
     whichSpy = spyOn(Bun, "which").mockReturnValue(null as unknown as string);
-    const output = captureOutput(() => shellInit("zsh"));
-    const match = output.match(/_GX_BIN="([^"]+)"/);
-    expect(match).toBeTruthy();
-    expect(match![1]).toBe("gx");
+    const errorSpy = spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const output = captureOutput(() => shellInit("zsh"));
+      const match = output.match(/_GX_BIN="([^"]+)"/);
+      expect(match).toBeTruthy();
+      expect(match![1]).toBe("gx");
+      expect(errorSpy).toHaveBeenCalled();
+      expect(errorSpy.mock.calls[0]![0]).toContain("not found on PATH");
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 
   test("_GX_BIN never contains a runtime path", () => {

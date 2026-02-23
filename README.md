@@ -118,7 +118,9 @@ Creates `.claude/CLAUDE.md` and `.claude/commands/` with plan and review slash c
 ```sh
 gx config                         # show current config
 gx config set projectDir ~/code   # change project directory
-gx config set structure host      # use host/owner/repo layout
+gx config set structure flat      # use repo-only layout
+gx config set structure owner    # use owner/repo layout (default)
+gx config set structure host     # use host/owner/repo layout
 gx config set editor code         # set default editor
 ```
 
@@ -134,12 +136,20 @@ Rescans the project directory and rebuilds the project index.
 
 ## Directory structure
 
-By default, gx uses a flat structure:
+By default, gx uses the `owner` structure:
 
 ```
 ~/Projects/src/
   owner/repo/
   owner/other-repo/
+```
+
+Set `structure` to `flat` for a repo-only layout (no owner prefix):
+
+```
+~/Projects/src/
+  repo/
+  other-repo/
 ```
 
 Set `structure` to `host` for host-prefixed layout:
