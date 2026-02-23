@@ -178,7 +178,7 @@ describe("resolveGxBin PATH lookup", () => {
     const output = captureOutput(() => shellInit("zsh"));
     const match = output.match(/_GX_BIN="([^"]+)"/);
     expect(match).toBeTruthy();
-    const binPath = match![1];
+    const binPath = match![1]!;
     // If which("gx") resolved, the file should exist
     if (binPath !== "gx") {
       const file = Bun.file(binPath);
