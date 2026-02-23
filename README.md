@@ -1,47 +1,30 @@
 # gx
 
-A fast git project manager for cloning, navigating, and organising repositories. Built with TypeScript and Bun.
-
-## Features
-
-- **Organised cloning** --- `gx clone user/repo` clones to a structured directory and cd's into it
-- **Instant navigation** --- `gx <name>` jumps to any indexed project with tab completion
-- **Fuzzy matching** --- misspell a project name and gx suggests the closest match
-- **Editor integration** --- `gx open <name>` opens a project in your preferred editor
-- **Agent scaffolding** --- `gx init` scaffolds `.claude/` configuration for AI-assisted development
-- **Shell integration** --- native support for zsh, bash, and fish with completions
+A fast git project manager for cloning, navigating, and organising repositories.
 
 ## Install
 
-### Prerequisites
+```sh
+curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
+```
 
-- [Bun](https://bun.sh) v1.0+
+This downloads (or builds) the `gx` binary, puts it on your PATH, and sets up shell integration with tab completion. Supports zsh, bash, and fish.
 
-### Build and install
+<details>
+<summary>Manual install</summary>
+
+Requires [Bun](https://bun.sh) v1.0+.
 
 ```sh
 git clone https://github.com/joshuaboys/gx
 cd gx
-bun install
-bun run build
-```
-
-Copy the binary somewhere on your `PATH`:
-
-```sh
+bun install && bun run build
 cp gx ~/.local/bin/
 ```
 
-### Shell integration
+Add shell integration to your config file:
 
-Add one line to your shell config to enable `cd` on clone/jump and tab completion:
-
-**zsh** (`~/.zshrc`):
-```sh
-eval "$(gx shell-init)"
-```
-
-**bash** (`~/.bashrc`):
+**zsh** (`~/.zshrc`) / **bash** (`~/.bashrc`):
 ```sh
 eval "$(gx shell-init)"
 ```
@@ -50,8 +33,7 @@ eval "$(gx shell-init)"
 ```fish
 gx shell-init | source
 ```
-
-Reload your shell and you're good to go.
+</details>
 
 <details>
 <summary>oh-my-zsh (legacy)</summary>
@@ -113,7 +95,7 @@ gx init --force            # overwrite existing .claude/
 
 Creates `.claude/CLAUDE.md` and `.claude/commands/` with plan and review slash commands. Supports project types: `typescript-bun`, `typescript-node`, `rust`, `go`, `python`, `generic`.
 
-### Configuration
+## Configuration
 
 ```sh
 gx config                         # show current config
@@ -126,15 +108,7 @@ gx config set editor code         # set default editor
 
 Config is stored at `~/.config/gx/config.json`.
 
-### Rebuild index
-
-```sh
-gx rebuild
-```
-
-Rescans the project directory and rebuilds the project index.
-
-## Directory structure
+### Directory structure
 
 By default, gx uses the `owner` structure:
 
@@ -160,13 +134,25 @@ Set `structure` to `host` for host-prefixed layout:
   gitlab.com/owner/other-repo/
 ```
 
-## Development
+### Rebuild index
 
 ```sh
-bun test           # run tests
-bun run dev        # run from source
-bun run build      # compile binary
+gx rebuild
 ```
+
+Rescans the project directory and rebuilds the project index.
+
+## Uninstall
+
+```sh
+rm ~/.local/bin/gx
+```
+
+Remove the `# gx` block from your shell config file (`~/.zshrc`, `~/.bashrc`, or `~/.config/fish/conf.d/gx.fish`).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
