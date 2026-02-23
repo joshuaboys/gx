@@ -21,8 +21,20 @@ function detectShell(): Shell | null {
 
 function resolveGxBin(): string {
   // Embed the absolute path to the current gx binary so the generated
-  // wrapper works even when gx is not on PATH (e.g. oh-my-zsh plugin)
-  return resolvePath(process.argv[0] ?? "gx");
+  // wrapper works even when gx is not on PATH (e.g. oh-my-zsh plugin).
+  // In dev mode (bun src/index.ts), process.argv[0] is the bun runtime,
+  // not the compiled gx binary — detect this and fall back to PATH lookup.
+  const argv0 = process.argv[0] ?? "gx";
+  const basename = argv0.split("/").pop() ?? "";
+  if (basename === "bun" || basename === "node") {
+    const found = Bun.which("gx");
+    if (found) return found;
+    console.error(
+      "Warning: running in dev mode and compiled gx not found on PATH.\n" +
+        "Run `bun run build` first, then re-run `gx shell-init`.",
+    );
+  }
+  return resolvePath(argv0);
 }
 
 function zshInit(): string {
