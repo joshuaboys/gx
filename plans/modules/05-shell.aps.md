@@ -63,6 +63,6 @@ Change status to **Ready** when:
 | Confidence | high |
 
 - **Intent:** `gx shell-init` run via `bun src/index.ts` baked `_GX_BIN` as `$cwd/bun` instead of the compiled binary path, breaking all shell commands
-- **Expected Outcome:** `resolveGxBin()` detects dev mode (argv[0] is `bun`/`node`) and falls back to `Bun.which("gx")` to find the compiled binary on PATH
+- **Expected Outcome:** `resolveGxBin()` always uses `which("gx")` to find the compiled binary on PATH, falling back to bare `"gx"` with a warning if not found
 - **Validation:** `bun run src/index.ts shell-init | grep _GX_BIN` outputs the compiled binary path, not a cwd-relative bun path
 - **Files:** `src/commands/shell-init.ts`
