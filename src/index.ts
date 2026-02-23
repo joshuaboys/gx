@@ -9,6 +9,7 @@ import { rebuild } from "./commands/rebuild.ts";
 import { showConfig, setConfig } from "./commands/config.ts";
 import { openProject } from "./commands/open.ts";
 import { initAgent } from "./commands/init.ts";
+import { shellInit } from "./commands/shell-init.ts";
 import pkg from "../package.json";
 
 const VERSION = pkg.version;
@@ -33,6 +34,7 @@ Usage:
   gx config                Show config
   gx config set <key> <v>  Set config value
   gx init                  Scaffold .claude/ agent config
+  gx shell-init [shell]    Print shell integration code
   gx resolve <name>        Resolve project name to path
   gx resolve --list        List all project names
 
@@ -109,6 +111,9 @@ Options:
       await initAgent(process.cwd(), { type, force });
       break;
     }
+    case "shell-init":
+      shellInit(args[1]);
+      break;
     case "resolve":
       if (args[1] === "--list") {
         await resolve("", indexPath, config, true);
