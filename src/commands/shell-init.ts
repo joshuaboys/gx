@@ -1,5 +1,3 @@
-import { which } from "bun";
-
 const SUPPORTED_SHELLS = ["zsh", "bash", "fish"] as const;
 type Shell = (typeof SUPPORTED_SHELLS)[number];
 
@@ -24,7 +22,7 @@ function resolveGxBin(): string {
   // (it may resolve to a nonexistent build-time path), so always
   // prefer PATH lookup. Fall back to "gx" for bare PATH resolution
   // in the generated shell code if the binary isn't installed yet.
-  const found = which("gx");
+  const found = Bun.which("gx");
   if (found) return found;
 
   console.error(
