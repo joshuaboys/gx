@@ -9,39 +9,62 @@ A fast git project manager for cloning, navigating, and organising repositories.
 - **Fuzzy matching** --- misspell a project name and gx suggests the closest match
 - **Editor integration** --- `gx open <name>` opens a project in your preferred editor
 - **Agent scaffolding** --- `gx init` scaffolds `.claude/` configuration for AI-assisted development
-- **Shell integration** --- oh-my-zsh plugin for `cd`, completions, and shell functions
+- **Shell integration** --- native support for zsh, bash, and fish with completions
 
 ## Install
 
 ### Prerequisites
 
 - [Bun](https://bun.sh) v1.0+
-- zsh with [oh-my-zsh](https://ohmyz.sh)
 
 ### Build and install
 
 ```sh
 git clone https://github.com/joshuaboys/gx
 cd gx
-
-# Build the binary
+bun install
 bun run build
-
-# Install the zsh plugin
-ln -s "$(pwd)/plugin" ~/.oh-my-zsh/custom/plugins/gx
 ```
 
-Add `gx` to your oh-my-zsh plugins in `~/.zshrc`:
+Copy the binary somewhere on your `PATH`:
 
 ```sh
-plugins=(git gx)
+cp gx ~/.local/bin/
 ```
 
-Reload your shell:
+### Shell integration
+
+Add one line to your shell config to enable `cd` on clone/jump and tab completion:
+
+**zsh** (`~/.zshrc`):
+```sh
+eval "$(gx shell-init)"
+```
+
+**bash** (`~/.bashrc`):
+```sh
+eval "$(gx shell-init)"
+```
+
+**fish** (`~/.config/fish/conf.d/gx.fish`):
+```fish
+gx shell-init | source
+```
+
+Reload your shell and you're good to go.
+
+<details>
+<summary>oh-my-zsh (legacy)</summary>
+
+If you already use gx as an oh-my-zsh plugin, it still works:
 
 ```sh
-source ~/.zshrc
+ln -s /path/to/gx/plugin ~/.oh-my-zsh/custom/plugins/gx
+# add gx to plugins=(...) in ~/.zshrc
 ```
+
+The plugin file now delegates to `gx shell-init` internally.
+</details>
 
 ## Usage
 
