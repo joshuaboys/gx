@@ -140,7 +140,7 @@ setup_shell() {
   rc_file=$(shell_rc_file "$shell")
 
   if [ -z "$rc_file" ]; then
-    warn "Unrecognized shell ($shell). Add shell integration manually:"
+    warn "Unrecognised shell ($shell). Add shell integration manually:"
     echo '  eval "$(gx shell-init)"'
     return
   fi
