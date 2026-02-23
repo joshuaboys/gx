@@ -16,10 +16,12 @@ function captureOutput(fn: () => void): string {
 
 describe("shellInit", () => {
   let origShell: string | undefined;
+  let origOverride: string | undefined;
   let origExit: typeof process.exit;
 
   beforeEach(() => {
     origShell = process.env.SHELL;
+    origOverride = process.env.GX_SHELL_OVERRIDE;
     origExit = process.exit;
   });
 
@@ -29,6 +31,11 @@ describe("shellInit", () => {
     } else {
       delete process.env.SHELL;
     }
+    if (origOverride !== undefined) {
+      process.env.GX_SHELL_OVERRIDE = origOverride;
+    } else {
+      delete process.env.GX_SHELL_OVERRIDE;
+    }
     process.exit = origExit;
   });
 
@@ -36,7 +43,7 @@ describe("shellInit", () => {
     const output = captureOutput(() => shellInit("zsh"));
     expect(output).toContain("gx()");
     expect(output).toContain("compdef _gx gx");
-    expect(output).toContain("command gx clone");
+    expect(output).toContain("_GX_BIN=");
   });
 
   test("explicit bash outputs bash integration", () => {
@@ -69,6 +76,13 @@ describe("shellInit", () => {
     process.env.SHELL = "/usr/bin/fish";
     const output = captureOutput(() => shellInit());
     expect(output).toContain("complete -c gx");
+  });
+
+  test("GX_SHELL_OVERRIDE takes priority over SHELL", () => {
+    process.env.SHELL = "/bin/zsh";
+    process.env.GX_SHELL_OVERRIDE = "bash";
+    const output = captureOutput(() => shellInit());
+    expect(output).toContain("complete -F _gx_completions gx");
   });
 
   test("unsupported shell exits with error", () => {
@@ -117,8 +131,27 @@ describe("shellInit", () => {
     expect(output).toContain('cd "$output"');
   });
 
-  test("fish clone handler uses cd", () => {
+  test("fish clone handler uses quoted cd", () => {
     const output = captureOutput(() => shellInit("fish"));
-    expect(output).toContain("cd $output");
+    expect(output).toContain('cd "$output"');
+  });
+
+  test("fish jump handler uses quoted cd", () => {
+    const output = captureOutput(() => shellInit("fish"));
+    expect(output).toContain('cd "$target"');
+  });
+
+  test("output embeds absolute binary path", () => {
+    const output = captureOutput(() => shellInit("zsh"));
+    expect(output).toContain("_GX_BIN=");
+    // Should be an absolute path
+    expect(output).toMatch(/_GX_BIN="\/.*"/);
+  });
+
+  test("all shells use $_GX_BIN instead of command gx", () => {
+    for (const shell of ["zsh", "bash", "fish"] as const) {
+      const output = captureOutput(() => shellInit(shell));
+      expect(output).not.toContain("command gx");
+    }
   });
 });
