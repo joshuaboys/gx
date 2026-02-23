@@ -1,4 +1,5 @@
-import { resolve as resolvePath } from "path";
+import { resolve as resolvePath, basename } from "path";
+import { which } from "bun";
 
 const SUPPORTED_SHELLS = ["zsh", "bash", "fish"] as const;
 type Shell = (typeof SUPPORTED_SHELLS)[number];
@@ -25,14 +26,14 @@ function resolveGxBin(): string {
   // In dev mode (bun src/index.ts), process.argv[0] is the bun runtime,
   // not the compiled gx binary — detect this and fall back to PATH lookup.
   const argv0 = process.argv[0] ?? "gx";
-  const basename = argv0.split("/").pop() ?? "";
-  if (basename === "bun" || basename === "node") {
-    const found = Bun.which("gx");
+  if (basename(argv0) === "bun") {
+    const found = which("gx");
     if (found) return found;
     console.error(
       "Warning: running in dev mode and compiled gx not found on PATH.\n" +
         "Run `bun run build` first, then re-run `gx shell-init`.",
     );
+    return "gx";
   }
   return resolvePath(argv0);
 }
