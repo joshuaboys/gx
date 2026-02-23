@@ -161,3 +161,28 @@ describe("shellInit", () => {
     expect(output).not.toMatch(/_GX_BIN=".*\/bun"/);
   });
 });
+
+describe("resolveGxBin PATH lookup", () => {
+  test("embeds an absolute path containing 'gx' when found on PATH", () => {
+    // In the test environment, gx is installed so which("gx") returns a real path
+    const output = captureOutput(() => shellInit("zsh"));
+    const match = output.match(/_GX_BIN="([^"]+)"/);
+    expect(match).toBeTruthy();
+    const binPath = match![1];
+    // Must be an absolute path to the gx binary, not a runtime like bun
+    expect(binPath).toMatch(/^\/.*gx$/);
+    expect(binPath).not.toContain("/bun");
+  });
+
+  test("_GX_BIN path actually exists on disk", () => {
+    const output = captureOutput(() => shellInit("zsh"));
+    const match = output.match(/_GX_BIN="([^"]+)"/);
+    expect(match).toBeTruthy();
+    const binPath = match![1];
+    // If which("gx") resolved, the file should exist
+    if (binPath !== "gx") {
+      const file = Bun.file(binPath);
+      expect(file.size).toBeGreaterThan(0);
+    }
+  });
+});
