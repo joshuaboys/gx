@@ -84,6 +84,13 @@ describe("setConfig", () => {
     expect(config.structure).toBe("flat");
   });
 
+  test("accepts valid structure value 'owner'", async () => {
+    const configPath = join(tmpDir, "config.json");
+    await setConfig(configPath, "structure", "owner");
+    const config = await loadConfig(configPath);
+    expect(config.structure).toBe("owner");
+  });
+
   test("accepts valid structure value 'host'", async () => {
     const configPath = join(tmpDir, "config.json");
     await setConfig(configPath, "structure", "host");

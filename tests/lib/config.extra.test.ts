@@ -47,7 +47,7 @@ describe("loadConfig validation", () => {
     const configPath = join(tmpDir, "config.json");
     await Bun.write(configPath, JSON.stringify({ structure: "invalid" }));
     const config = await loadConfig(configPath);
-    expect(config.structure).toBe("flat");
+    expect(config.structure).toBe("owner");
   });
 
   test("rejects non-number similarityThreshold and uses default", async () => {

@@ -30,7 +30,7 @@ function validateConfig(raw: unknown): Config {
         ? obj.defaultHost
         : DEFAULT_CONFIG.defaultHost,
     structure:
-      obj.structure === "flat" || obj.structure === "host"
+      obj.structure === "flat" || obj.structure === "owner" || obj.structure === "host"
         ? obj.structure
         : DEFAULT_CONFIG.structure,
     shallow:
