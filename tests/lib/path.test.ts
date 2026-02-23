@@ -10,7 +10,16 @@ const repo: ParsedRepo = {
   originalUrl: "https://github.com/juev/gclone",
 };
 
-test("flat structure: owner/repo", () => {
+test("flat structure: repo only", () => {
+  const config: Config = {
+    ...DEFAULT_CONFIG,
+    projectDir: "/home/user/src",
+    structure: "flat",
+  };
+  expect(toPath(repo, config)).toBe("/home/user/src/gclone");
+});
+
+test("owner structure: owner/repo", () => {
   const config: Config = { ...DEFAULT_CONFIG, projectDir: "/home/user/src" };
   expect(toPath(repo, config)).toBe("/home/user/src/juev/gclone");
 });

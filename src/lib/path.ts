@@ -7,5 +7,8 @@ export function toPath(parsed: ParsedRepo, config: Config): string {
   if (config.structure === "host") {
     return join(base, parsed.host, parsed.owner, parsed.repo);
   }
+  if (config.structure === "flat") {
+    return join(base, parsed.repo);
+  }
   return join(base, parsed.owner, parsed.repo);
 }
