@@ -1,4 +1,3 @@
-import { resolve as resolvePath, basename } from "path";
 import { which } from "bun";
 
 const SUPPORTED_SHELLS = ["zsh", "bash", "fish"] as const;
@@ -21,21 +20,19 @@ function detectShell(): Shell | null {
 }
 
 function resolveGxBin(): string {
-  // Embed the absolute path to the current gx binary so the generated
-  // wrapper works even when gx is not on PATH (e.g. oh-my-zsh plugin).
-  // In dev mode (bun src/index.ts), process.argv[0] is the bun runtime,
-  // not the compiled gx binary — detect this and fall back to PATH lookup.
-  const argv0 = process.argv[0] ?? "gx";
-  if (basename(argv0) === "bun") {
-    const found = which("gx");
-    if (found) return found;
-    console.error(
-      "Warning: running in dev mode and compiled gx not found on PATH.\n" +
-        "Run `bun run build` first, then re-run `gx shell-init`.",
-    );
-    return "gx";
-  }
-  return resolvePath(argv0);
+  // Bun compiled binaries don't report a reliable process.argv[0]
+  // (it may resolve to a nonexistent build-time path), so always
+  // prefer PATH lookup. Fall back to "gx" for bare PATH resolution
+  // in the generated shell code if the binary isn't installed yet.
+  const found = which("gx");
+  if (found) return found;
+
+  console.error(
+    "Warning: compiled gx not found on PATH.\n" +
+      "The generated shell code will use bare `gx` and require it on PATH.\n" +
+      "Run `bun run build` and ensure gx is on your PATH, then re-run `gx shell-init`.",
+  );
+  return "gx";
 }
 
 function zshInit(): string {

@@ -18,13 +18,11 @@ describe("shellInit", () => {
   let origShell: string | undefined;
   let origOverride: string | undefined;
   let origExit: typeof process.exit;
-  let origArgv0: string | undefined;
 
   beforeEach(() => {
     origShell = process.env.SHELL;
     origOverride = process.env.GX_SHELL_OVERRIDE;
     origExit = process.exit;
-    origArgv0 = process.argv[0];
   });
 
   afterEach(() => {
@@ -39,7 +37,6 @@ describe("shellInit", () => {
       delete process.env.GX_SHELL_OVERRIDE;
     }
     process.exit = origExit;
-    process.argv[0] = origArgv0!;
   });
 
   test("explicit zsh outputs zsh integration", () => {
@@ -144,12 +141,11 @@ describe("shellInit", () => {
     expect(output).toContain('cd "$target"');
   });
 
-  test("output embeds binary path", () => {
-    // In dev mode (bun test), argv[0] is "bun" and gx may not be on PATH,
-    // so _GX_BIN falls back to "gx". With a compiled binary, it's absolute.
+  test("output embeds binary path via PATH lookup", () => {
     const output = captureOutput(() => shellInit("zsh"));
     expect(output).toContain("_GX_BIN=");
-    expect(output).toMatch(/_GX_BIN=".*gx.*"/);
+    // Should resolve to gx on PATH or fall back to bare "gx"
+    expect(output).toMatch(/_GX_BIN=".*gx"/);
   });
 
   test("all shells use $_GX_BIN instead of command gx", () => {
@@ -159,24 +155,9 @@ describe("shellInit", () => {
     }
   });
 
-  test("dev mode (argv[0]=bun) falls back to gx on PATH", () => {
-    process.argv[0] = "bun";
+  test("_GX_BIN never contains bun runtime path", () => {
     const output = captureOutput(() => shellInit("zsh"));
-    // Should resolve to the compiled gx binary on PATH, not cwd/bun
-    expect(output).not.toContain("/bun");
-    expect(output).toMatch(/_GX_BIN=".*gx"/);
-  });
-
-  test("dev mode with full bun path falls back to gx on PATH", () => {
-    process.argv[0] = "/home/user/.bun/bin/bun";
-    const output = captureOutput(() => shellInit("zsh"));
-    expect(output).not.toContain("/bun");
-    expect(output).toMatch(/_GX_BIN=".*gx"/);
-  });
-
-  test("compiled binary path is used directly", () => {
-    process.argv[0] = "/home/user/.local/bin/gx";
-    const output = captureOutput(() => shellInit("zsh"));
-    expect(output).toContain('_GX_BIN="/home/user/.local/bin/gx"');
+    // Should never embed the bun runtime as the binary
+    expect(output).not.toMatch(/_GX_BIN=".*\/bun"/);
   });
 });
