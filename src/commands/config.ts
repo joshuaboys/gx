@@ -1,7 +1,7 @@
 import { loadConfig, saveConfig } from "../lib/config.ts";
 import type { Config } from "../types.ts";
 
-const VALID_STRUCTURES = new Set(["flat", "host"]);
+const VALID_STRUCTURES = new Set(["flat", "owner", "host"]);
 
 export async function showConfig(configPath: string): Promise<void> {
   const config = await loadConfig(configPath);
@@ -25,7 +25,7 @@ export async function setConfig(
   if (key === "structure") {
     if (!VALID_STRUCTURES.has(value)) {
       console.error(`Invalid structure value: ${value}`);
-      console.error(`Valid values: flat, host`);
+      console.error(`Valid values: flat, owner, host`);
       process.exit(1);
     }
     record[key] = value;

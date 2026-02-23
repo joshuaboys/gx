@@ -1,7 +1,7 @@
 export interface Config {
   projectDir: string;
   defaultHost: string;
-  structure: "flat" | "host";
+  structure: "flat" | "owner" | "host";
   shallow: boolean;
   similarityThreshold: number;
   editor: string;
@@ -10,7 +10,7 @@ export interface Config {
 export const DEFAULT_CONFIG: Config = {
   projectDir: "~/Projects/src",
   defaultHost: "github.com",
-  structure: "flat",
+  structure: "owner",
   shallow: false,
   similarityThreshold: 0.7,
   editor: "",
