@@ -39,7 +39,20 @@ detect_shell() {
 shell_rc_file() {
   case "$1" in
     zsh)  echo "$HOME/.zshrc" ;;
-    bash) echo "$HOME/.bashrc" ;;
+    bash)
+      case "$(uname -s)" in
+        Darwin*)
+          if [ -f "$HOME/.bash_profile" ]; then
+            echo "$HOME/.bash_profile"
+          elif [ -f "$HOME/.profile" ]; then
+            echo "$HOME/.profile"
+          else
+            echo "$HOME/.bashrc"
+          fi
+          ;;
+        *) echo "$HOME/.bashrc" ;;
+      esac
+      ;;
     fish) echo "$HOME/.config/fish/conf.d/gx.fish" ;;
     *)    echo "" ;;
   esac
@@ -103,14 +116,14 @@ build_from_source() {
 
   info "Cloning gx..."
   if command_exists git; then
-    git clone --depth 1 "https://github.com/${REPO}.git" "$tmpdir/gx" 2>/dev/null
+    git clone --depth 1 "https://github.com/${REPO}.git" "$tmpdir/gx"
   else
     error "Git is required to build from source"
   fi
 
   info "Building..."
   cd "$tmpdir/gx"
-  bun install --frozen-lockfile 2>/dev/null || bun install
+  bun install --frozen-lockfile || bun install || error "bun install failed"
   bun run build
 
   mkdir -p "$INSTALL_DIR"
@@ -127,7 +140,7 @@ setup_shell() {
   rc_file=$(shell_rc_file "$shell")
 
   if [ -z "$rc_file" ]; then
-    warn "Unrecognised shell ($shell). Add shell integration manually:"
+    warn "Unrecognized shell ($shell). Add shell integration manually:"
     echo '  eval "$(gx shell-init)"'
     return
   fi
@@ -195,8 +208,8 @@ main() {
     build_from_source
   fi
 
-  ensure_path
   setup_shell
+  ensure_path
 
   echo ""
   info "gx installed to $GX_BIN"

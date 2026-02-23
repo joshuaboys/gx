@@ -1,6 +1,6 @@
 # gx
 
-A fast git project manager for cloning, navigating, and organising repositories.
+A fast git project manager for cloning, navigating, and organizing repositories.
 
 ## Install
 
