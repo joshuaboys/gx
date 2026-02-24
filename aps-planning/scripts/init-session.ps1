@@ -133,7 +133,8 @@ try {
         if (-not (Test-Path .claude -PathType Container)) {
             New-Item -ItemType Directory -Path .claude -Force | Out-Null
         }
-        git rev-parse HEAD 2>$null | Out-File -FilePath .claude/.aps-session-baseline -Encoding utf8 -NoNewline -ErrorAction SilentlyContinue
+        $hash = (git rev-parse HEAD 2>$null)
+        if ($hash) { [IO.File]::WriteAllText(".claude/.aps-session-baseline", $hash.Trim()) }
     }
 } catch {
     # Silently ignore git errors (not in a repo, etc.)

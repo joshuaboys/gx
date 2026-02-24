@@ -53,7 +53,6 @@ add_result() {
 print_text_results() {
   local current_file=""
   local file_has_issues=false
-  local files_with_issues=0
 
   for result in "${FILE_RESULTS[@]}"; do
     IFS='|' read -r path type code message line <<< "$result"
@@ -74,7 +73,6 @@ print_text_results() {
 
     if [[ "$code" != "OK" ]]; then
       file_has_issues=true
-      ((files_with_issues++)) || true
 
       local color="$RED"
       [[ "$type" == "warning" ]] && color="$YELLOW"
@@ -126,7 +124,6 @@ print_json_results() {
   local file_type=""
   local errors=""
   local warnings=""
-  local first_file=true
 
   for result in "${FILE_RESULTS[@]}"; do
     IFS='|' read -r path type code message line <<< "$result"

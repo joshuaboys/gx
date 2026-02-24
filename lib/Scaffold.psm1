@@ -29,6 +29,12 @@ $script:SkillFiles = @(
     "scaffold/aps-planning/scripts/pre-tool-check.sh"
     "scaffold/aps-planning/scripts/post-tool-nudge.sh"
     "scaffold/aps-planning/scripts/enforce-plan-update.sh"
+    "scaffold/aps-planning/scripts/install-hooks.ps1"
+    "scaffold/aps-planning/scripts/init-session.ps1"
+    "scaffold/aps-planning/scripts/check-complete.ps1"
+    "scaffold/aps-planning/scripts/pre-tool-check.ps1"
+    "scaffold/aps-planning/scripts/post-tool-nudge.ps1"
+    "scaffold/aps-planning/scripts/enforce-plan-update.ps1"
 )
 
 # Files to download for slash commands
@@ -445,7 +451,7 @@ function Invoke-ApsUpdate {
     } else {
         Write-Host ""
         Write-ApsInfo "Hooks already configured (not modified)."
-        Write-Host "  To update: ./aps-planning/scripts/install-hooks.sh"
+        Write-Host "  To update: ./aps-planning/scripts/install-hooks.ps1"
     }
 
     Write-Host ""
