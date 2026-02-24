@@ -51,7 +51,7 @@ src/
     config.ts           # Config file management (~/.config/gx/config.json)
     detect.ts           # Project type detection
     fuzzy.ts            # Fuzzy matching for project names
-    index.ts            # Lib barrel exports
+    index.ts            # ProjectIndex class (project registry, rebuild, save/load)
     path.ts             # Path resolution and project indexing
     templates.ts        # .claude/ scaffolding templates
     url.ts              # Git URL parsing

@@ -61,14 +61,14 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 | Module | Purpose | Status | Version | Dependencies |
 |--------|---------|--------|---------|--------------|
-| [URL & Path](./modules/01-url.aps.md) | Parse git URLs and map to filesystem paths | Complete | v1 | — |
-| [Clone](./modules/02-clone.aps.md) | Clone repos to organized directories | Complete | v1 | URL |
-| [Index](./modules/03-index.aps.md) | Track projects and resolve names to paths | Complete | v1 | — |
-| [CLI](./modules/04-cli.aps.md) | Subcommand routing and argument parsing | Complete | v1 | URL, Clone, Index |
-| [Shell Plugin](./modules/05-shell.aps.md) | Zsh plugin for cd, completion, and shell integration | Complete | v1 | CLI |
-| [Fuzzy Matching](./modules/06-fuzzy.aps.md) | Suggest closest matches when exact project name not found | Complete | v2 | Index |
-| [Editor Integration](./modules/07-editor.aps.md) | Open projects in preferred editor | Complete | v2 | Index, CLI |
-| [Agent Scaffolding](./modules/08-agent.aps.md) | Scaffold AI agent configuration for projects | Complete | v2 | CLI |
+| [URL & Path](./archive/modules/01-url.aps.md) | Parse git URLs and map to filesystem paths | Complete (archived) | v1 | — |
+| [Clone](./archive/modules/02-clone.aps.md) | Clone repos to organized directories | Complete (archived) | v1 | URL |
+| [Index](./archive/modules/03-index.aps.md) | Track projects and resolve names to paths | Complete (archived) | v1 | — |
+| [CLI](./archive/modules/04-cli.aps.md) | Subcommand routing and argument parsing | Complete (archived) | v1 | URL, Clone, Index |
+| [Shell Plugin](./archive/modules/05-shell.aps.md) | Zsh plugin for cd, completion, and shell integration | Complete (archived) | v1 | CLI |
+| [Fuzzy Matching](./archive/modules/06-fuzzy.aps.md) | Suggest closest matches when exact project name not found | Complete (archived) | v2 | Index |
+| [Editor Integration](./archive/modules/07-editor.aps.md) | Open projects in preferred editor | Complete (archived) | v2 | Index, CLI |
+| [Agent Scaffolding](./archive/modules/08-agent.aps.md) | Scaffold AI agent configuration for projects | Complete (archived) | v2 | CLI |
 | [Tracking](./modules/09-tracking.aps.md) | Record project visits and enable recency-based navigation | Draft | v3 | Index |
 | [Dashboard](./modules/10-dashboard.aps.md) | Colored ANSI overview of all projects grouped by git status | Draft | v3 | Index, Tracking |
 | [Hooks](./modules/11-hooks.aps.md) | Per-project onEnter commands with trust/allow safety | Future | v4 | Shell Plugin |
@@ -97,12 +97,12 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 ## Open Questions
 
 - [x] Which language? — TypeScript/Bun
-- [x] Directory structure? — Flat (user/repo) by default, configurable
+- [x] Directory structure? — Owner/repo by default (`owner`), configurable to `flat` or `host`
 - [x] Default host? — github.com
 - [x] Should `gx rebuild` run automatically on a schedule or only manually? — Manual only for v1
-- [ ] Which fuzzy matching algorithm? (Levenshtein, Jaro-Winkler, or substring containment)
+- [x] Which fuzzy matching algorithm? — Jaro-Winkler (implemented in `src/lib/fuzzy.ts`)
+- [x] Should `gx init` overwrite existing `.claude/CLAUDE.md` or merge? — Refuse without `--force`; no merge
 - [ ] Should `gx open` support opening specific files within a project?
-- [ ] Should `gx init` overwrite existing `.claude/CLAUDE.md` or merge?
 - [ ] Should `gx recent` show a configurable default count or always show all?
 - [ ] What git commands should `gx resume` run for context? (`git status --short`, `git log -1 --oneline`, `git branch --show-current`)
 - [ ] Should `gx dash` fetch remotes before reporting ahead/behind, or use local state only?
@@ -112,9 +112,9 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 ## Decisions
 
-- **D-001:** Flat directory structure (user/repo) by default, `host` mode (host/user/repo) via config — *accepted*
+- **D-001:** Owner/repo directory structure by default (`owner`), `flat` (repo only) and `host` (host/owner/repo) modes via config — *accepted*
 - **D-002:** github.com as default host for shorthand `user/repo` — *accepted*
-- **D-003:** Binary + zsh plugin architecture — *accepted*
+- **D-003:** Binary + multi-shell integration architecture — `gx shell-init` generates eval-able code for zsh, bash, and fish; `plugin/gx.plugin.zsh` is a legacy oh-my-zsh compatibility shim — *accepted*
 - **D-004:** `gx <name>` as default action (jump to project) — *accepted*
 - **D-005:** Dashboard uses local git state only — no remote fetch on `gx dash` (too slow for multi-project scan) — *proposed*
 - **D-006:** `lastVisited` is an optional field on IndexEntry — backward compatible, no migration needed — *proposed*

@@ -15,7 +15,13 @@ afterEach(async () => {
 });
 
 describe("detectProjectType", () => {
-  test("detects typescript-bun when package.json and bun.lockb exist", async () => {
+  test("detects typescript-bun when package.json and bun.lock (text format) exist", async () => {
+    await Bun.write(join(tmpDir, "package.json"), "{}");
+    await Bun.write(join(tmpDir, "bun.lock"), "{}");
+    expect(await detectProjectType(tmpDir)).toBe("typescript-bun");
+  });
+
+  test("detects typescript-bun when package.json and bun.lockb (binary format) exist", async () => {
     await Bun.write(join(tmpDir, "package.json"), "{}");
     await Bun.write(join(tmpDir, "bun.lockb"), "");
     expect(await detectProjectType(tmpDir)).toBe("typescript-bun");
@@ -52,7 +58,7 @@ describe("detectProjectType", () => {
 
   test("prefers typescript-bun over rust when both exist", async () => {
     await Bun.write(join(tmpDir, "package.json"), "{}");
-    await Bun.write(join(tmpDir, "bun.lockb"), "");
+    await Bun.write(join(tmpDir, "bun.lock"), "{}");
     await Bun.write(join(tmpDir, "Cargo.toml"), "");
     expect(await detectProjectType(tmpDir)).toBe("typescript-bun");
   });

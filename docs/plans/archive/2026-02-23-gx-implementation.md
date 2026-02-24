@@ -1,3 +1,5 @@
+<!-- Archived: 2026-02-24 | Reason: v1 build complete — historical record of initial construction -->
+
 # gx Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

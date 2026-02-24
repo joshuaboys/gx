@@ -3,3 +3,23 @@
 
 # Compiled binary
 /gx
+
+# Dependencies
+node_modules/
+
+# Bun lockfile (text format, committed; exclude binary format if ever generated)
+bun.lockb
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Editor artefacts
+.idea/
+*.swp
+*.swo

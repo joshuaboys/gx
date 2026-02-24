@@ -41,7 +41,7 @@ describe("initAgent", () => {
 
   test("detects typescript-bun project type", async () => {
     await Bun.write(join(tmpDir, "package.json"), "{}");
-    await Bun.write(join(tmpDir, "bun.lockb"), "");
+    await Bun.write(join(tmpDir, "bun.lock"), "{}");
     await initAgent(tmpDir, {});
     const content = await Bun.file(
       join(tmpDir, ".claude", "CLAUDE.md"),

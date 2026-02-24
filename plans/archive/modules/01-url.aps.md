@@ -1,3 +1,5 @@
+<!-- Archived: 2026-02-24 | Reason: All work items complete -->
+
 # URL Parsing & Path Mapping
 
 | ID | Owner | Status |
