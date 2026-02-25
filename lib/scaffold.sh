@@ -47,6 +47,7 @@ CLI_FILES=(
   "bin/aps.ps1"
   "lib/output.sh"
   "lib/Output.psm1"
+  "lib/config.sh"
   "lib/lint.sh"
   "lib/Lint.psm1"
   "lib/scaffold.sh"
