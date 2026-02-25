@@ -62,6 +62,11 @@ Change status to **Ready** when:
 - **Expected Outcome:** Add migration/doctor workflow contract for future schema bumps.
 - **Validation:** `./bin/aps --help` includes migration/doctor path (or documented placeholder) and docs reference migration flow.
 
+### APSCFG-005: Future option — lint gateway enforcement (deferred)
+- **Intent:** Keep strict planning-rule enforcement as an explicit future option without blocking current rollout.
+- **Expected Outcome:** Planning docs record lint-gateway as deferred (`Maybe/Future`) with trigger conditions for adoption.
+- **Validation:** `plans/index.aps.md` or module notes include deferred-item reference.
+
 ## Execution *(optional)*
 
 Steps: [../execution/APSCFG.steps.md](../execution/APSCFG.steps.md)
