@@ -10,7 +10,7 @@
 
 ## APSCFG-002 — Init-time preference capture
 
-1. Add minimal interactive prompts for verification strictness and gate enforcement.
-2. Persist selected values into `.apsrc.yaml`.
+1. Add minimal interactive prompts for profile, verification strictness, and fallback adapters.
+2. Persist selected preference values into `.apsrc.yaml`.
 3. Keep non-interactive mode deterministic via safe defaults.
 4. Verify generated config for both interactive and non-interactive paths.

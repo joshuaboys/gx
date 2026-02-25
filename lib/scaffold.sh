@@ -105,7 +105,7 @@ ask_choice() {
   if [[ -t 0 ]]; then
     local hint
     hint="$(IFS='/'; echo "${options[*]}")"
-    printf "%s [%s] (default: %s) " "$prompt" "$hint" "$default"
+    printf "%s [%s] (default: %s) " "$prompt" "$hint" "$default" >&2
     read -r answer
     answer="${answer:-$default}"
 
@@ -333,7 +333,8 @@ cmd_init() {
   install_commands "$target"
   info ".claude/commands/ (plan, plan-status)"
 
-  # Project APS policy config
+  # Project APS policy config (bash scaffold path)
+  # NOTE: PowerShell scaffold parity is tracked separately.
   write_apsrc_config "$target"
 
   echo ""
@@ -444,7 +445,13 @@ cmd_update() {
 
   # Config (optional on update for existing projects)
   if [[ ! -f "$target/.apsrc.yaml" ]]; then
-    if ask_yn "No .apsrc.yaml found. Generate project APS policy now?" "y"; then
+    # Avoid side effects in non-interactive contexts (CI/automation)
+    local apsrc_default="y"
+    if [[ ! -t 0 ]]; then
+      apsrc_default="n"
+    fi
+
+    if ask_yn "No .apsrc.yaml found. Generate project APS policy now?" "$apsrc_default"; then
       write_apsrc_config "$target"
     else
       info "Skipped .apsrc.yaml generation (you can add it later)."
