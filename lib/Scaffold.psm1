@@ -41,6 +41,7 @@ $script:CommandFiles = @(
 $script:CliFilesBash = @(
     "bin/aps"
     "lib/output.sh"
+    "lib/config.sh"
     "lib/lint.sh"
     "lib/scaffold.sh"
     "lib/rules/common.sh"
