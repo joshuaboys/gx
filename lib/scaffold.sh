@@ -95,6 +95,88 @@ ask_yn() {
   fi
 }
 
+# Prompt user to select one value from a list. Non-interactive returns default.
+ask_choice() {
+  local prompt="$1"
+  local default="$2"
+  shift 2
+  local options=("$@")
+
+  if [[ -t 0 ]]; then
+    local hint
+    hint="$(IFS='/'; echo "${options[*]}")"
+    printf "%s [%s] (default: %s) " "$prompt" "$hint" "$default"
+    read -r answer
+    answer="${answer:-$default}"
+
+    local opt
+    for opt in "${options[@]}"; do
+      if [[ "$answer" == "$opt" ]]; then
+        echo "$answer"
+        return 0
+      fi
+    done
+
+    echo "$default"
+    return 0
+  fi
+
+  echo "$default"
+}
+
+write_apsrc_config() {
+  local target="$1"
+  local config_file="$target/.apsrc.yaml"
+
+  if [[ -f "$config_file" ]]; then
+    info ".apsrc.yaml already exists (left unchanged)"
+    return 0
+  fi
+
+  local profile
+  local verification
+  local fallback_adapters="true"
+
+  profile="$(ask_choice "Select APS profile" "startup-ceo" "startup-ceo" "enterprise" "solo-builder" "custom")"
+  verification="$(ask_choice "Verification strictness" "strict" "strict" "standard")"
+
+  if ask_yn "Enable fallback adapters when native capability is missing?" "y"; then
+    fallback_adapters="true"
+  else
+    fallback_adapters="false"
+  fi
+
+  cat > "$config_file" <<EOF
+version: 1
+
+mode:
+  planning: native
+  execution: gated
+  verification: $verification
+
+adapters:
+  enableFallbackAdapters: $fallback_adapters
+  requireSchemaNormalization: true
+
+gates:
+  requireDesignDrill: true
+  requireProofForProgress: true
+  requireDodForDone: true
+  blockerEscalationMinutes: 5
+
+artifacts:
+  plansDir: plans
+  templatesDir: plans/templates
+  statusSchema: aps-v1
+
+init:
+  askOnBootstrap: true
+  profile: $profile
+EOF
+
+  info "Generated .apsrc.yaml (project APS policy)"
+}
+
 # Check if APS hooks are already configured
 has_aps_hooks() {
   local target="${1:-.}"
@@ -251,6 +333,9 @@ cmd_init() {
   install_commands "$target"
   info ".claude/commands/ (plan, plan-status)"
 
+  # Project APS policy config
+  write_apsrc_config "$target"
+
   echo ""
   echo "  bin/"
   echo "  └── aps                              <- CLI (lint, init, update)"
@@ -276,6 +361,8 @@ cmd_init() {
   echo "  .claude/commands/"
   echo "  ├── plan.md                          <- /plan command"
   echo "  └── plan-status.md                   <- /plan-status command"
+  echo ""
+  echo "  .apsrc.yaml                          <- Project APS policy (versioned)"
 
   # Hooks
   prompt_hooks "$target"
@@ -299,7 +386,7 @@ Usage:
   aps init [target-dir]
 
 Creates bin/aps CLI, plans/, aps-planning/ skill, .claude/commands/,
-and optionally installs hooks and sets up PATH via direnv.
+project policy file (.apsrc.yaml), and optionally installs hooks + PATH via direnv.
 
 Refuses to run if plans/ already exists.
 
@@ -354,6 +441,15 @@ cmd_update() {
   # Commands
   install_commands "$target"
   info ".claude/commands/ (plan, plan-status)"
+
+  # Config (optional on update for existing projects)
+  if [[ ! -f "$target/.apsrc.yaml" ]]; then
+    if ask_yn "No .apsrc.yaml found. Generate project APS policy now?" "y"; then
+      write_apsrc_config "$target"
+    else
+      info "Skipped .apsrc.yaml generation (you can add it later)."
+    fi
+  fi
 
   # Hooks: prompt only if not already configured
   if ! has_aps_hooks "$target"; then
