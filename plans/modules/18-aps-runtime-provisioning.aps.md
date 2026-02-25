@@ -40,7 +40,7 @@ Change status to **Ready** when:
 - [x] Dependencies identified
 - [x] At least one task defined
 
-## Work Items
+## Tasks
 
 ### APSCFG-001: Scaffold `.apsrc.yaml` during `aps init`
 - **Intent:** Persist project APS policy at bootstrap instead of relying on implicit defaults.
