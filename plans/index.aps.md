@@ -120,3 +120,4 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - **D-005:** Dashboard uses local git state only — no remote fetch on `gx dash` (too slow for multi-project scan) — *proposed*
 - **D-006:** `lastVisited` is an optional field on IndexEntry — backward compatible, no migration needed — *proposed*
 - **D-007:** v3 before v4 — tracking and dashboard provide immediate value and inform TUI design — *proposed*
+- **D-008:** README includes Acknowledgements section crediting ghq and gclone as prior art — *accepted*
