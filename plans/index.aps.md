@@ -70,7 +70,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [Editor Integration](./archive/modules/07-editor.aps.md) | Open projects in preferred editor | Complete (archived) | v2 | Index, CLI |
 | [Agent Scaffolding](./archive/modules/08-agent.aps.md) | Scaffold AI agent configuration for projects | Complete (archived) | v2 | CLI |
 | [Tracking](./modules/09-tracking.aps.md) | Record project visits and enable recency-based navigation | Draft | v3 | Index |
-| [Dashboard](./modules/10-dashboard.aps.md) | Colored ANSI overview of all projects grouped by git status | Draft | v3 | Index, Tracking |
+| [Status Dashboard](./modules/10-dashboard.aps.md) | `gx status` — colored health report (clean/dirty/stashes/worktrees) | Ready | v3 | Index, URL |
 | [Hooks](./modules/11-hooks.aps.md) | Per-project onEnter commands with trust/allow safety | Future | v4 | Shell Plugin |
 | [Templates](./modules/12-templates.aps.md) | Create new projects from template repositories | Future | v4 | Clone, Index |
 | [Interactive TUI](./modules/13-tui.aps.md) | Keyboard-navigable interactive terminal dashboard | Future | v4 | Dashboard, Tracking |
@@ -105,8 +105,8 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [ ] Should `gx open` support opening specific files within a project?
 - [ ] Should `gx recent` show a configurable default count or always show all?
 - [ ] What git commands should `gx resume` run for context? (`git status --short`, `git log -1 --oneline`, `git branch --show-current`)
-- [ ] Should `gx dash` fetch remotes before reporting ahead/behind, or use local state only?
-- [ ] What stale threshold default? (30 days proposed)
+- [x] Should `gx status` fetch remotes before reporting ahead/behind, or use local state only? — Local only (per D-005)
+- [x] What stale threshold default? — 14 days (hardcoded for v1)
 - [ ] Should hook trust be per-project or per-file-hash (re-trust on `.gx.json` change)?
 - [ ] Which TUI library for interactive mode? (ink, blessed, raw ANSI, or Bun-native)
 
@@ -116,6 +116,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - **D-002:** github.com as default host for shorthand `user/repo` — *accepted*
 - **D-003:** Binary + multi-shell integration architecture — `gx shell-init` generates eval-able code for zsh, bash, and fish; `plugin/gx.plugin.zsh` is a legacy oh-my-zsh compatibility shim — *accepted*
 - **D-004:** `gx <name>` as default action (jump to project) — *accepted*
-- **D-005:** Dashboard uses local git state only — no remote fetch on `gx dash` (too slow for multi-project scan) — *proposed*
+- **D-005:** Dashboard uses local git state only — no remote fetch (too slow for multi-project scan) — *accepted*
+- **D-008:** `gx status` replaces `gx dash` — mirrors `git status` naming, more intuitive. No dependency on Tracking module (09); stash and worktree sections added — *accepted*
 - **D-006:** `lastVisited` is an optional field on IndexEntry — backward compatible, no migration needed — *proposed*
 - **D-007:** v3 before v4 — tracking and dashboard provide immediate value and inform TUI design — *proposed*
