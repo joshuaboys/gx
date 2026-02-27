@@ -129,7 +129,7 @@ Options:
       await resolve(command, indexPath, config);
       if (process.stdout.isTTY) {
         console.error(
-          `Hint: add shell integration for cd support: eval "$(gx shell-init)"`,
+          `Hint: add shell integration for cd support: run 'gx shell-init' and follow the printed instructions for your shell.`,
         );
       }
       break;
