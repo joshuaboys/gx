@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
 
 This downloads (or builds) the `gx` binary, puts it on your PATH, and sets up shell integration with tab completion. Supports zsh, bash, and fish.
 
-> **Note:** Shell integration is required for `gx` to `cd` into projects. The curl installer sets this up automatically. If you installed manually, add `eval "$(gx shell-init)"` to your shell config (see below).
+> **Note:** Shell integration is required for `gx` to `cd` into projects. The curl installer sets this up automatically. If you installed manually, add `eval "$(gx shell-init)"` for bash/zsh or `gx shell-init | source` for fish to your shell config (see below).
 
 <details>
 <summary>Manual install</summary>
