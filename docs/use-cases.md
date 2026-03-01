@@ -16,6 +16,8 @@ gx dashboard           # jump to the frontend
 gx api-server           # back in seconds
 ```
 
+Shell integration (`eval "$(gx shell-init)"`) is required for `gx <name>` to auto-`cd`. Without it, the command prints the resolved path to stdout instead of changing directories.
+
 No need to remember directory paths or keep multiple terminals open per project.
 
 ---
@@ -26,7 +28,8 @@ No need to remember directory paths or keep multiple terminals open per project.
 
 ```sh
 # Find repos with uncommitted changes
-for dir in $(gx resolve --list | xargs -I{} gx resolve {}); do
+gx resolve --list | while read -r name; do
+  dir=$(gx resolve "$name")
   if [ -n "$(git -C "$dir" status --porcelain)" ]; then
     echo "dirty: $dir"
   fi
@@ -37,7 +40,7 @@ done
 # Count lines of code across all projects
 gx resolve --list | while read -r name; do
   dir=$(gx resolve "$name")
-  count=$(find "$dir" -name '*.ts' -o -name '*.go' -o -name '*.rs' | xargs wc -l 2>/dev/null | tail -1)
+  count=$(find "$dir" -type f \( -name '*.ts' -o -name '*.go' -o -name '*.rs' \) -print0 | xargs -0 wc -l 2>/dev/null | tail -1)
   echo "$name: $count"
 done
 ```
@@ -245,7 +248,7 @@ Build your own shortcuts on top of gx:
 
 ```sh
 # Jump and open in one command
-gxo() { gx "$1" && gx open . --editor "${2:-code}"; }
+gxo() { gx "$1" && gx open --editor "${2:-code}"; }
 
 # Jump and show git status
 gxs() { gx "$1" && git status; }
@@ -275,7 +278,7 @@ done
 
 ```sh
 # Open all related repos in VS Code workspaces
-code $(gx resolve shared-lib) $(gx resolve api-server) $(gx resolve dashboard)
+code "$(gx resolve shared-lib)" "$(gx resolve api-server)" "$(gx resolve dashboard)"
 ```
 
 ---
