@@ -20,9 +20,11 @@ afterEach(async () => {
 });
 
 test("indexRepos adds a repo by explicit path", async () => {
-  // Create a fake git repo
+  // Create a real git repo
   const repoDir = join(tmpDir, "myrepo");
-  await mkdir(join(repoDir, ".git"), { recursive: true });
+  await mkdir(repoDir, { recursive: true });
+  const init = Bun.spawn(["git", "init"], { cwd: repoDir, stdout: "ignore", stderr: "ignore" });
+  await init.exited;
 
   const config: Config = { ...DEFAULT_CONFIG, projectDir: tmpDir };
   await indexRepos([repoDir], config, indexPath);
