@@ -26,7 +26,8 @@
 
 ```sh
 # Install
-curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | bash
+exec $SHELL   # reload to pick up PATH and shell integration
 
 # Clone a repo and cd into it
 gx clone user/repo
@@ -42,7 +43,7 @@ That's it. Shell integration and tab completion are set up automatically.
 The curl installer downloads (or builds) the `gx` binary, puts it on your `PATH`, and sets up shell integration with tab completion.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | bash
 ```
 
 > **Note:** Shell integration is required for `gx` to `cd` into projects. The installer sets this up automatically. If you installed manually, add `eval "$(gx shell-init)"` for bash/zsh or `gx shell-init | source` for fish to your shell config.

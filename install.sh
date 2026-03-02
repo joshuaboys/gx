@@ -2,7 +2,7 @@
 set -e
 
 # gx installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | bash
 
 REPO="joshuaboys/gx"
 INSTALL_DIR="$HOME/.local/bin"

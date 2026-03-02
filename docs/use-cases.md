@@ -2,6 +2,21 @@
 
 Real-world workflows where gx streamlines day-to-day development.
 
+## Contents
+
+- [Rapid Context Switching](#1-rapid-context-switching)
+- [Scripting with the Index](#2-scripting-with-the-index)
+- [Onboarding onto a New Machine](#3-onboarding-onto-a-new-machine)
+- [Polyglot Multi-Repo Development](#4-polyglot-multi-repo-development)
+- [Scaffolding AI Agent Configs](#5-scaffolding-ai-agent-configs-across-projects)
+- [Quick Code Review](#6-quick-code-review-across-repos)
+- [CI/CD & Automation Scripts](#7-cicd--automation-scripts)
+- [Workspace Auditing](#8-workspace-auditing)
+- [Feeding Context to LLMs & AI Tools](#9-feeding-context-to-llms--ai-tools)
+- [Team Standardisation](#10-team-standardisation)
+- [Shell Aliases & Integrations](#11-shell-aliases--integrations)
+- [Monorepo-Adjacent Workflows](#12-monorepo-adjacent-workflows)
+
 ---
 
 ## 1. Rapid Context Switching
@@ -285,17 +300,17 @@ code "$(gx resolve shared-lib)" "$(gx resolve api-server)" "$(gx resolve dashboa
 
 ## Summary
 
-| Use Case | Key Commands |
-|----------|-------------|
-| Context switching | `gx <name>` |
-| Scripting with index | `gx resolve`, `gx resolve --list` |
-| Machine onboarding | `gx clone`, `gx ls` |
-| Multi-language navigation | `gx <name>` with fuzzy matching |
-| AI agent scaffolding | `gx init` |
-| Code review | `gx open --editor` |
-| CI/CD path lookup | `gx resolve <name>` |
-| Workspace auditing | `gx resolve --list` + git commands |
-| LLM context generation | Index JSON + `gx resolve --list` |
-| Team standardisation | `gx config set` |
-| Custom shell aliases | Shell functions wrapping gx |
-| Multi-repo coordination | `gx resolve` in loops |
+| Use Case                  | Key Commands                       |
+| ------------------------- | ---------------------------------- |
+| Context switching         | `gx <name>`                        |
+| Scripting with index      | `gx resolve`, `gx resolve --list`  |
+| Machine onboarding        | `gx clone`, `gx ls`                |
+| Multi-language navigation | `gx <name>` with fuzzy matching    |
+| AI agent scaffolding      | `gx init`                          |
+| Code review               | `gx open --editor`                 |
+| CI/CD path lookup         | `gx resolve <name>`                |
+| Workspace auditing        | `gx resolve --list` + git commands |
+| LLM context generation    | Index JSON + `gx resolve --list`   |
+| Team standardisation      | `gx config set`                    |
+| Custom shell aliases      | Shell functions wrapping gx        |
+| Multi-repo coordination   | `gx resolve` in loops              |

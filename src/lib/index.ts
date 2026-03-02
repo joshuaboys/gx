@@ -31,6 +31,7 @@ export class ProjectIndex {
         raw !== null &&
         "projects" in raw &&
         typeof (raw as Record<string, unknown>).projects === "object" &&
+        (raw as Record<string, unknown>).projects !== null &&
         !Array.isArray((raw as Record<string, unknown>).projects)
       ) {
         return new ProjectIndex(raw as Index);
@@ -122,7 +123,7 @@ export class ProjectIndex {
 
   async save(path: string): Promise<void> {
     await mkdir(dirname(path), { recursive: true });
-    const tmp = path + ".tmp";
+    const tmp = `${path}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
     await Bun.write(tmp, JSON.stringify(this.data, null, 2) + "\n");
     await rename(tmp, path);
   }
