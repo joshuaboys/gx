@@ -1,4 +1,4 @@
-import { resolve as resolvePath, basename } from "path";
+import { resolve as resolvePath, basename, join } from "path";
 import { lstat } from "fs/promises";
 import { ProjectIndex } from "../lib/index.ts";
 import { expandTilde } from "../lib/config.ts";
@@ -21,12 +21,28 @@ async function indexPaths(paths: string[], indexPath: string): Promise<void> {
   const idx = await ProjectIndex.load(indexPath);
 
   for (const rawPath of paths) {
-    const absPath = resolvePath(rawPath);
+    const absPath = resolvePath(expandTilde(rawPath));
 
-    // Verify .git exists
+    // Verify this is a real git worktree
+    const verifyProc = Bun.spawn(["git", "rev-parse", "--is-inside-work-tree"], {
+      cwd: absPath,
+      stdout: "pipe",
+      stderr: "ignore",
+    });
+    if ((await verifyProc.exited) !== 0) {
+      throw new Error(`${absPath} is not a git repository`);
+    }
+
+    // Reject symlinked .git marker for safety/consistency
     try {
-      await lstat(`${absPath}/.git`);
-    } catch {
+      const gitStat = await lstat(join(absPath, ".git"));
+      if (gitStat.isSymbolicLink()) {
+        throw new Error(
+          `${absPath} has a symlinked .git directory, which is not supported for indexing`,
+        );
+      }
+    } catch (err) {
+      if (err instanceof Error) throw err;
       throw new Error(`${absPath} is not a git repository`);
     }
 

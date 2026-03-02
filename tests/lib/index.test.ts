@@ -57,11 +57,21 @@ test("names returns project names for completion", async () => {
   expect(idx.names()).toContain("gclone");
 });
 
-test("getRemoteUrl returns origin URL for a real git repo", async () => {
-  // Use the gx repo itself as a test subject
-  const url = await ProjectIndex.getRemoteUrl(process.cwd());
-  expect(typeof url).toBe("string");
-  expect(url.length).toBeGreaterThan(0);
+test("getRemoteUrl returns origin URL for a local repo with origin configured", async () => {
+  const repoDir = join(tmpDir, "fixture-repo");
+  await mkdir(repoDir, { recursive: true });
+
+  let proc = Bun.spawn(["git", "init"], { cwd: repoDir, stdout: "ignore", stderr: "ignore" });
+  await proc.exited;
+  proc = Bun.spawn(["git", "remote", "add", "origin", "https://github.com/joshuaboys/gx.git"], {
+    cwd: repoDir,
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  await proc.exited;
+
+  const url = await ProjectIndex.getRemoteUrl(repoDir);
+  expect(url).toBe("https://github.com/joshuaboys/gx.git");
 });
 
 test("getRemoteUrl returns empty string for non-repo", async () => {
@@ -92,13 +102,18 @@ test("merge overwrites when name exists but path differs", async () => {
 });
 
 test("scanForRepos populates remote URL when available", async () => {
-  // Clone a real repo into tmpDir to have a valid origin
   const repoDir = join(tmpDir, "testorg", "gx");
-  const proc = Bun.spawn(["git", "clone", "--depth=1", "https://github.com/joshuaboys/gx.git", repoDir], {
+  await mkdir(repoDir, { recursive: true });
+
+  let proc = Bun.spawn(["git", "init"], { cwd: repoDir, stdout: "ignore", stderr: "ignore" });
+  await proc.exited;
+  proc = Bun.spawn(["git", "remote", "add", "origin", "https://github.com/joshuaboys/gx.git"], {
+    cwd: repoDir,
     stdout: "ignore",
     stderr: "ignore",
   });
   await proc.exited;
+  await mkdir(join(repoDir, ".git"), { recursive: true });
 
   const idx = await ProjectIndex.load(indexPath);
   await idx.rebuild(tmpDir);
@@ -106,7 +121,7 @@ test("scanForRepos populates remote URL when available", async () => {
   const gxEntry = entries.find((e) => e.name === "gx");
   expect(gxEntry).toBeDefined();
   expect(gxEntry!.url).toContain("joshuaboys/gx");
-}, 30_000);
+});
 
 test("additiveScan adds new repos without removing existing", async () => {
   const idx = await ProjectIndex.load(indexPath);

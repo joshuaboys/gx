@@ -1,5 +1,5 @@
 import { join, basename } from "path";
-import { mkdir, readdir, realpath } from "fs/promises";
+import { mkdir, readdir, realpath, rename } from "fs/promises";
 import type { Index, IndexEntry } from "../types.ts";
 
 const MAX_SCAN_DEPTH = 10;
@@ -20,7 +20,9 @@ export class ProjectIndex {
         typeof raw === "object" &&
         raw !== null &&
         "projects" in raw &&
-        typeof (raw as Record<string, unknown>).projects === "object"
+        typeof (raw as Record<string, unknown>).projects === "object" &&
+        (raw as Record<string, unknown>).projects !== null &&
+        !Array.isArray((raw as Record<string, unknown>).projects)
       ) {
         return new ProjectIndex(raw as Index);
       }
@@ -103,13 +105,17 @@ export class ProjectIndex {
     }
 
     for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      if (entry.name === ".git") {
-        const name = basename(dir);
-        const url = await ProjectIndex.getRemoteUrl(dir);
-        this.merge(name, { path: dir, url, clonedAt: "" });
-        return; // Don't descend into .git or sibling dirs of a repo
-      }
+      const isGitMarker =
+        entry.name === ".git" && (entry.isDirectory() || entry.isFile());
+      if (!isGitMarker) continue;
+      const name = basename(dir);
+      const existing = this.data.projects[name];
+      const url =
+        existing && existing.path === dir && existing.url
+          ? existing.url
+          : await ProjectIndex.getRemoteUrl(dir);
+      this.merge(name, { path: dir, url, clonedAt: "" });
+      return; // Don't descend into .git or sibling dirs of a repo
     }
 
     // No .git found at this level, recurse into subdirectories
@@ -137,6 +143,8 @@ export class ProjectIndex {
 
   async save(path: string): Promise<void> {
     await mkdir(join(path, ".."), { recursive: true });
-    await Bun.write(path, JSON.stringify(this.data, null, 2) + "\n");
+    const tmp = `${path}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
+    await Bun.write(tmp, JSON.stringify(this.data, null, 2) + "\n");
+    await rename(tmp, path);
   }
 }
