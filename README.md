@@ -27,12 +27,13 @@
 ```sh
 # Install
 curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
+exec $SHELL   # reload to pick up PATH and shell integration
 
 # Clone a repo and cd into it
 gx clone user/repo
 
 # Jump back to it later
-gx repo
+gx myproject
 ```
 
 That's it. Shell integration and tab completion are set up automatically.
@@ -62,11 +63,13 @@ cp gx ~/.local/bin/
 Add shell integration to your config file:
 
 **zsh** (`~/.zshrc`) / **bash** (`~/.bashrc`):
+
 ```sh
 eval "$(gx shell-init)"
 ```
 
 **fish** (`~/.config/fish/conf.d/gx.fish`):
+
 ```fish
 gx shell-init | source
 ```
