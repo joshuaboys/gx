@@ -2,10 +2,8 @@
 
 Real-world examples of APS specs at different scales.
 
-> **Canonical examples:** For full worked examples with complete file trees, see
-> [examples/user-auth/](../examples/user-auth/) and
-> [examples/opencode-companion/](../examples/opencode-companion/). The examples
-> below are compact summaries for quick context-window access.
+> The examples below are compact summaries for quick reference. Each demonstrates
+> the APS format at a different scale.
 
 ## Example 1: Quick Feature (Simple Spec)
 

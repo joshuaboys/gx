@@ -78,6 +78,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [Distribution & Install UX](./modules/15-distribution.aps.md) | Release binaries, installer, and doctor flow for easy adoption | Draft | v5 | CLI |
 | [Shell Portability](./modules/16-shell-portability.aps.md) | Bash/fish integration and completion parity | Draft | v5 | Shell Plugin, CLI |
 | [Index Reliability & Observability](./modules/17-index-observability.aps.md) | Index diagnostics, stats, and scan telemetry | Draft | v5 | Index, Tracking |
+| [APS Runtime Provisioning & Project Config](./modules/18-aps-runtime-provisioning.aps.md) | Global APS runtime with per-project policy via `.apsrc.yaml` and init-time preference capture | Ready | v6 | CLI, APS scaffolding |
 
 ## Risks
 
