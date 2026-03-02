@@ -57,6 +57,75 @@ test("names returns project names for completion", async () => {
   expect(idx.names()).toContain("gclone");
 });
 
+test("getRemoteUrl returns origin URL for a real git repo", async () => {
+  // Use the gx repo itself as a test subject
+  const url = await ProjectIndex.getRemoteUrl(process.cwd());
+  expect(typeof url).toBe("string");
+  expect(url.length).toBeGreaterThan(0);
+});
+
+test("getRemoteUrl returns empty string for non-repo", async () => {
+  const url = await ProjectIndex.getRemoteUrl(tmpDir);
+  expect(url).toBe("");
+});
+
+test("merge adds a new project and returns true", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  const isNew = idx.merge("newrepo", { path: "/tmp/newrepo", url: "https://github.com/user/newrepo", clonedAt: "2026-03-02T00:00:00Z" });
+  expect(isNew).toBe(true);
+  expect(idx.resolve("newrepo")).toBe("/tmp/newrepo");
+});
+
+test("merge skips when name and path already match", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("myrepo", { path: "/tmp/myrepo", url: "", clonedAt: "" });
+  const isNew = idx.merge("myrepo", { path: "/tmp/myrepo", url: "https://github.com/user/myrepo", clonedAt: "2026-03-02T00:00:00Z" });
+  expect(isNew).toBe(false);
+});
+
+test("merge overwrites when name exists but path differs", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("myrepo", { path: "/old/myrepo", url: "", clonedAt: "" });
+  const isNew = idx.merge("myrepo", { path: "/new/myrepo", url: "", clonedAt: "" });
+  expect(isNew).toBe(true);
+  expect(idx.resolve("myrepo")).toBe("/new/myrepo");
+});
+
+test("scanForRepos populates remote URL when available", async () => {
+  // Clone a real repo into tmpDir to have a valid origin
+  const repoDir = join(tmpDir, "testorg", "gx");
+  const proc = Bun.spawn(["git", "clone", "--depth=1", "https://github.com/joshuaboys/gx.git", repoDir], {
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  await proc.exited;
+
+  const idx = await ProjectIndex.load(indexPath);
+  await idx.rebuild(tmpDir);
+  const entries = idx.list();
+  const gxEntry = entries.find((e) => e.name === "gx");
+  expect(gxEntry).toBeDefined();
+  expect(gxEntry!.url).toContain("joshuaboys/gx");
+}, 30_000);
+
+test("additiveScan adds new repos without removing existing", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  // Pre-populate with an entry that won't be found by scan
+  idx.add("external", { path: "/external/repo", url: "", clonedAt: "" });
+
+  // Create fake repos to discover
+  await mkdir(join(tmpDir, "org", "repoA", ".git"), { recursive: true });
+  await mkdir(join(tmpDir, "org", "repoB", ".git"), { recursive: true });
+
+  await idx.additiveScan(tmpDir);
+
+  // External entry is preserved
+  expect(idx.resolve("external")).toBe("/external/repo");
+  // New repos are added
+  expect(idx.resolve("repoA")).toBe(join(tmpDir, "org", "repoA"));
+  expect(idx.resolve("repoB")).toBe(join(tmpDir, "org", "repoB"));
+});
+
 test("rebuild scans directory for git repos", async () => {
   // Create fake repos
   const repoA = join(tmpDir, "user", "repoA", ".git");

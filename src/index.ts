@@ -10,6 +10,7 @@ import { showConfig, setConfig } from "./commands/config.ts";
 import { openProject } from "./commands/open.ts";
 import { initAgent } from "./commands/init.ts";
 import { shellInit } from "./commands/shell-init.ts";
+import { indexRepos } from "./commands/index-repos.ts";
 import pkg from "../package.json";
 
 const VERSION = pkg.version;
@@ -30,6 +31,8 @@ Usage:
   gx clone <repo>          Clone and jump to repo
   gx open [name]           Open project in editor
   gx ls                    List indexed projects
+  gx index                 Index new repos (additive scan)
+  gx index <path>...       Add specific repo(s) to index
   gx rebuild               Rescan and rebuild index
   gx config                Show config
   gx config set <key> <v>  Set config value
@@ -68,6 +71,11 @@ Options:
     case "ls":
       await ls(indexPath);
       break;
+    case "index": {
+      const paths = args.slice(1);
+      await indexRepos(paths, config, indexPath);
+      break;
+    }
     case "rebuild":
       await rebuild(config, indexPath);
       break;

@@ -39,6 +39,20 @@ export class ProjectIndex {
     this.data.projects[name] = entry;
   }
 
+  merge(name: string, entry: IndexEntry): boolean {
+    const existing = this.data.projects[name];
+    if (existing && existing.path === entry.path) {
+      return false; // Already tracked at same path
+    }
+    if (existing) {
+      console.error(
+        `Warning: project name '${name}' collision — overwriting ${existing.path} with ${entry.path}`,
+      );
+    }
+    this.data.projects[name] = entry;
+    return true;
+  }
+
   resolve(name: string): string | null {
     return this.data.projects[name]?.path ?? null;
   }
@@ -55,6 +69,11 @@ export class ProjectIndex {
 
   async rebuild(projectDir: string): Promise<void> {
     this.data.projects = {};
+    const visited = new Set<string>();
+    await this.scanForRepos(projectDir, 0, visited);
+  }
+
+  async additiveScan(projectDir: string): Promise<void> {
     const visited = new Set<string>();
     await this.scanForRepos(projectDir, 0, visited);
   }
@@ -87,11 +106,8 @@ export class ProjectIndex {
       if (!entry.isDirectory()) continue;
       if (entry.name === ".git") {
         const name = basename(dir);
-        this.data.projects[name] = {
-          path: dir,
-          url: "",
-          clonedAt: "",
-        };
+        const url = await ProjectIndex.getRemoteUrl(dir);
+        this.merge(name, { path: dir, url, clonedAt: "" });
         return; // Don't descend into .git or sibling dirs of a repo
       }
     }
@@ -101,6 +117,21 @@ export class ProjectIndex {
       if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
       if (SKIP_DIRS.has(entry.name)) continue;
       await this.scanForRepos(join(dir, entry.name), depth + 1, visited);
+    }
+  }
+
+  static async getRemoteUrl(repoPath: string): Promise<string> {
+    try {
+      const proc = Bun.spawn(
+        ["git", "config", "--get", "remote.origin.url"],
+        { cwd: repoPath, stdout: "pipe", stderr: "ignore" },
+      );
+      const exitCode = await proc.exited;
+      if (exitCode !== 0) return "";
+      const text = await new Response(proc.stdout).text();
+      return text.trim();
+    } catch {
+      return "";
     }
   }
 
