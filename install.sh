@@ -33,7 +33,10 @@ detect_arch() {
 }
 
 detect_shell() {
-  basename "${SHELL:-/bin/sh}"
+  local name
+  name=$(basename "${SHELL:-/bin/sh}")
+  # Strip version suffixes (e.g. zsh-5.9 -> zsh, bash-5.2 -> bash)
+  echo "${name%%-*}"
 }
 
 shell_rc_file() {
@@ -70,7 +73,11 @@ try_prebuilt() {
   if command_exists curl; then
     http_code=$(curl -sL -o /dev/null -w "%{http_code}" "$url" 2>/dev/null) || http_code="000"
   elif command_exists wget; then
-    http_code=$(wget --spider -S "$url" 2>&1 | grep "HTTP/" | tail -1 | awk '{print $2}') || http_code="000"
+    if wget -q --spider "$url" 2>/dev/null; then
+      http_code="200"
+    else
+      http_code="000"
+    fi
   else
     return 1
   fi
@@ -122,14 +129,16 @@ build_from_source() {
   fi
 
   info "Building..."
-  cd "$tmpdir/gx"
-  bun install --frozen-lockfile || bun install || error "bun install failed"
-  bun run build || error "bun build failed"
+  (
+    cd "$tmpdir/gx"
+    bun install --frozen-lockfile || bun install || error "bun install failed"
+    bun run build || error "bun build failed"
+  )
 
+  [ -f "$tmpdir/gx/gx" ] || error "Build artifact 'gx' not found"
   mkdir -p "$INSTALL_DIR"
-  cp gx "$GX_BIN"
+  cp "$tmpdir/gx/gx" "$GX_BIN"
   chmod +x "$GX_BIN"
-  cd - >/dev/null
 }
 
 # --- shell integration ---
@@ -180,8 +189,9 @@ ensure_path() {
   shell=$(detect_shell)
   rc_file=$(shell_rc_file "$shell")
 
-  if [ -n "$rc_file" ] && [ -f "$rc_file" ]; then
-    if ! grep -qF "$INSTALL_DIR" "$rc_file" 2>/dev/null; then
+  if [ -n "$rc_file" ]; then
+    mkdir -p "$(dirname "$rc_file")"
+    if [ ! -f "$rc_file" ] || ! grep -qF "$INSTALL_DIR" "$rc_file" 2>/dev/null; then
       if [ "$shell" = "fish" ]; then
         printf '\nfish_add_path %s\n' "$INSTALL_DIR" >> "$rc_file"
       else
