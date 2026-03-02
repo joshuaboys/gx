@@ -3,10 +3,10 @@ import type { ParsedRepo } from "../types.ts";
 const HTTPS_RE = /^https?:\/\/([^/]+)\/(.+?)(?:\.git)?\/?$/;
 const SSH_RE = /^(?:ssh:\/\/)?[^@]+@([^/:]+)(?::\d+)?[:/](.+?)(?:\.git)?\/?$/;
 const GIT_RE = /^git:\/\/([^/]+)\/(.+?)(?:\.git)?\/?$/;
-const SHORTHAND_RE = /^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-][a-zA-Z0-9_.\-/]*)$/;
+const SHORTHAND_RE = /^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)$/;
 
 function validateSegments(owner: string, repo: string): void {
-  for (const seg of [...owner.split("/"), repo]) {
+  for (const seg of [...owner.split("/"), ...repo.split("/")]) {
     if (seg === ".." || seg === "." || !seg) {
       throw new Error("Path traversal detected");
     }
@@ -20,7 +20,10 @@ function extract(match: RegExpMatchArray): [string, string] {
   return [match[1] ?? "", match[2] ?? ""];
 }
 
-export function parseUrl(input: string, defaultHost = "github.com"): ParsedRepo {
+export function parseUrl(
+  input: string,
+  defaultHost = "github.com",
+): ParsedRepo {
   const trimmed = input.trim();
   if (!trimmed) throw new Error("Empty repository URL");
 
@@ -58,7 +61,11 @@ export function parseUrl(input: string, defaultHost = "github.com"): ParsedRepo 
   throw new Error(`Cannot parse repository URL: ${trimmed}`);
 }
 
-function buildParsed(host: string, path: string, originalUrl: string): ParsedRepo {
+function buildParsed(
+  host: string,
+  path: string,
+  originalUrl: string,
+): ParsedRepo {
   const segments = path.split("/");
   if (segments.length < 2) {
     throw new Error(`Invalid repository path: ${path}`);
@@ -70,7 +77,10 @@ function buildParsed(host: string, path: string, originalUrl: string): ParsedRep
 }
 
 export function toCloneUrl(parsed: ParsedRepo): string {
-  if (parsed.originalUrl.startsWith("git@") || parsed.originalUrl.startsWith("ssh://")) {
+  if (
+    parsed.originalUrl.startsWith("git@") ||
+    parsed.originalUrl.startsWith("ssh://")
+  ) {
     return parsed.originalUrl;
   }
   return `https://${parsed.host}/${parsed.owner}/${parsed.repo}.git`;

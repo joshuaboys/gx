@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join, dirname } from "path";
 import { homedir } from "os";
 import { mkdir } from "fs/promises";
 import type { Config } from "../types.ts";
@@ -30,23 +30,20 @@ function validateConfig(raw: unknown): Config {
         ? obj.defaultHost
         : DEFAULT_CONFIG.defaultHost,
     structure:
-      obj.structure === "flat" || obj.structure === "owner" || obj.structure === "host"
+      obj.structure === "flat" ||
+      obj.structure === "owner" ||
+      obj.structure === "host"
         ? obj.structure
         : DEFAULT_CONFIG.structure,
     shallow:
-      typeof obj.shallow === "boolean"
-        ? obj.shallow
-        : DEFAULT_CONFIG.shallow,
+      typeof obj.shallow === "boolean" ? obj.shallow : DEFAULT_CONFIG.shallow,
     similarityThreshold:
       typeof obj.similarityThreshold === "number" &&
       obj.similarityThreshold >= 0 &&
       obj.similarityThreshold <= 1
         ? obj.similarityThreshold
         : DEFAULT_CONFIG.similarityThreshold,
-    editor:
-      typeof obj.editor === "string"
-        ? obj.editor
-        : DEFAULT_CONFIG.editor,
+    editor: typeof obj.editor === "string" ? obj.editor : DEFAULT_CONFIG.editor,
   };
 }
 
@@ -61,10 +58,7 @@ export async function loadConfig(path?: string): Promise<Config> {
   }
 }
 
-export async function saveConfig(
-  path: string,
-  config: Config
-): Promise<void> {
-  await mkdir(join(path, ".."), { recursive: true });
+export async function saveConfig(path: string, config: Config): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
   await Bun.write(path, JSON.stringify(config, null, 2) + "\n");
 }

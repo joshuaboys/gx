@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 # gx installer
@@ -11,7 +11,7 @@ GX_BIN="$INSTALL_DIR/gx"
 # --- helpers ---
 
 info() { printf '\033[1;34m==>\033[0m %s\n' "$1"; }
-warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$1"; }
+warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$1" >&2; }
 error() { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 
 command_exists() { command -v "$1" >/dev/null 2>&1; }
