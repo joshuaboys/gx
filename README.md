@@ -2,7 +2,8 @@
 
 # gx
 
-**A fast git project manager — clone, jump, and organize repos from the terminal.**
+**A fast git project manager. 
+Clone, jump, and organise repos from the terminal.**
 
 [![CI](https://github.com/joshuaboys/gx/actions/workflows/ci.yml/badge.svg)](https://github.com/joshuaboys/gx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -15,7 +16,7 @@
 ## Features
 
 - **Instant project switching** — jump to any repo by name with fuzzy matching
-- **Structured organization** — repos are cloned into a consistent `owner/repo` layout
+- **Structured organisation** — repos are cloned into a consistent `owner/repo` layout
 - **GitHub shorthand** — `gx clone user/repo` just works
 - **Shell integration** — tab completion and auto-`cd` for zsh, bash, and fish
 - **Open in any editor** — `gx open` launches VS Code, nvim, or whatever you use
