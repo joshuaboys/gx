@@ -1,7 +1,22 @@
-import { test, expect } from "bun:test";
+import { test, expect, beforeEach, afterEach } from "bun:test";
 import { toPath } from "../../src/lib/path.ts";
 import type { ParsedRepo, Config } from "../../src/types.ts";
 import { DEFAULT_CONFIG } from "../../src/types.ts";
+
+let savedGxAgent: string | undefined;
+
+beforeEach(() => {
+  savedGxAgent = process.env.GX_AGENT;
+  delete process.env.GX_AGENT;
+});
+
+afterEach(() => {
+  if (savedGxAgent !== undefined) {
+    process.env.GX_AGENT = savedGxAgent;
+  } else {
+    delete process.env.GX_AGENT;
+  }
+});
 
 const repo: ParsedRepo = {
   host: "github.com",
@@ -54,7 +69,6 @@ test("owner structure with GX_AGENT routes to dotdir", () => {
   process.env.GX_AGENT = "morgan";
   const config: Config = { ...DEFAULT_CONFIG, projectDir: "/home/user/src" };
   expect(toPath(repo, config)).toBe("/home/user/src/.morgan/juev/gclone");
-  delete process.env.GX_AGENT;
 });
 
 test("flat structure with GX_AGENT routes to dotdir", () => {
@@ -65,7 +79,6 @@ test("flat structure with GX_AGENT routes to dotdir", () => {
     structure: "flat",
   };
   expect(toPath(repo, config)).toBe("/home/user/src/.morgan/gclone");
-  delete process.env.GX_AGENT;
 });
 
 test("host structure with GX_AGENT routes to dotdir", () => {
@@ -78,11 +91,9 @@ test("host structure with GX_AGENT routes to dotdir", () => {
   expect(toPath(repo, config)).toBe(
     "/home/user/src/.morgan/github.com/juev/gclone",
   );
-  delete process.env.GX_AGENT;
 });
 
 test("no GX_AGENT produces normal path", () => {
-  delete process.env.GX_AGENT;
   const config: Config = { ...DEFAULT_CONFIG, projectDir: "/home/user/src" };
   expect(toPath(repo, config)).toBe("/home/user/src/juev/gclone");
 });

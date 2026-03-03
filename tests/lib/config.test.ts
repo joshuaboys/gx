@@ -12,12 +12,20 @@ import { mkdtemp, rm } from "fs/promises";
 import { tmpdir } from "os";
 
 let tmpDir: string;
+let savedGxAgent: string | undefined;
 
 beforeEach(async () => {
   tmpDir = await mkdtemp(join(tmpdir(), "gx-test-"));
+  savedGxAgent = process.env.GX_AGENT;
+  delete process.env.GX_AGENT;
 });
 
 afterEach(async () => {
+  if (savedGxAgent !== undefined) {
+    process.env.GX_AGENT = savedGxAgent;
+  } else {
+    delete process.env.GX_AGENT;
+  }
   await rm(tmpDir, { recursive: true });
 });
 
@@ -50,62 +58,52 @@ test("getConfigPath returns ~/.config/gx/config.json", () => {
 // getAgent() tests
 
 test("getAgent returns null when GX_AGENT is not set", () => {
-  delete process.env.GX_AGENT;
   expect(getAgent()).toBeNull();
 });
 
 test("getAgent returns lowercase agent name", () => {
   process.env.GX_AGENT = "Morgan";
   expect(getAgent()).toBe("morgan");
-  delete process.env.GX_AGENT;
 });
 
 test("getAgent trims whitespace", () => {
   process.env.GX_AGENT = "  morgan  ";
   expect(getAgent()).toBe("morgan");
-  delete process.env.GX_AGENT;
 });
 
 test("getAgent returns null for empty string", () => {
   process.env.GX_AGENT = "";
   expect(getAgent()).toBeNull();
-  delete process.env.GX_AGENT;
 });
 
 test("getAgent returns null for whitespace-only", () => {
   process.env.GX_AGENT = "   ";
   expect(getAgent()).toBeNull();
-  delete process.env.GX_AGENT;
 });
 
 test("getAgent accepts alphanumeric with hyphens", () => {
   process.env.GX_AGENT = "agent-007";
   expect(getAgent()).toBe("agent-007");
-  delete process.env.GX_AGENT;
 });
 
 test("getAgent throws on invalid characters", () => {
   process.env.GX_AGENT = "bad_agent!";
   expect(() => getAgent()).toThrow("Invalid GX_AGENT");
-  delete process.env.GX_AGENT;
 });
 
 test("getAgent throws on leading hyphen", () => {
   process.env.GX_AGENT = "-morgan";
   expect(() => getAgent()).toThrow("Invalid GX_AGENT");
-  delete process.env.GX_AGENT;
 });
 
 test("getAgent throws on trailing hyphen", () => {
   process.env.GX_AGENT = "morgan-";
   expect(() => getAgent()).toThrow("Invalid GX_AGENT");
-  delete process.env.GX_AGENT;
 });
 
 // effectiveProjectDir() tests
 
 test("effectiveProjectDir returns base dir when no agent", () => {
-  delete process.env.GX_AGENT;
   const config = { ...DEFAULT_CONFIG, projectDir: "/home/user/src" };
   expect(effectiveProjectDir(config)).toBe("/home/user/src");
 });
@@ -114,11 +112,9 @@ test("effectiveProjectDir appends .agent when GX_AGENT set", () => {
   process.env.GX_AGENT = "morgan";
   const config = { ...DEFAULT_CONFIG, projectDir: "/home/user/src" };
   expect(effectiveProjectDir(config)).toBe("/home/user/src/.morgan");
-  delete process.env.GX_AGENT;
 });
 
 test("effectiveProjectDir expands tilde", () => {
-  delete process.env.GX_AGENT;
   const config = { ...DEFAULT_CONFIG, projectDir: "~/src" };
   const result = effectiveProjectDir(config);
   expect(result).not.toContain("~");
@@ -131,5 +127,4 @@ test("effectiveProjectDir expands tilde with agent", () => {
   const result = effectiveProjectDir(config);
   expect(result).not.toContain("~");
   expect(result).toMatch(/\/src\/\.morgan$/);
-  delete process.env.GX_AGENT;
 });
