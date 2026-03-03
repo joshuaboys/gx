@@ -66,6 +66,15 @@ gx() {
             else
                 return 1
             fi
+            if [ "$2" = "wt" ]; then
+                if ! command -v wt >/dev/null 2>&1; then
+                    echo "gx: wt (worktrunk) not found on PATH" >&2
+                    echo "Install: brew install worktrunk" >&2
+                    return 1
+                fi
+                shift 2
+                wt "$@"
+            fi
             ;;
     esac
 }
@@ -78,8 +87,17 @@ _gx() {
     if (( CURRENT == 2 )); then
         projects=($("$_GX_BIN" resolve --list 2>/dev/null))
         compadd "\${commands[@]}" "\${projects[@]}"
-    elif (( CURRENT == 3 )) && [[ "\${words[2]}" == "config" ]]; then
-        compadd set
+    elif (( CURRENT == 3 )); then
+        case "\${words[2]}" in
+            clone|ls|rebuild|config|resolve|open|init|shell-init|--help|--version|-h|-v)
+                if [[ "\${words[2]}" == "config" ]]; then
+                    compadd set
+                fi
+                ;;
+            *)
+                compadd wt
+                ;;
+        esac
     elif (( CURRENT == 4 )) && [[ "\${words[2]}" == "config" ]] && [[ "\${words[3]}" == "set" ]]; then
         compadd projectDir defaultHost structure shallow similarityThreshold editor
     fi
@@ -120,6 +138,15 @@ gx() {
             else
                 return 1
             fi
+            if [ "$2" = "wt" ]; then
+                if ! command -v wt >/dev/null 2>&1; then
+                    echo "gx: wt (worktrunk) not found on PATH" >&2
+                    echo "Install: brew install worktrunk" >&2
+                    return 1
+                fi
+                shift 2
+                wt "$@"
+            fi
             ;;
     esac
 }
@@ -134,8 +161,17 @@ _gx_completions() {
         local projects
         projects=$("$_GX_BIN" resolve --list 2>/dev/null)
         COMPREPLY=($(compgen -W "$commands $projects" -- "$cur"))
-    elif [ "\$COMP_CWORD" -eq 2 ] && [ "$prev" = "config" ]; then
-        COMPREPLY=($(compgen -W "set" -- "$cur"))
+    elif [ "\$COMP_CWORD" -eq 2 ]; then
+        case "\${COMP_WORDS[1]}" in
+            clone|ls|rebuild|config|resolve|open|init|shell-init|--help|--version|-h|-v)
+                if [ "\${COMP_WORDS[1]}" = "config" ]; then
+                    COMPREPLY=($(compgen -W "set" -- "$cur"))
+                fi
+                ;;
+            *)
+                COMPREPLY=($(compgen -W "wt" -- "$cur"))
+                ;;
+        esac
     elif [ "\$COMP_CWORD" -eq 3 ] && [ "\${COMP_WORDS[1]}" = "config" ] && [ "$prev" = "set" ]; then
         COMPREPLY=($(compgen -W "projectDir defaultHost structure shallow similarityThreshold editor" -- "$cur"))
     fi
@@ -168,6 +204,14 @@ function gx
             else
                 return 1
             end
+            if test "$argv[2]" = "wt"
+                if not command -v wt >/dev/null 2>&1
+                    echo "gx: wt (worktrunk) not found on PATH" >&2
+                    echo "Install: brew install worktrunk" >&2
+                    return 1
+                end
+                wt $argv[3..]
+            end
     end
 end
 
@@ -176,7 +220,8 @@ complete -c gx -f
 complete -c gx -n "__fish_use_subcommand" -a "clone ls rebuild config resolve open init shell-init --help --version"
 complete -c gx -n "__fish_use_subcommand" -a "($_GX_BIN resolve --list 2>/dev/null)"
 complete -c gx -n "__fish_seen_subcommand_from config" -a "set"
-complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost structure shallow similarityThreshold editor"`;
+complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost structure shallow similarityThreshold editor"
+complete -c gx -n "not __fish_seen_subcommand_from clone ls rebuild config resolve open init shell-init; and test (count (commandline -opc)) -eq 2" -a "wt"`;
 }
 
 export function shellInit(shellArg?: string): void {
@@ -193,7 +238,9 @@ export function shellInit(shellArg?: string): void {
     shell = detectShell();
     if (!shell) {
       console.error("Could not detect shell from $SHELL");
-      console.error(`Specify one explicitly: gx shell-init <${SUPPORTED_SHELLS.join("|")}>`);
+      console.error(
+        `Specify one explicitly: gx shell-init <${SUPPORTED_SHELLS.join("|")}>`,
+      );
       process.exit(1);
     }
   }

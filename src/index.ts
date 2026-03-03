@@ -28,6 +28,7 @@ async function main() {
 
 Usage:
   gx <name>                Jump to project
+  gx <name> wt [args...]   Jump to project and run wt (worktrunk)
   gx clone <repo>          Clone and jump to repo
   gx open [name]           Open project in editor
   gx ls                    List indexed projects
@@ -98,9 +99,7 @@ Options:
       }
       const name = args.find(
         (a, i) =>
-          i > 0 &&
-          a !== "--editor" &&
-          (editorFlag < 0 || i !== editorFlag + 1),
+          i > 0 && a !== "--editor" && (editorFlag < 0 || i !== editorFlag + 1),
       );
       await openProject(name, config, indexPath, editor);
       break;

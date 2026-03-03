@@ -162,6 +162,56 @@ describe("shellInit", () => {
   });
 });
 
+describe("wt (worktrunk) integration", () => {
+  test("zsh includes wt dispatch in default case", () => {
+    const output = captureOutput(() => shellInit("zsh"));
+    expect(output).toContain('"$2" = "wt"');
+    expect(output).toContain("command -v wt");
+    expect(output).toContain("shift 2");
+    expect(output).toContain('wt "$@"');
+  });
+
+  test("bash includes wt dispatch in default case", () => {
+    const output = captureOutput(() => shellInit("bash"));
+    expect(output).toContain('"$2" = "wt"');
+    expect(output).toContain("command -v wt");
+    expect(output).toContain("shift 2");
+    expect(output).toContain('wt "$@"');
+  });
+
+  test("fish includes wt dispatch in default case", () => {
+    const output = captureOutput(() => shellInit("fish"));
+    expect(output).toContain('"$argv[2]" = "wt"');
+    expect(output).toContain("command -v wt");
+    expect(output).toContain("wt $argv[3..]");
+  });
+
+  test("all shells include install hint when wt missing", () => {
+    for (const shell of ["zsh", "bash", "fish"] as const) {
+      const output = captureOutput(() => shellInit(shell));
+      expect(output).toContain("brew install worktrunk");
+    }
+  });
+
+  test("zsh completion offers wt after project name", () => {
+    const output = captureOutput(() => shellInit("zsh"));
+    expect(output).toContain("compadd wt");
+  });
+
+  test("bash completion offers wt after project name", () => {
+    const output = captureOutput(() => shellInit("bash"));
+    expect(output).toContain('compgen -W "wt"');
+  });
+
+  test("fish completion offers wt after project name", () => {
+    const output = captureOutput(() => shellInit("fish"));
+    expect(output).toContain(
+      'complete -c gx -n "not __fish_seen_subcommand_from',
+    );
+    expect(output).toContain('-a "wt"');
+  });
+});
+
 describe("resolveGxBin PATH lookup", () => {
   let whichSpy: ReturnType<typeof spyOn>;
 
