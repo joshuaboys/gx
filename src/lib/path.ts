@@ -1,9 +1,9 @@
 import { join } from "path";
 import type { ParsedRepo, Config } from "../types.ts";
-import { expandTilde } from "./config.ts";
+import { effectiveProjectDir } from "./config.ts";
 
 export function toPath(parsed: ParsedRepo, config: Config): string {
-  const base = expandTilde(config.projectDir);
+  const base = effectiveProjectDir(config);
   if (config.structure === "host") {
     return join(base, parsed.host, parsed.owner, parsed.repo);
   }

@@ -1,7 +1,7 @@
 import { resolve as resolvePath, basename, join } from "path";
 import { lstat } from "fs/promises";
 import { ProjectIndex } from "../lib/index.ts";
-import { expandTilde } from "../lib/config.ts";
+import { expandTilde, effectiveProjectDir } from "../lib/config.ts";
 import type { Config } from "../types.ts";
 
 export async function indexRepos(
@@ -24,11 +24,14 @@ async function indexPaths(paths: string[], indexPath: string): Promise<void> {
     const absPath = resolvePath(expandTilde(rawPath));
 
     // Verify this is a real git worktree
-    const verifyProc = Bun.spawn(["git", "rev-parse", "--is-inside-work-tree"], {
-      cwd: absPath,
-      stdout: "pipe",
-      stderr: "ignore",
-    });
+    const verifyProc = Bun.spawn(
+      ["git", "rev-parse", "--is-inside-work-tree"],
+      {
+        cwd: absPath,
+        stdout: "pipe",
+        stderr: "ignore",
+      },
+    );
     if ((await verifyProc.exited) !== 0) {
       throw new Error(`${absPath} is not a git repository`);
     }
@@ -65,12 +68,14 @@ async function indexPaths(paths: string[], indexPath: string): Promise<void> {
 }
 
 async function indexScan(config: Config, indexPath: string): Promise<void> {
-  const projectDir = expandTilde(config.projectDir);
+  const projectDir = effectiveProjectDir(config);
   const idx = await ProjectIndex.load(indexPath);
   const before = idx.list().length;
   await idx.additiveScan(projectDir);
   await idx.save(indexPath);
   const after = idx.list().length;
   const added = after - before;
-  console.error(`Found ${added} new project${added !== 1 ? "s" : ""} (${after} total)`);
+  console.error(
+    `Found ${added} new project${added !== 1 ? "s" : ""} (${after} total)`,
+  );
 }

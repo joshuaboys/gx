@@ -1,17 +1,28 @@
-import { loadConfig, saveConfig } from "../lib/config.ts";
+import {
+  loadConfig,
+  saveConfig,
+  getAgent,
+  effectiveProjectDir,
+} from "../lib/config.ts";
 import type { Config } from "../types.ts";
 
 const VALID_STRUCTURES = new Set(["flat", "owner", "host"]);
 
 export async function showConfig(configPath: string): Promise<void> {
   const config = await loadConfig(configPath);
-  console.log(JSON.stringify(config, null, 2));
+  const agent = getAgent();
+  const output: Record<string, unknown> = { ...config };
+  if (agent) {
+    output.agent = agent;
+    output.effectiveProjectDir = effectiveProjectDir(config);
+  }
+  console.log(JSON.stringify(output, null, 2));
 }
 
 export async function setConfig(
   configPath: string,
   key: string,
-  value: string
+  value: string,
 ): Promise<void> {
   const config = await loadConfig(configPath);
   if (!(key in config)) {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { join } from "path";
 import { homedir } from "os";
-import { loadConfig, getConfigPath } from "./lib/config.ts";
+import { loadConfig, getConfigPath, getAgent } from "./lib/config.ts";
 import { cloneRepo } from "./commands/clone.ts";
 import { ls } from "./commands/ls.ts";
 import { resolve } from "./commands/resolve.ts";
@@ -57,6 +57,8 @@ Options:
   const configPath = getConfigPath();
   const indexPath = getIndexPath();
   const config = await loadConfig(configPath);
+  const agent = getAgent();
+  if (agent) console.error(`[gx agent: ${agent}]`);
 
   switch (command) {
     case "clone": {

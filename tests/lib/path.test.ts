@@ -49,3 +49,40 @@ test("tilde expansion in projectDir", () => {
   expect(result).not.toContain("~");
   expect(result).toContain("/juev/gclone");
 });
+
+test("owner structure with GX_AGENT routes to dotdir", () => {
+  process.env.GX_AGENT = "morgan";
+  const config: Config = { ...DEFAULT_CONFIG, projectDir: "/home/user/src" };
+  expect(toPath(repo, config)).toBe("/home/user/src/.morgan/juev/gclone");
+  delete process.env.GX_AGENT;
+});
+
+test("flat structure with GX_AGENT routes to dotdir", () => {
+  process.env.GX_AGENT = "morgan";
+  const config: Config = {
+    ...DEFAULT_CONFIG,
+    projectDir: "/home/user/src",
+    structure: "flat",
+  };
+  expect(toPath(repo, config)).toBe("/home/user/src/.morgan/gclone");
+  delete process.env.GX_AGENT;
+});
+
+test("host structure with GX_AGENT routes to dotdir", () => {
+  process.env.GX_AGENT = "morgan";
+  const config: Config = {
+    ...DEFAULT_CONFIG,
+    projectDir: "/home/user/src",
+    structure: "host",
+  };
+  expect(toPath(repo, config)).toBe(
+    "/home/user/src/.morgan/github.com/juev/gclone",
+  );
+  delete process.env.GX_AGENT;
+});
+
+test("no GX_AGENT produces normal path", () => {
+  delete process.env.GX_AGENT;
+  const config: Config = { ...DEFAULT_CONFIG, projectDir: "/home/user/src" };
+  expect(toPath(repo, config)).toBe("/home/user/src/juev/gclone");
+});

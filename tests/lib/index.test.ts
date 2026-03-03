@@ -23,7 +23,11 @@ test("load returns empty index when file missing", async () => {
 
 test("add and resolve a project", async () => {
   const idx = await ProjectIndex.load(indexPath);
-  idx.add("gx", { path: "/home/user/src/joshuaboys/gx", url: "https://github.com/joshuaboys/gx", clonedAt: "2026-02-23T00:00:00Z" });
+  idx.add("gx", {
+    path: "/home/user/src/joshuaboys/gx",
+    url: "https://github.com/joshuaboys/gx",
+    clonedAt: "2026-02-23T00:00:00Z",
+  });
   expect(idx.resolve("gx")).toBe("/home/user/src/joshuaboys/gx");
 });
 
@@ -34,7 +38,11 @@ test("resolve returns null for unknown project", async () => {
 
 test("save persists and load reads back", async () => {
   const idx = await ProjectIndex.load(indexPath);
-  idx.add("gx", { path: "/tmp/gx", url: "https://github.com/joshuaboys/gx", clonedAt: "2026-02-23T00:00:00Z" });
+  idx.add("gx", {
+    path: "/tmp/gx",
+    url: "https://github.com/joshuaboys/gx",
+    clonedAt: "2026-02-23T00:00:00Z",
+  });
   await idx.save(indexPath);
 
   const idx2 = await ProjectIndex.load(indexPath);
@@ -61,13 +69,20 @@ test("getRemoteUrl returns origin URL for a local repo with origin configured", 
   const repoDir = join(tmpDir, "fixture-repo");
   await mkdir(repoDir, { recursive: true });
 
-  let proc = Bun.spawn(["git", "init"], { cwd: repoDir, stdout: "ignore", stderr: "ignore" });
-  await proc.exited;
-  proc = Bun.spawn(["git", "remote", "add", "origin", "https://github.com/joshuaboys/gx.git"], {
+  let proc = Bun.spawn(["git", "init"], {
     cwd: repoDir,
     stdout: "ignore",
     stderr: "ignore",
   });
+  await proc.exited;
+  proc = Bun.spawn(
+    ["git", "remote", "add", "origin", "https://github.com/joshuaboys/gx.git"],
+    {
+      cwd: repoDir,
+      stdout: "ignore",
+      stderr: "ignore",
+    },
+  );
   await proc.exited;
 
   const url = await ProjectIndex.getRemoteUrl(repoDir);
@@ -81,7 +96,11 @@ test("getRemoteUrl returns empty string for non-repo", async () => {
 
 test("merge adds a new project and returns true", async () => {
   const idx = await ProjectIndex.load(indexPath);
-  const isNew = idx.merge("newrepo", { path: "/tmp/newrepo", url: "https://github.com/user/newrepo", clonedAt: "2026-03-02T00:00:00Z" });
+  const isNew = idx.merge("newrepo", {
+    path: "/tmp/newrepo",
+    url: "https://github.com/user/newrepo",
+    clonedAt: "2026-03-02T00:00:00Z",
+  });
   expect(isNew).toBe(true);
   expect(idx.resolve("newrepo")).toBe("/tmp/newrepo");
 });
@@ -89,14 +108,22 @@ test("merge adds a new project and returns true", async () => {
 test("merge skips when name and path already match", async () => {
   const idx = await ProjectIndex.load(indexPath);
   idx.add("myrepo", { path: "/tmp/myrepo", url: "", clonedAt: "" });
-  const isNew = idx.merge("myrepo", { path: "/tmp/myrepo", url: "https://github.com/user/myrepo", clonedAt: "2026-03-02T00:00:00Z" });
+  const isNew = idx.merge("myrepo", {
+    path: "/tmp/myrepo",
+    url: "https://github.com/user/myrepo",
+    clonedAt: "2026-03-02T00:00:00Z",
+  });
   expect(isNew).toBe(false);
 });
 
 test("merge overwrites when name exists but path differs", async () => {
   const idx = await ProjectIndex.load(indexPath);
   idx.add("myrepo", { path: "/old/myrepo", url: "", clonedAt: "" });
-  const isNew = idx.merge("myrepo", { path: "/new/myrepo", url: "", clonedAt: "" });
+  const isNew = idx.merge("myrepo", {
+    path: "/new/myrepo",
+    url: "",
+    clonedAt: "",
+  });
   expect(isNew).toBe(true);
   expect(idx.resolve("myrepo")).toBe("/new/myrepo");
 });
@@ -105,13 +132,20 @@ test("scanForRepos populates remote URL when available", async () => {
   const repoDir = join(tmpDir, "testorg", "gx");
   await mkdir(repoDir, { recursive: true });
 
-  let proc = Bun.spawn(["git", "init"], { cwd: repoDir, stdout: "ignore", stderr: "ignore" });
-  await proc.exited;
-  proc = Bun.spawn(["git", "remote", "add", "origin", "https://github.com/joshuaboys/gx.git"], {
+  let proc = Bun.spawn(["git", "init"], {
     cwd: repoDir,
     stdout: "ignore",
     stderr: "ignore",
   });
+  await proc.exited;
+  proc = Bun.spawn(
+    ["git", "remote", "add", "origin", "https://github.com/joshuaboys/gx.git"],
+    {
+      cwd: repoDir,
+      stdout: "ignore",
+      stderr: "ignore",
+    },
+  );
   await proc.exited;
   await mkdir(join(repoDir, ".git"), { recursive: true });
 
@@ -152,4 +186,83 @@ test("rebuild scans directory for git repos", async () => {
   await idx.rebuild(tmpDir);
   expect(idx.resolve("repoA")).toBe(join(tmpDir, "user", "repoA"));
   expect(idx.resolve("repoB")).toBe(join(tmpDir, "user", "repoB"));
+});
+
+// scopedRebuild() tests
+
+test("scopedRebuild deletes entries under scope and rescans", async () => {
+  await mkdir(join(tmpDir, "org", "repoA", ".git"), { recursive: true });
+  await mkdir(join(tmpDir, "org", "repoB", ".git"), { recursive: true });
+
+  const idx = await ProjectIndex.load(indexPath);
+  // Pre-populate with an out-of-scope entry
+  idx.add("external", { path: "/other/dir/external", url: "", clonedAt: "" });
+  // Add an in-scope entry that will be wiped and re-discovered
+  idx.add("repoA", {
+    path: join(tmpDir, "org", "repoA"),
+    url: "",
+    clonedAt: "",
+  });
+
+  await idx.scopedRebuild(tmpDir);
+
+  // External entry preserved (not under tmpDir)
+  expect(idx.resolve("external")).toBe("/other/dir/external");
+  // In-scope entries rediscovered
+  expect(idx.resolve("repoA")).toBe(join(tmpDir, "org", "repoA"));
+  expect(idx.resolve("repoB")).toBe(join(tmpDir, "org", "repoB"));
+});
+
+test("scopedRebuild skips dotdir entries during deletion", async () => {
+  // Simulate agent repos under a dotdir
+  const agentDir = join(tmpDir, ".morgan");
+  await mkdir(join(agentDir, "org", "agentrepo", ".git"), { recursive: true });
+  // Simulate user repos
+  await mkdir(join(tmpDir, "org", "userrepo", ".git"), { recursive: true });
+
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("agentrepo", {
+    path: join(agentDir, "org", "agentrepo"),
+    url: "",
+    clonedAt: "",
+  });
+  idx.add("userrepo", {
+    path: join(tmpDir, "org", "userrepo"),
+    url: "",
+    clonedAt: "",
+  });
+
+  // User scoped rebuild (scope = tmpDir) should NOT delete agent entries
+  await idx.scopedRebuild(tmpDir);
+
+  // Agent entry preserved (dotdir prefix)
+  expect(idx.resolve("agentrepo")).toBe(join(agentDir, "org", "agentrepo"));
+  // User entry re-discovered
+  expect(idx.resolve("userrepo")).toBe(join(tmpDir, "org", "userrepo"));
+});
+
+test("scopedRebuild from agent scope only affects agent entries", async () => {
+  const agentDir = join(tmpDir, ".morgan");
+  await mkdir(join(agentDir, "org", "agentrepo", ".git"), { recursive: true });
+  await mkdir(join(tmpDir, "org", "userrepo", ".git"), { recursive: true });
+
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("agentrepo", {
+    path: join(agentDir, "org", "agentrepo"),
+    url: "",
+    clonedAt: "",
+  });
+  idx.add("userrepo", {
+    path: join(tmpDir, "org", "userrepo"),
+    url: "",
+    clonedAt: "",
+  });
+
+  // Agent scoped rebuild (scope = agentDir)
+  await idx.scopedRebuild(agentDir);
+
+  // User entry preserved (not under agentDir)
+  expect(idx.resolve("userrepo")).toBe(join(tmpDir, "org", "userrepo"));
+  // Agent entry re-discovered
+  expect(idx.resolve("agentrepo")).toBe(join(agentDir, "org", "agentrepo"));
 });
