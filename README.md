@@ -2,8 +2,7 @@
 
 # gx
 
-**A fast git project manager. 
-Clone, jump, and organise repos from the terminal.**
+**A fast git project manager — clone, jump, and organize repos from the terminal.**
 
 [![CI](https://github.com/joshuaboys/gx/actions/workflows/ci.yml/badge.svg)](https://github.com/joshuaboys/gx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -16,7 +15,7 @@ Clone, jump, and organise repos from the terminal.**
 ## Features
 
 - **Instant project switching** — jump to any repo by name with fuzzy matching
-- **Structured organisation** — repos are cloned into a consistent `owner/repo` layout
+- **Structured organization** — repos are cloned into a consistent `owner/repo` layout
 - **GitHub shorthand** — `gx clone user/repo` just works
 - **Shell integration** — tab completion and auto-`cd` for zsh, bash, and fish
 - **Open in any editor** — `gx open` launches VS Code, nvim, or whatever you use
@@ -27,14 +26,14 @@ Clone, jump, and organise repos from the terminal.**
 
 ```sh
 # Install
-curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | bash
 exec $SHELL   # reload to pick up PATH and shell integration
 
 # Clone a repo and cd into it
 gx clone user/repo
 
 # Jump back to it later
-gx myproject
+gx repo
 ```
 
 That's it. Shell integration and tab completion are set up automatically.
@@ -44,7 +43,7 @@ That's it. Shell integration and tab completion are set up automatically.
 The curl installer downloads (or builds) the `gx` binary, puts it on your `PATH`, and sets up shell integration with tab completion.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | bash
 ```
 
 > **Note:** Shell integration is required for `gx` to `cd` into projects. The installer sets this up automatically. If you installed manually, add `eval "$(gx shell-init)"` for bash/zsh or `gx shell-init | source` for fish to your shell config.
@@ -64,13 +63,11 @@ cp gx ~/.local/bin/
 Add shell integration to your config file:
 
 **zsh** (`~/.zshrc`) / **bash** (`~/.bashrc`):
-
 ```sh
 eval "$(gx shell-init)"
 ```
 
 **fish** (`~/.config/fish/conf.d/gx.fish`):
-
 ```fish
 gx shell-init | source
 ```

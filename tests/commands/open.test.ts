@@ -23,42 +23,49 @@ describe("resolveEditor", () => {
 
   test("returns override when provided", () => {
     const config: Config = { ...DEFAULT_CONFIG, editor: "vim" };
-    expect(resolveEditor(config, "code")).toBe("code");
+    expect(resolveEditor(config, "code")).toEqual({ bin: "code", args: [] });
   });
 
   test("falls back to config.editor when no override", () => {
     const config: Config = { ...DEFAULT_CONFIG, editor: "nvim" };
     delete process.env.VISUAL;
     delete process.env.EDITOR;
-    expect(resolveEditor(config)).toBe("nvim");
+    expect(resolveEditor(config)).toEqual({ bin: "nvim", args: [] });
   });
 
   test("falls back to $VISUAL when config.editor is empty", () => {
     const config: Config = { ...DEFAULT_CONFIG, editor: "" };
     process.env.VISUAL = "code";
     delete process.env.EDITOR;
-    expect(resolveEditor(config)).toBe("code");
+    expect(resolveEditor(config)).toEqual({ bin: "code", args: [] });
   });
 
   test("falls back to $EDITOR when $VISUAL is unset", () => {
     const config: Config = { ...DEFAULT_CONFIG, editor: "" };
     delete process.env.VISUAL;
     process.env.EDITOR = "vim";
-    expect(resolveEditor(config)).toBe("vim");
+    expect(resolveEditor(config)).toEqual({ bin: "vim", args: [] });
   });
 
   test("falls back to nano when nothing else is set", () => {
     const config: Config = { ...DEFAULT_CONFIG, editor: "" };
     delete process.env.VISUAL;
     delete process.env.EDITOR;
-    expect(resolveEditor(config)).toBe("nano");
+    expect(resolveEditor(config)).toEqual({ bin: "nano", args: [] });
   });
 
   test("override takes priority over everything", () => {
     const config: Config = { ...DEFAULT_CONFIG, editor: "emacs" };
     process.env.VISUAL = "code";
     process.env.EDITOR = "vim";
-    expect(resolveEditor(config, "zed")).toBe("zed");
+    expect(resolveEditor(config, "zed")).toEqual({ bin: "zed", args: [] });
+  });
+
+  test("splits editor string with flags into bin and args", () => {
+    const config: Config = { ...DEFAULT_CONFIG, editor: "" };
+    delete process.env.VISUAL;
+    process.env.EDITOR = "emacsclient -t";
+    expect(resolveEditor(config)).toEqual({ bin: "emacsclient", args: ["-t"] });
   });
 });
 

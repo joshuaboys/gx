@@ -7,7 +7,7 @@ export async function ls(indexPath: string): Promise<void> {
     console.error("No projects indexed. Clone a repo or run 'gx rebuild'.");
     return;
   }
-  const maxName = Math.max(...entries.map((e) => e.name.length));
+  const maxName = entries.reduce((m, e) => Math.max(m, e.name.length), 0);
   for (const entry of entries) {
     console.log(`${entry.name.padEnd(maxName)}  ${entry.path}`);
   }
