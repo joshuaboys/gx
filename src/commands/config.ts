@@ -11,7 +11,7 @@ export async function showConfig(configPath: string): Promise<void> {
 export async function setConfig(
   configPath: string,
   key: string,
-  value: string,
+  value: string
 ): Promise<void> {
   const config = await loadConfig(configPath);
   if (!(key in config)) {
@@ -35,10 +35,6 @@ export async function setConfig(
     const num = Number(value);
     if (Number.isNaN(num)) {
       console.error(`Value for '${key}' must be a number`);
-      process.exit(1);
-    }
-    if (key === "similarityThreshold" && (num < 0 || num > 1)) {
-      console.error(`Value for 'similarityThreshold' must be between 0 and 1`);
       process.exit(1);
     }
     record[key] = num;

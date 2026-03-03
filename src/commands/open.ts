@@ -1,7 +1,9 @@
 import { ProjectIndex } from "../lib/index.ts";
-import { fuzzyMatch, AUTO_JUMP_THRESHOLD } from "../lib/fuzzy.ts";
+import { fuzzyMatch } from "../lib/fuzzy.ts";
 import type { Config } from "../types.ts";
 import { which } from "bun";
+
+const AUTO_JUMP_THRESHOLD = 0.85;
 
 export const EDITORS: Record<string, { cmd: string; gui: boolean }> = {
   code: { cmd: "code", gui: true },
@@ -15,66 +17,12 @@ export const EDITORS: Record<string, { cmd: string; gui: boolean }> = {
   subl: { cmd: "subl", gui: true },
 };
 
-export function resolveEditor(
-  config: Config,
-  override?: string,
-): { bin: string; args: string[] } {
-  const raw =
-    override ||
-    config.editor ||
-    process.env.VISUAL ||
-    process.env.EDITOR ||
-    "nano";
-  const parsed = shellSplit(raw);
-  return { bin: parsed[0] ?? "nano", args: parsed.slice(1) };
-}
-
-function shellSplit(input: string): string[] {
-  const parts: string[] = [];
-  let current = "";
-  let quote: "'" | '"' | null = null;
-  let escaped = false;
-
-  for (const ch of input) {
-    if (escaped) {
-      current += ch;
-      escaped = false;
-      continue;
-    }
-
-    if (ch === "\\") {
-      escaped = true;
-      continue;
-    }
-
-    if (quote) {
-      if (ch === quote) {
-        quote = null;
-      } else {
-        current += ch;
-      }
-      continue;
-    }
-
-    if (ch === "'" || ch === '"') {
-      quote = ch;
-      continue;
-    }
-
-    if (/\s/.test(ch)) {
-      if (current.length > 0) {
-        parts.push(current);
-        current = "";
-      }
-      continue;
-    }
-
-    current += ch;
-  }
-
-  if (escaped) current += "\\";
-  if (current.length > 0) parts.push(current);
-  return parts;
+export function resolveEditor(config: Config, override?: string): string {
+  if (override) return override;
+  if (config.editor) return config.editor;
+  if (process.env.VISUAL) return process.env.VISUAL;
+  if (process.env.EDITOR) return process.env.EDITOR;
+  return "nano";
 }
 
 export async function openProject(
@@ -118,9 +66,8 @@ export async function openProject(
     projectPath = process.cwd();
   }
 
-  const editor = resolveEditor(config, editorOverride);
-  const editorInfo = EDITORS[editor.bin] ?? { cmd: editor.bin, gui: false };
-  const spawnArgs = [editorInfo.cmd, ...editor.args, projectPath];
+  const editorName = resolveEditor(config, editorOverride);
+  const editorInfo = EDITORS[editorName] ?? { cmd: editorName, gui: false };
 
   // Verify editor binary exists
   if (!which(editorInfo.cmd)) {
@@ -130,15 +77,15 @@ export async function openProject(
 
   if (editorInfo.gui) {
     // Spawn detached for GUI editors — don't block the terminal
-    Bun.spawn(spawnArgs, {
+    Bun.spawn([editorInfo.cmd, projectPath], {
       stdout: "ignore",
       stderr: "ignore",
       stdin: "ignore",
     });
-    console.error(`Opened ${projectPath} in ${editor.bin}`);
+    console.error(`Opened ${projectPath} in ${editorName}`);
   } else {
     // Terminal editor: inherit stdio for interactive use
-    const proc = Bun.spawn(spawnArgs, {
+    const proc = Bun.spawn([editorInfo.cmd, projectPath], {
       stdout: "inherit",
       stderr: "inherit",
       stdin: "inherit",

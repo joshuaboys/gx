@@ -1,16 +1,9 @@
-import { join, basename, dirname } from "path";
-import { mkdir, readdir, realpath, rename } from "fs/promises";
+import { join, basename } from "path";
+import { mkdir, readdir, realpath } from "fs/promises";
 import type { Index, IndexEntry } from "../types.ts";
 
 const MAX_SCAN_DEPTH = 10;
-const SKIP_DIRS = new Set([
-  "node_modules",
-  "vendor",
-  "target",
-  ".build",
-  "dist",
-  "build",
-]);
+const SKIP_DIRS = new Set(["node_modules", "vendor", "target", ".build", "dist", "build"]);
 
 export class ProjectIndex {
   private data: Index;
@@ -20,39 +13,25 @@ export class ProjectIndex {
   }
 
   static async load(path: string): Promise<ProjectIndex> {
-    const file = Bun.file(path);
-    if (!(await file.exists())) {
-      return new ProjectIndex({ projects: {} });
-    }
     try {
+      const file = Bun.file(path);
       const raw = await file.json();
       if (
         typeof raw === "object" &&
         raw !== null &&
         "projects" in raw &&
-        typeof (raw as Record<string, unknown>).projects === "object" &&
-        (raw as Record<string, unknown>).projects !== null &&
-        !Array.isArray((raw as Record<string, unknown>).projects)
+        typeof (raw as Record<string, unknown>).projects === "object"
       ) {
         return new ProjectIndex(raw as Index);
       }
-      console.error(
-        `Warning: index file has unexpected shape (${path}). Run 'gx rebuild' to regenerate.`,
-      );
       return new ProjectIndex({ projects: {} });
     } catch {
-      console.error(
-        `Warning: index file is corrupt (${path}). Run 'gx rebuild' to regenerate.`,
-      );
       return new ProjectIndex({ projects: {} });
     }
   }
 
   add(name: string, entry: IndexEntry): void {
-    if (
-      this.data.projects[name] &&
-      this.data.projects[name].path !== entry.path
-    ) {
+    if (this.data.projects[name] && this.data.projects[name].path !== entry.path) {
       console.error(
         `Warning: project name '${name}' collision — overwriting ${this.data.projects[name].path} with ${entry.path}`,
       );
@@ -108,7 +87,11 @@ export class ProjectIndex {
       if (!entry.isDirectory()) continue;
       if (entry.name === ".git") {
         const name = basename(dir);
-        this.add(name, { path: dir, url: "", clonedAt: "" });
+        this.data.projects[name] = {
+          path: dir,
+          url: "",
+          clonedAt: "",
+        };
         return; // Don't descend into .git or sibling dirs of a repo
       }
     }
@@ -122,17 +105,7 @@ export class ProjectIndex {
   }
 
   async save(path: string): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    const tmp = `${path}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
-    await Bun.write(tmp, JSON.stringify(this.data, null, 2) + "\n");
-    try {
-      await rename(tmp, path);
-    } catch (err) {
-      try {
-        const { unlink } = await import("fs/promises");
-        await unlink(tmp);
-      } catch {}
-      throw err;
-    }
+    await mkdir(join(path, ".."), { recursive: true });
+    await Bun.write(path, JSON.stringify(this.data, null, 2) + "\n");
   }
 }
