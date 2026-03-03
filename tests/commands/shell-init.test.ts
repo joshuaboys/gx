@@ -186,7 +186,7 @@ describe("wt (worktrunk) integration", () => {
     expect(output).toContain("wt $argv[3..]");
   });
 
-  test("all shells include install hint when wt missing", () => {
+  test("all shells include wt install hint in generated output", () => {
     for (const shell of ["zsh", "bash", "fish"] as const) {
       const output = captureOutput(() => shellInit(shell));
       expect(output).toContain("brew install worktrunk");

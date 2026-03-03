@@ -82,7 +82,7 @@ gx() {
 # Tab completion
 _gx() {
     local -a commands projects
-    commands=(clone ls rebuild config resolve open init shell-init --help --version)
+    commands=(clone ls rebuild config resolve open init shell-init --help --version -h -v)
 
     if (( CURRENT == 2 )); then
         projects=($("$_GX_BIN" resolve --list 2>/dev/null))
@@ -157,7 +157,7 @@ _gx_completions() {
     local prev="\${COMP_WORDS[COMP_CWORD-1]}"
 
     if [ "\$COMP_CWORD" -eq 1 ]; then
-        local commands="clone ls rebuild config resolve open init shell-init --help --version"
+        local commands="clone ls rebuild config resolve open init shell-init --help --version -h -v"
         local projects
         projects=$("$_GX_BIN" resolve --list 2>/dev/null)
         COMPREPLY=($(compgen -W "$commands $projects" -- "$cur"))
@@ -217,7 +217,7 @@ end
 
 # Tab completion
 complete -c gx -f
-complete -c gx -n "__fish_use_subcommand" -a "clone ls rebuild config resolve open init shell-init --help --version"
+complete -c gx -n "__fish_use_subcommand" -a "clone ls rebuild config resolve open init shell-init --help --version -h -v"
 complete -c gx -n "__fish_use_subcommand" -a "($_GX_BIN resolve --list 2>/dev/null)"
 complete -c gx -n "__fish_seen_subcommand_from config" -a "set"
 complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost structure shallow similarityThreshold editor"
