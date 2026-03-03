@@ -1,6 +1,8 @@
 import { ProjectIndex } from "../lib/index.ts";
-import { fuzzyMatch, AUTO_JUMP_THRESHOLD } from "../lib/fuzzy.ts";
+import { fuzzyMatch } from "../lib/fuzzy.ts";
 import type { Config } from "../types.ts";
+
+const AUTO_JUMP_THRESHOLD = 0.85;
 
 export async function resolve(
   name: string,
@@ -33,9 +35,7 @@ export async function resolve(
 
   const first = matches[0];
   if (matches.length === 1 && first && first.score >= AUTO_JUMP_THRESHOLD) {
-    console.error(
-      `Fuzzy match: '${name}' -> '${first.name}' (${(first.score * 100).toFixed(0)}%)`,
-    );
+    console.error(`Fuzzy match: '${name}' -> '${first.name}' (${(first.score * 100).toFixed(0)}%)`);
     console.log(first.path);
     return;
   }

@@ -72,7 +72,7 @@ Options:
       await rebuild(config, indexPath);
       break;
     case "config":
-      if (args[1] === "set" && args[2] !== undefined && args[3] !== undefined) {
+      if (args[1] === "set" && args[2] && args[3]) {
         await setConfig(configPath, args[2], args[3]);
       } else {
         await showConfig(configPath);
@@ -90,7 +90,9 @@ Options:
       }
       const name = args.find(
         (a, i) =>
-          i > 0 && a !== "--editor" && (editorFlag < 0 || i !== editorFlag + 1),
+          i > 0 &&
+          a !== "--editor" &&
+          (editorFlag < 0 || i !== editorFlag + 1),
       );
       await openProject(name, config, indexPath, editor);
       break;
@@ -135,6 +137,6 @@ Options:
 }
 
 main().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
+  console.error(err.message);
   process.exit(1);
 });

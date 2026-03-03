@@ -1,4 +1,4 @@
-import { join, dirname } from "path";
+import { join } from "path";
 import { mkdir, lstat } from "fs/promises";
 import { parseUrl, toCloneUrl } from "../lib/url.ts";
 import { toPath } from "../lib/path.ts";
@@ -8,7 +8,7 @@ import type { Config } from "../types.ts";
 export async function cloneRepo(
   input: string,
   config: Config,
-  indexPath: string,
+  indexPath: string
 ): Promise<string> {
   const parsed = parseUrl(input, config.defaultHost);
   const targetDir = toPath(parsed, config);
@@ -25,18 +25,14 @@ export async function cloneRepo(
       return targetDir;
     }
   } catch (err: unknown) {
-    if (
-      err instanceof Error &&
-      "code" in err &&
-      (err as NodeJS.ErrnoException).code !== "ENOENT"
-    ) {
+    if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code !== "ENOENT") {
       throw err;
     }
     // ENOENT = doesn't exist, continue with clone
   }
 
   // Create parent directory
-  await mkdir(dirname(targetDir), { recursive: true });
+  await mkdir(join(targetDir, ".."), { recursive: true });
 
   // Clone
   const cloneUrl = toCloneUrl(parsed);
@@ -60,13 +56,7 @@ export async function cloneRepo(
     url: cloneUrl,
     clonedAt: new Date().toISOString(),
   });
-  try {
-    await idx.save(indexPath);
-  } catch {
-    console.error(
-      `Warning: cloned to ${targetDir} but failed to update index. Run 'gx rebuild' to re-index.`,
-    );
-  }
+  await idx.save(indexPath);
 
   return targetDir;
 }

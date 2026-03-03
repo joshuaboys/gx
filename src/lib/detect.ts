@@ -1,5 +1,3 @@
-import { join } from "path";
-
 export type ProjectType =
   | "typescript-bun"
   | "typescript-node"
@@ -25,7 +23,8 @@ export const VALID_TYPES: ReadonlySet<string> = new Set<ProjectType>([
  * the binary `bun.lockb`. Both are treated as indicators of a Bun project.
  */
 export async function detectProjectType(dir: string): Promise<ProjectType> {
-  const has = async (name: string) => Bun.file(join(dir, name)).exists();
+  const has = async (name: string) =>
+    Bun.file(`${dir}/${name}`).exists();
 
   if (await has("package.json")) {
     const isBun = (await has("bun.lock")) || (await has("bun.lockb"));
