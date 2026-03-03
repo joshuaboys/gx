@@ -3,7 +3,7 @@ import type { ParsedRepo } from "../types.ts";
 const HTTPS_RE = /^https?:\/\/([^/]+)\/(.+?)(?:\.git)?\/?$/;
 const SSH_RE = /^(?:ssh:\/\/)?[^@]+@([^/:]+)(?::\d+)?[:/](.+?)(?:\.git)?\/?$/;
 const GIT_RE = /^git:\/\/([^/]+)\/(.+?)(?:\.git)?\/?$/;
-const SHORTHAND_RE = /^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)$/;
+const SHORTHAND_RE = /^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)\/?$/;
 
 function validateSegments(owner: string, repo: string): void {
   for (const seg of [...owner.split("/"), ...repo.split("/")]) {

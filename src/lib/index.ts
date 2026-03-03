@@ -125,6 +125,14 @@ export class ProjectIndex {
     await mkdir(dirname(path), { recursive: true });
     const tmp = `${path}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
     await Bun.write(tmp, JSON.stringify(this.data, null, 2) + "\n");
-    await rename(tmp, path);
+    try {
+      await rename(tmp, path);
+    } catch (err) {
+      try {
+        const { unlink } = await import("fs/promises");
+        await unlink(tmp);
+      } catch {}
+      throw err;
+    }
   }
 }
