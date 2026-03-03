@@ -221,7 +221,7 @@ complete -c gx -n "__fish_use_subcommand" -a "clone ls rebuild config resolve op
 complete -c gx -n "__fish_use_subcommand" -a "($_GX_BIN resolve --list 2>/dev/null)"
 complete -c gx -n "__fish_seen_subcommand_from config" -a "set"
 complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost structure shallow similarityThreshold editor"
-complete -c gx -n "not __fish_seen_subcommand_from clone ls rebuild config resolve open init shell-init; and test (count (commandline -opc)) -eq 2" -a "wt"`;
+complete -c gx -n "not __fish_seen_subcommand_from clone ls rebuild config resolve open init shell-init --help -h --version -v; and test (count (commandline -opc)) -eq 2" -a "wt"`;
 }
 
 export function shellInit(shellArg?: string): void {
