@@ -3,7 +3,14 @@ import { mkdir, readdir, realpath, rename } from "fs/promises";
 import type { Index, IndexEntry } from "../types.ts";
 
 const MAX_SCAN_DEPTH = 10;
-const SKIP_DIRS = new Set(["node_modules", "vendor", "target", ".build", "dist", "build"]);
+const SKIP_DIRS = new Set([
+  "node_modules",
+  "vendor",
+  "target",
+  ".build",
+  "dist",
+  "build",
+]);
 
 export class ProjectIndex {
   private data: Index;
@@ -33,7 +40,10 @@ export class ProjectIndex {
   }
 
   add(name: string, entry: IndexEntry): void {
-    if (this.data.projects[name] && this.data.projects[name].path !== entry.path) {
+    if (
+      this.data.projects[name] &&
+      this.data.projects[name].path !== entry.path
+    ) {
       console.error(
         `Warning: project name '${name}' collision — overwriting ${this.data.projects[name].path} with ${entry.path}`,
       );
@@ -73,6 +83,19 @@ export class ProjectIndex {
     this.data.projects = {};
     const visited = new Set<string>();
     await this.scanForRepos(projectDir, 0, visited);
+  }
+
+  async scopedRebuild(scopeDir: string): Promise<void> {
+    const prefix = scopeDir.endsWith("/") ? scopeDir : scopeDir + "/";
+    for (const [name, entry] of Object.entries(this.data.projects)) {
+      if (!entry.path.startsWith(prefix)) continue;
+      const rel = entry.path.slice(prefix.length);
+      const firstSegment = rel.split("/")[0];
+      if (firstSegment && firstSegment.startsWith(".")) continue;
+      delete this.data.projects[name];
+    }
+    const visited = new Set<string>();
+    await this.scanForRepos(scopeDir, 0, visited);
   }
 
   async additiveScan(projectDir: string): Promise<void> {
@@ -128,10 +151,11 @@ export class ProjectIndex {
 
   static async getRemoteUrl(repoPath: string): Promise<string> {
     try {
-      const proc = Bun.spawn(
-        ["git", "config", "--get", "remote.origin.url"],
-        { cwd: repoPath, stdout: "pipe", stderr: "ignore" },
-      );
+      const proc = Bun.spawn(["git", "config", "--get", "remote.origin.url"], {
+        cwd: repoPath,
+        stdout: "pipe",
+        stderr: "ignore",
+      });
       const exitCode = await proc.exited;
       if (exitCode !== 0) return "";
       const text = await new Response(proc.stdout).text();
