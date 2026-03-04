@@ -141,8 +141,12 @@ Options:
     case "recent": {
       const nFlag = args.indexOf("-n");
       let limit: number | undefined;
-      const nValue = nFlag >= 0 ? args[nFlag + 1] : undefined;
-      if (nValue) {
+      if (nFlag >= 0) {
+        const nValue = args[nFlag + 1];
+        if (!nValue || nValue.startsWith("-")) {
+          console.error("Usage: gx recent [-n <count>]");
+          process.exit(1);
+        }
         limit = parseInt(nValue, 10);
         if (isNaN(limit) || limit < 1) {
           console.error("Usage: gx recent [-n <count>]");

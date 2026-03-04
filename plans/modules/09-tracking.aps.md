@@ -48,6 +48,15 @@ The original spec included a separate `gx touch` CLI command for the shell plugi
 - `gx resume` must not fail if the project directory has been deleted — report "project missing" gracefully
 - `gx recent` with no visits yet should fall back to `clonedAt` ordering
 
+## Work Items
+
+- [x] TRK-1: Add `lastVisited` field and `touch()` method to ProjectIndex
+- [x] TRK-2: Update `resolve` to call `touch()` on match
+- [x] TRK-3: Implement `gx recent` command
+- [x] TRK-4: Implement `gx resume` command with git context
+- [x] TRK-5: Add shell wrapper integration for `resume`
+- [x] TRK-6: Add tab completion for `recent` and `resume`
+
 ## Ready Checklist
 
 - [x] Purpose and scope are clear

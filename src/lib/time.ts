@@ -1,6 +1,9 @@
 export function relativeTime(iso: string): string {
   if (!iso) return "";
-  const diff = Date.now() - new Date(iso).getTime();
+  const time = new Date(iso).getTime();
+  if (Number.isNaN(time)) return "";
+  const diff = Date.now() - time;
+  if (diff < 0) return "";
   const seconds = Math.floor(diff / 1000);
   if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);

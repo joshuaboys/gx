@@ -23,7 +23,7 @@ afterEach(async () => {
   await rm(tmpDir, { recursive: true });
 });
 
-test("resolve updates lastVisited on exact match", async () => {
+test("touch updates lastVisited on exact match", async () => {
   const idx = await ProjectIndex.load(indexPath);
   idx.add("gx", {
     path: "/tmp/gx",
