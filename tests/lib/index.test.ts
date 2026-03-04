@@ -266,3 +266,91 @@ test("scopedRebuild from agent scope only affects agent entries", async () => {
   // Agent entry re-discovered
   expect(idx.resolve("agentrepo")).toBe(join(agentDir, "org", "agentrepo"));
 });
+
+test("touch updates lastVisited on existing entry", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("gx", {
+    path: "/tmp/gx",
+    url: "",
+    clonedAt: "2026-01-01T00:00:00Z",
+  });
+  const before = new Date().toISOString();
+  const found = idx.touch("gx");
+  const after = new Date().toISOString();
+  expect(found).toBe(true);
+  const entry = idx.list().find((e) => e.name === "gx");
+  expect(entry!.lastVisited).toBeDefined();
+  expect(entry!.lastVisited! >= before).toBe(true);
+  expect(entry!.lastVisited! <= after).toBe(true);
+});
+
+test("touch returns false for unknown project", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  expect(idx.touch("nope")).toBe(false);
+});
+
+test("recent returns entries sorted by lastVisited descending", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("old", {
+    path: "/tmp/old",
+    url: "",
+    clonedAt: "2026-01-01T00:00:00Z",
+    lastVisited: "2026-01-01T00:00:00Z",
+  });
+  idx.add("new", {
+    path: "/tmp/new",
+    url: "",
+    clonedAt: "2026-01-02T00:00:00Z",
+    lastVisited: "2026-03-01T00:00:00Z",
+  });
+  idx.add("mid", {
+    path: "/tmp/mid",
+    url: "",
+    clonedAt: "2026-01-03T00:00:00Z",
+    lastVisited: "2026-02-01T00:00:00Z",
+  });
+  const result = idx.recent();
+  expect(result.map(([name]) => name)).toEqual(["new", "mid", "old"]);
+});
+
+test("recent falls back to clonedAt when lastVisited is absent", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("visited", {
+    path: "/tmp/visited",
+    url: "",
+    clonedAt: "2026-01-01T00:00:00Z",
+    lastVisited: "2026-02-01T00:00:00Z",
+  });
+  idx.add("unvisited", {
+    path: "/tmp/unvisited",
+    url: "",
+    clonedAt: "2026-03-01T00:00:00Z",
+  });
+  const result = idx.recent();
+  expect(result.map(([name]) => name)).toEqual(["unvisited", "visited"]);
+});
+
+test("recent respects limit parameter", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("a", {
+    path: "/tmp/a",
+    url: "",
+    clonedAt: "",
+    lastVisited: "2026-03-03T00:00:00Z",
+  });
+  idx.add("b", {
+    path: "/tmp/b",
+    url: "",
+    clonedAt: "",
+    lastVisited: "2026-03-02T00:00:00Z",
+  });
+  idx.add("c", {
+    path: "/tmp/c",
+    url: "",
+    clonedAt: "",
+    lastVisited: "2026-03-01T00:00:00Z",
+  });
+  const result = idx.recent(2);
+  expect(result).toHaveLength(2);
+  expect(result.map(([name]) => name)).toEqual(["a", "b"]);
+});
