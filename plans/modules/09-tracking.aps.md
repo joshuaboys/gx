@@ -1,8 +1,8 @@
 # Project Tracking
 
-| ID | Owner | Status |
-|----|-------|--------|
-| TRK | @joshuaboys | Draft |
+| ID  | Owner       | Status   |
+| --- | ----------- | -------- |
+| TRK | @joshuaboys | Complete |
 
 ## Purpose
 
@@ -15,7 +15,6 @@ Track when projects are visited so users can quickly return to recently used pro
 - `gx recent` — list projects sorted by most recently visited
 - `gx recent -n <N>` — limit output to last N projects
 - `gx resume <name>` — jump to project and print context (current branch, dirty file count, last commit summary)
-- Internal `gx touch <name>` subcommand for shell plugin to record visits without resolving
 - Tab completion for `gx recent` and `gx resume`
 
 ## Out of Scope
@@ -33,30 +32,26 @@ Track when projects are visited so users can quickly return to recently used pro
 
 **Exposes:**
 
-- `touch(name: string): Promise<void>` — update `lastVisited` for a project
-- `recent(limit?: number): IndexEntry[]` — return projects sorted by `lastVisited` descending
-- `resume(name: string): ResumeContext` — resolve project path and gather git context
+- `touch(name: string): boolean` — update `lastVisited` for a project (internal method on ProjectIndex)
+- `recent(limit?: number): Array<[string, IndexEntry]>` — return projects sorted by `lastVisited` descending
+- `getResumeContext(dir: string): ResumeContext | null` — gather git context for a project directory
 - `recent` subcommand in CLI
 - `resume` subcommand in CLI
-- `touch` subcommand in CLI (internal, used by shell plugin)
+
+## Design Decision
+
+The original spec included a separate `gx touch` CLI command for the shell plugin to call after each `cd`. During design review, this was eliminated: `resolve` now updates `lastVisited` as a side effect, removing an entire subprocess spawn per navigation.
 
 ## Constraints
 
-- Must not break existing index.json format — `lastVisited` is optional (null for never-visited projects)
+- Must not break existing index.json format — `lastVisited` is optional (absent for never-visited projects)
 - `gx resume` must not fail if the project directory has been deleted — report "project missing" gracefully
 - `gx recent` with no visits yet should fall back to `clonedAt` ordering
-- `gx touch` should be fast (no stdout, minimal I/O) since it runs on every shell navigation
 
 ## Ready Checklist
 
-Change status to **Ready** when:
-
-- [ ] Purpose and scope are clear
-- [ ] Index entry schema extension designed (backward-compatible)
-- [ ] Shell plugin integration for `touch` defined
-- [ ] Dependencies identified
-- [ ] At least one task defined
-
-## Work Items
-
-_None yet -- tasks will be defined when this module reaches Ready status._
+- [x] Purpose and scope are clear
+- [x] Index entry schema extension designed (backward-compatible)
+- [x] Shell plugin integration defined (resolve updates lastVisited as side effect)
+- [x] Dependencies identified
+- [x] At least one task defined
