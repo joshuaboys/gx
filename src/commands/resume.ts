@@ -1,8 +1,7 @@
+import { stat } from "fs/promises";
 import { ProjectIndex } from "../lib/index.ts";
-import { fuzzyMatch } from "../lib/fuzzy.ts";
+import { fuzzyMatch, AUTO_JUMP_THRESHOLD } from "../lib/fuzzy.ts";
 import type { Config } from "../types.ts";
-
-const AUTO_JUMP_THRESHOLD = 0.85;
 
 export interface ResumeContext {
   branch: string;
@@ -29,8 +28,8 @@ export async function getResumeContext(
   dir: string,
 ): Promise<ResumeContext | null> {
   try {
-    const { statSync } = await import("fs");
-    if (!statSync(dir).isDirectory()) return null;
+    const s = await stat(dir);
+    if (!s.isDirectory()) return null;
   } catch {
     return null;
   }
