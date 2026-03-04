@@ -2,7 +2,7 @@
 
 # gx
 
-**A fast git project manager. 
+**A fast git project manager.
 Clone, jump, and organise repos from the terminal.**
 
 [![CI](https://github.com/joshuaboys/gx/actions/workflows/ci.yml/badge.svg)](https://github.com/joshuaboys/gx/actions/workflows/ci.yml)
@@ -206,13 +206,6 @@ Remove the `# gx` block from your shell config file (`~/.zshrc`, `~/.bashrc`, or
 
 - [Use cases & examples](docs/use-cases.md) — real-world workflows, scripting recipes, and shell aliases
 - [Contributing](CONTRIBUTING.md) — development setup and guidelines
-
-## Acknowledgements
-
-gx draws inspiration from these projects:
-
-- **[ghq](https://github.com/x-motemen/ghq)** — the original structured repository manager. ghq pioneered the `host/owner/repo` directory layout and index-based project lookup that gx builds on.
-- **[gclone](https://github.com/allonsy/gclone)** — a git clone helper with automatic directory organisation, shorthand URL parsing, and shell auto-cd. gx's clone workflow and shell integration owe a lot to gclone's approach.
 
 ## Acknowledgements
 
