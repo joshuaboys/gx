@@ -69,6 +69,22 @@ export class ProjectIndex {
     return this.data.projects[name]?.path ?? null;
   }
 
+  touch(name: string): boolean {
+    const entry = this.data.projects[name];
+    if (!entry) return false;
+    entry.lastVisited = new Date().toISOString();
+    return true;
+  }
+
+  recent(limit?: number): Array<[string, IndexEntry]> {
+    const entries = Object.entries(this.data.projects).sort((a, b) => {
+      const timeA = a[1].lastVisited || a[1].clonedAt || "";
+      const timeB = b[1].lastVisited || b[1].clonedAt || "";
+      return timeB.localeCompare(timeA);
+    });
+    return limit ? entries.slice(0, limit) : entries;
+  }
+
   list(): Array<{ name: string } & IndexEntry> {
     return Object.entries(this.data.projects)
       .map(([name, entry]) => ({ name, ...entry }))

@@ -31,8 +31,8 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 ### v3 — Project Awareness (Draft)
 
-- [ ] `gx recent` lists projects sorted by last visited
-- [ ] `gx resume <name>` jumps to project and prints context (branch, dirty files, last commit)
+- [x] `gx recent` lists projects sorted by last visited
+- [x] `gx resume <name>` jumps to project and prints context (branch, dirty files, last commit)
 - [ ] `gx dash` shows all projects grouped by git status (dirty, ahead, clean, stale)
 - [ ] Dashboard output is colored ANSI with group headers
 - [ ] Parallel git status queries complete within reasonable time for 50+ projects
@@ -72,7 +72,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [Fuzzy Matching](./archive/modules/06-fuzzy.aps.md)                                       | Suggest closest matches when exact project name not found                                     | Complete (archived) | v2      | Index                    |
 | [Editor Integration](./archive/modules/07-editor.aps.md)                                  | Open projects in preferred editor                                                             | Complete (archived) | v2      | Index, CLI               |
 | [Agent Scaffolding](./archive/modules/08-agent.aps.md)                                    | Scaffold AI agent configuration for projects                                                  | Complete (archived) | v2      | CLI                      |
-| [Tracking](./modules/09-tracking.aps.md)                                                  | Record project visits and enable recency-based navigation                                     | Draft               | v3      | Index                    |
+| [Tracking](./modules/09-tracking.aps.md)                                                  | Record project visits and enable recency-based navigation                                     | Complete            | v3      | Index                    |
 | [Dashboard](./modules/10-dashboard.aps.md)                                                | Colored ANSI overview of all projects grouped by git status                                   | Draft               | v3      | Index, Tracking          |
 | [Hooks](./modules/11-hooks.aps.md)                                                        | Per-project onEnter commands with trust/allow safety                                          | Future              | v4      | Shell Plugin             |
 | [Templates](./modules/12-templates.aps.md)                                                | Create new projects from template repositories                                                | Future              | v4      | Clone, Index             |
@@ -111,7 +111,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [x] Should `gx init` overwrite existing `.claude/CLAUDE.md` or merge? — Refuse without `--force`; no merge
 - [ ] Should `gx open` support opening specific files within a project?
 - [ ] Should `gx recent` show a configurable default count or always show all?
-- [ ] What git commands should `gx resume` run for context? (`git status --short`, `git log -1 --oneline`, `git branch --show-current`)
+- [x] What git commands should `gx resume` run for context? — `git branch --show-current`, `git status --porcelain`, `git log -1 --format='%h %s (%cr)'`
 - [ ] Should `gx dash` fetch remotes before reporting ahead/behind, or use local state only?
 - [ ] What stale threshold default? (30 days proposed)
 - [ ] Should hook trust be per-project or per-file-hash (re-trust on `.gx.json` change)?
@@ -124,6 +124,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - **D-003:** Binary + multi-shell integration architecture — `gx shell-init` generates eval-able code for zsh, bash, and fish; `plugin/gx.plugin.zsh` is a legacy oh-my-zsh compatibility shim — _accepted_
 - **D-004:** `gx <name>` as default action (jump to project) — _accepted_
 - **D-005:** Dashboard uses local git state only — no remote fetch on `gx dash` (too slow for multi-project scan) — _proposed_
-- **D-006:** `lastVisited` is an optional field on IndexEntry — backward compatible, no migration needed — _proposed_
+- **D-006:** `lastVisited` is an optional field on IndexEntry — backward compatible, no migration needed — _accepted_
+- **D-009:** No separate `gx touch` command — `resolve` updates `lastVisited` as a side effect, eliminating a subprocess spawn per navigation — _accepted_
 - **D-007:** v3 before v4 — tracking and dashboard provide immediate value and inform TUI design — _proposed_
 - **D-008:** README includes Acknowledgements section crediting ghq and gclone as prior art — _accepted_

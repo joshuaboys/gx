@@ -27,6 +27,7 @@ export interface IndexEntry {
   path: string;
   url: string;
   clonedAt: string;
+  lastVisited?: string;
 }
 
 export interface Index {

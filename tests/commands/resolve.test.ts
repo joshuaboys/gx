@@ -23,6 +23,25 @@ afterEach(async () => {
   await rm(tmpDir, { recursive: true });
 });
 
+test("touch updates lastVisited on exact match", async () => {
+  const idx = await ProjectIndex.load(indexPath);
+  idx.add("gx", {
+    path: "/tmp/gx",
+    url: "https://github.com/joshuaboys/gx",
+    clonedAt: "2026-01-01T00:00:00Z",
+  });
+  await idx.save(indexPath);
+
+  const idx2 = await ProjectIndex.load(indexPath);
+  const found = idx2.touch("gx");
+  expect(found).toBe(true);
+  await idx2.save(indexPath);
+
+  const idx3 = await ProjectIndex.load(indexPath);
+  const entry = idx3.list().find((e) => e.name === "gx");
+  expect(entry!.lastVisited).toBeDefined();
+});
+
 describe("resolve", () => {
   test("--list mode prints all names joined by newlines", async () => {
     const logSpy = spyOn(console, "log").mockImplementation(() => {});
@@ -39,7 +58,9 @@ describe("resolve", () => {
   });
 
   test("no match exits with code 1", async () => {
-    const mockExit = spyOn(process, "exit").mockImplementation(() => { throw new Error("exit"); });
+    const mockExit = spyOn(process, "exit").mockImplementation(() => {
+      throw new Error("exit");
+    });
     try {
       await resolve("nonexistent", indexPath, DEFAULT_CONFIG);
     } catch {}

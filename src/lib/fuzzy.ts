@@ -1,3 +1,5 @@
+export const AUTO_JUMP_THRESHOLD = 0.85;
+
 export interface FuzzyResult {
   name: string;
   score: number;
@@ -51,7 +53,9 @@ function jaro(a: string, b: string): number {
   }
 
   return (
-    (matches / aLen + matches / bLen + (matches - transpositions / 2) / matches) /
+    (matches / aLen +
+      matches / bLen +
+      (matches - transpositions / 2) / matches) /
     3
   );
 }

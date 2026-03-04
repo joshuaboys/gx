@@ -11,6 +11,8 @@ import { openProject } from "./commands/open.ts";
 import { initAgent } from "./commands/init.ts";
 import { shellInit } from "./commands/shell-init.ts";
 import { indexRepos } from "./commands/index-repos.ts";
+import { recent } from "./commands/recent.ts";
+import { resume } from "./commands/resume.ts";
 import pkg from "../package.json";
 
 const VERSION = pkg.version;
@@ -35,6 +37,9 @@ Usage:
   gx index                 Index new repos (additive scan)
   gx index <path>...       Add specific repo(s) to index
   gx rebuild               Rescan and rebuild index
+  gx recent               List recently visited projects
+  gx recent -n <N>        Show last N projects
+  gx resume <name>        Jump to project with git context
   gx config                Show config
   gx config set <key> <v>  Set config value
   gx init                  Scaffold .claude/ agent config
@@ -133,6 +138,33 @@ Options:
         process.exit(1);
       }
       break;
+    case "recent": {
+      const nFlag = args.indexOf("-n");
+      let limit: number | undefined;
+      if (nFlag >= 0) {
+        const nValue = args[nFlag + 1];
+        if (!nValue || nValue.startsWith("-")) {
+          console.error("Usage: gx recent [-n <count>]");
+          process.exit(1);
+        }
+        limit = parseInt(nValue, 10);
+        if (isNaN(limit) || limit < 1) {
+          console.error("Usage: gx recent [-n <count>]");
+          process.exit(1);
+        }
+      }
+      await recent(indexPath, limit);
+      break;
+    }
+    case "resume": {
+      const name = args[1];
+      if (!name) {
+        console.error("Usage: gx resume <name>");
+        process.exit(1);
+      }
+      await resume(name, indexPath, config);
+      break;
+    }
     default:
       // Default: treat as project name to resolve
       await resolve(command, indexPath, config);
