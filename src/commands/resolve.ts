@@ -1,8 +1,6 @@
 import { ProjectIndex } from "../lib/index.ts";
-import { fuzzyMatch } from "../lib/fuzzy.ts";
+import { fuzzyMatch, AUTO_JUMP_THRESHOLD } from "../lib/fuzzy.ts";
 import type { Config } from "../types.ts";
-
-const AUTO_JUMP_THRESHOLD = 0.85;
 
 export async function resolve(
   name: string,

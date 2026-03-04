@@ -37,9 +37,9 @@ Usage:
   gx index                 Index new repos (additive scan)
   gx index <path>...       Add specific repo(s) to index
   gx rebuild               Rescan and rebuild index
-  gx recent              List recently visited projects
-  gx recent -n <N>       Show last N projects
-  gx resume <name>       Jump to project with git context
+  gx recent               List recently visited projects
+  gx recent -n <N>        Show last N projects
+  gx resume <name>        Jump to project with git context
   gx config                Show config
   gx config set <key> <v>  Set config value
   gx init                  Scaffold .claude/ agent config
