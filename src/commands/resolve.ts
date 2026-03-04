@@ -20,6 +20,8 @@ export async function resolve(
   // Try exact match first
   const path = idx.resolve(name);
   if (path) {
+    idx.touch(name);
+    await idx.save(indexPath);
     console.log(path);
     return;
   }
@@ -35,7 +37,11 @@ export async function resolve(
 
   const first = matches[0];
   if (matches.length === 1 && first && first.score >= AUTO_JUMP_THRESHOLD) {
-    console.error(`Fuzzy match: '${name}' -> '${first.name}' (${(first.score * 100).toFixed(0)}%)`);
+    console.error(
+      `Fuzzy match: '${name}' -> '${first.name}' (${(first.score * 100).toFixed(0)}%)`,
+    );
+    idx.touch(first.name);
+    await idx.save(indexPath);
     console.log(first.path);
     return;
   }
