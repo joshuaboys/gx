@@ -8,7 +8,7 @@ import type { Config } from "../types.ts";
 export async function cloneRepo(
   input: string,
   config: Config,
-  indexPath: string
+  indexPath: string,
 ): Promise<string> {
   const parsed = parseUrl(input, config.defaultHost);
   const targetDir = toPath(parsed, config);
@@ -25,7 +25,11 @@ export async function cloneRepo(
       return targetDir;
     }
   } catch (err: unknown) {
-    if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code !== "ENOENT") {
+    if (
+      err instanceof Error &&
+      "code" in err &&
+      (err as NodeJS.ErrnoException).code !== "ENOENT"
+    ) {
       throw err;
     }
     // ENOENT = doesn't exist, continue with clone
@@ -51,10 +55,12 @@ export async function cloneRepo(
 
   // Update index
   const idx = await ProjectIndex.load(indexPath);
+  const now = new Date().toISOString();
   idx.add(parsed.repo, {
     path: targetDir,
     url: cloneUrl,
-    clonedAt: new Date().toISOString(),
+    clonedAt: now,
+    lastVisited: now,
   });
   await idx.save(indexPath);
 
