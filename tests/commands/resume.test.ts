@@ -25,19 +25,35 @@ test("getResumeContext returns context for a git repo", async () => {
     stdout: "ignore",
     stderr: "ignore",
   });
-  await proc.exited;
-  proc = Bun.spawn(["git", "commit", "--allow-empty", "-m", "initial"], {
-    cwd: repoDir,
-    stdout: "ignore",
-    stderr: "ignore",
-  });
-  await proc.exited;
+  const initExitCode = await proc.exited;
+  expect(initExitCode).toBe(0);
+  proc = Bun.spawn(
+    [
+      "git",
+      "-c",
+      "user.name=Test User",
+      "-c",
+      "user.email=test@example.com",
+      "commit",
+      "--allow-empty",
+      "-m",
+      "initial",
+    ],
+    {
+      cwd: repoDir,
+      stdout: "ignore",
+      stderr: "ignore",
+    },
+  );
+  const commitExitCode = await proc.exited;
+  expect(commitExitCode).toBe(0);
 
   const ctx = await getResumeContext(repoDir);
   expect(ctx).not.toBeNull();
   expect(ctx!.branch).toBeDefined();
   expect(typeof ctx!.dirtyCount).toBe("number");
-  expect(ctx!.lastCommit).toBeDefined();
+  expect(typeof ctx!.lastCommit).toBe("string");
+  expect(ctx!.lastCommit).not.toBe("");
 });
 
 test("getResumeContext returns null for missing directory", async () => {

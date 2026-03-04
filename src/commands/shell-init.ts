@@ -52,8 +52,14 @@ gx() {
         resume)
             local output
             output=$("$_GX_BIN" resume "\${@:2}")
+            local status=$?
+            if [ "$status" -ne 0 ]; then
+                return "$status"
+            fi
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
+            else
+                return 1
             fi
             ;;
         ls|recent|rebuild|config|open|init|shell-init|--help|-h|--version|-v)
@@ -129,10 +135,16 @@ gx() {
             fi
             ;;
         resume)
-            local output
+            local output status
             output=$("$_GX_BIN" resume "\${@:2}")
+            status=$?
+            if [ "$status" -ne 0 ]; then
+                return "$status"
+            fi
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
+            else
+                return 1
             fi
             ;;
         ls|recent|rebuild|config|open|init|shell-init|--help|-h|--version|-v)
@@ -209,8 +221,14 @@ function gx
             end
         case resume
             set -l output ($_GX_BIN resume $argv[2..])
+            set -l cmd_status $status
+            if test $cmd_status -ne 0
+                return $cmd_status
+            end
             if test -n "$output" -a -d "$output"
                 cd "$output"
+            else
+                return 1
             end
         case ls recent rebuild config open init shell-init --help -h --version -v resolve
             $_GX_BIN $argv
