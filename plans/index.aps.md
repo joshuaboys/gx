@@ -39,6 +39,9 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 ### v4 — Ecosystem (Future)
 
+- [ ] `gx fork <repo>` forks on GitHub, clones locally, sets upstream remote, and indexes
+- [ ] `gx sync` fetches upstream and integrates changes (fast-forward, rebase, or merge)
+- [ ] `gx sync` handles diverged forks safely — never silently discards commits
 - [ ] `.gx.json` hooks run on project entry with trust/allow safety
 - [ ] `gx new <name> --template <tpl>` creates projects from template repos
 - [ ] `gx tui` provides interactive terminal UI for project navigation
@@ -59,26 +62,27 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 
 ## Modules
 
-| Module                                                                                    | Purpose                                                                                       | Status              | Version | Dependencies         |
-| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------- | ------- | -------------------- |
-| [URL & Path](./archive/modules/01-url.aps.md)                                             | Parse git URLs and map to filesystem paths                                                    | Complete (archived) | v1      | —                    |
-| [Clone](./archive/modules/02-clone.aps.md)                                                | Clone repos to organized directories                                                          | Complete (archived) | v1      | URL                  |
-| [Index](./archive/modules/03-index.aps.md)                                                | Track projects and resolve names to paths                                                     | Complete (archived) | v1      | —                    |
-| [CLI](./archive/modules/04-cli.aps.md)                                                    | Subcommand routing and argument parsing                                                       | Complete (archived) | v1      | URL, Clone, Index    |
-| [Shell Plugin](./archive/modules/05-shell.aps.md)                                         | Zsh plugin for cd, completion, and shell integration                                          | Complete (archived) | v1      | CLI                  |
-| [Fuzzy Matching](./archive/modules/06-fuzzy.aps.md)                                       | Suggest closest matches when exact project name not found                                     | Complete (archived) | v2      | Index                |
-| [Editor Integration](./archive/modules/07-editor.aps.md)                                  | Open projects in preferred editor                                                             | Complete (archived) | v2      | Index, CLI           |
-| [Agent Scaffolding](./archive/modules/08-agent.aps.md)                                    | Scaffold AI agent configuration for projects                                                  | Complete (archived) | v2      | CLI                  |
-| [Tracking](./modules/09-tracking.aps.md)                                                  | Record project visits and enable recency-based navigation                                     | Complete            | v3      | Index                |
-| [Dashboard](./modules/10-dashboard.aps.md)                                                | Colored ANSI overview of all projects grouped by git status                                   | Draft               | v3      | Index, Tracking      |
-| [Hooks](./modules/11-hooks.aps.md)                                                        | Per-project onEnter commands with trust/allow safety                                          | Future              | v4      | Shell Plugin         |
-| [Templates](./modules/12-templates.aps.md)                                                | Create new projects from template repositories                                                | Future              | v4      | Clone, Index         |
-| [Interactive TUI](./modules/13-tui.aps.md)                                                | Keyboard-navigable interactive terminal dashboard                                             | Future              | v4      | Dashboard, Tracking  |
-| [Tutorial](./modules/14-tutorial.aps.md)                                                  | Interactive walkthrough teaching gx features                                                  | Future              | v4      | All stable modules   |
-| [Distribution & Install UX](./modules/15-distribution.aps.md)                             | Release binaries, installer, and doctor flow for easy adoption                                | Draft               | v5      | CLI                  |
-| [Shell Portability](./modules/16-shell-portability.aps.md)                                | Bash/fish integration and completion parity                                                   | Draft               | v5      | Shell Plugin, CLI    |
-| [Index Reliability & Observability](./modules/17-index-observability.aps.md)              | Index diagnostics, stats, and scan telemetry                                                  | Draft               | v5      | Index, Tracking      |
-| [APS Runtime Provisioning & Project Config](./modules/18-aps-runtime-provisioning.aps.md) | Global APS runtime with per-project policy via `.apsrc.yaml` and init-time preference capture | Ready               | v6      | CLI, APS scaffolding |
+| Module                                                                                    | Purpose                                                                                       | Status              | Version | Dependencies             |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------- | ------- | ------------------------ |
+| [URL & Path](./archive/modules/01-url.aps.md)                                             | Parse git URLs and map to filesystem paths                                                    | Complete (archived) | v1      | —                        |
+| [Clone](./archive/modules/02-clone.aps.md)                                                | Clone repos to organized directories                                                          | Complete (archived) | v1      | URL                      |
+| [Index](./archive/modules/03-index.aps.md)                                                | Track projects and resolve names to paths                                                     | Complete (archived) | v1      | —                        |
+| [CLI](./archive/modules/04-cli.aps.md)                                                    | Subcommand routing and argument parsing                                                       | Complete (archived) | v1      | URL, Clone, Index        |
+| [Shell Plugin](./archive/modules/05-shell.aps.md)                                         | Zsh plugin for cd, completion, and shell integration                                          | Complete (archived) | v1      | CLI                      |
+| [Fuzzy Matching](./archive/modules/06-fuzzy.aps.md)                                       | Suggest closest matches when exact project name not found                                     | Complete (archived) | v2      | Index                    |
+| [Editor Integration](./archive/modules/07-editor.aps.md)                                  | Open projects in preferred editor                                                             | Complete (archived) | v2      | Index, CLI               |
+| [Agent Scaffolding](./archive/modules/08-agent.aps.md)                                    | Scaffold AI agent configuration for projects                                                  | Complete (archived) | v2      | CLI                      |
+| [Tracking](./modules/09-tracking.aps.md)                                                  | Record project visits and enable recency-based navigation                                     | Complete            | v3      | Index                    |
+| [Dashboard](./modules/10-dashboard.aps.md)                                                | Colored ANSI overview of all projects grouped by git status                                   | Draft               | v3      | Index, Tracking          |
+| [Hooks](./modules/11-hooks.aps.md)                                                        | Per-project onEnter commands with trust/allow safety                                          | Future              | v4      | Shell Plugin             |
+| [Templates](./modules/12-templates.aps.md)                                                | Create new projects from template repositories                                                | Future              | v4      | Clone, Index             |
+| [Interactive TUI](./modules/13-tui.aps.md)                                                | Keyboard-navigable interactive terminal dashboard                                             | Future              | v4      | Dashboard, Tracking      |
+| [Tutorial](./modules/14-tutorial.aps.md)                                                  | Interactive walkthrough teaching gx features                                                  | Future              | v4      | All stable modules       |
+| [Distribution & Install UX](./modules/15-distribution.aps.md)                             | Release binaries, installer, and doctor flow for easy adoption                                | Draft               | v5      | CLI                      |
+| [Shell Portability](./modules/16-shell-portability.aps.md)                                | Bash/fish integration and completion parity                                                   | Draft               | v5      | Shell Plugin, CLI        |
+| [Index Reliability & Observability](./modules/17-index-observability.aps.md)              | Index diagnostics, stats, and scan telemetry                                                  | Draft               | v5      | Index, Tracking          |
+| [APS Runtime Provisioning & Project Config](./modules/18-aps-runtime-provisioning.aps.md) | Global APS runtime with per-project policy via `.apsrc.yaml` and init-time preference capture | Ready               | v6      | CLI, APS scaffolding     |
+| [Fork & Sync](./modules/19-fork.aps.md)                                                   | Fork repos via GitHub, clone locally, and keep forks synced with upstream                     | Draft               | v4      | Clone, Shell Plugin, CLI |
 
 ## Risks
 
@@ -94,6 +98,8 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | Index schema migration         | Adding `lastVisited` field to existing entries              | Make field optional, null = never visited, no migration step required              |
 | Hook security surface          | Malicious `.gx.json` could run arbitrary commands           | direnv-style trust/allow — hooks never run until user explicitly trusts project    |
 | TUI terminal compatibility     | Escape sequences differ across terminals                    | Target xterm-256color, degrade gracefully, always provide non-interactive fallback |
+| `gh` CLI dependency for fork   | Fork requires external tool not all users have              | Check upfront with clear error, `gx clone` still works without `gh`                |
+| Fork sync conflicts            | Rebase/merge on diverged forks can produce conflicts        | Abort cleanly, leave tree in resolvable state, print actionable guidance           |
 
 ## Open Questions
 
