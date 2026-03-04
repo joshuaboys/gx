@@ -68,7 +68,7 @@ interface SyncResult {
 ## Constraints
 
 - Requires `gh` CLI installed and authenticated — `gx fork` must check this upfront and give a clear error if missing
-- `gx sync` must never silently discard user commits — diverged state always requires an explicit strategy
+- `gx sync` must never silently discard user commits — diverged state uses the configured strategy (default: rebase), which can be overridden per-run with `--rebase` / `--merge`; the chosen strategy must be displayed to the user before execution
 - `gx sync` must abort cleanly on rebase/merge conflicts and leave the working tree in a resolvable state (same as `git rebase` / `git merge` would)
 - `gx sync` only operates on the current branch — does not sync all branches
 - `upstream` remote name is a convention — `gx sync` should detect the upstream remote by checking `gh repo view --json parent` or falling back to a remote named `upstream`
