@@ -30,22 +30,31 @@ async function main() {
 
 Usage:
   gx <name>                Jump to project
-  gx <name> wt [args...]   Jump to project and run wt (worktrunk)
   gx clone <repo>          Clone and jump to repo
   gx open [name]           Open project in editor
   gx ls                    List indexed projects
   gx index                 Index new repos (additive scan)
   gx index <path>...       Add specific repo(s) to index
   gx rebuild               Rescan and rebuild index
-  gx recent               List recently visited projects
-  gx recent -n <N>        Show last N projects
-  gx resume <name>        Jump to project with git context
+  gx recent                List recently visited projects
+  gx recent -n <N>         Show last N projects
+  gx resume <name>         Jump to project with git context
   gx config                Show config
   gx config set <key> <v>  Set config value
   gx init                  Scaffold .claude/ agent config
   gx shell-init [shell]    Print shell integration code
   gx resolve <name>        Resolve project name to path
   gx resolve --list        List all project names
+
+Worktrees (requires shell integration):
+  gx <name> wt [args...]   Jump to project and run wt (worktrunk)
+
+Planned (not yet implemented):
+  gx fork <repo>           Fork repo on GitHub, clone, and jump
+  gx fork <repo> --clone-only  Clone existing fork, set upstream
+  gx sync                  Fetch upstream and integrate changes
+  gx sync --rebase|--merge Override sync strategy
+  gx sync --push           Push to origin after syncing
 
 Options:
   gx open --editor <name>  Override editor for this invocation
