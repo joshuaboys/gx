@@ -174,6 +174,11 @@ Options:
       await resume(name, indexPath, config);
       break;
     }
+    case "fork":
+    case "sync":
+      console.error(`'gx ${command}' is not yet implemented.`);
+      process.exit(1);
+      break;
     default:
       // Default: treat as project name to resolve
       await resolve(command, indexPath, config);
