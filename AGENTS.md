@@ -48,3 +48,17 @@ Prefer Bun-native APIs: `Bun.file` over `node:fs`, `Bun.$\`cmd\`` over child_pro
 - Short, imperative subjects.
 - PRs: concise summary, linked issues, validation steps, doc updates for CLI changes.
 - CI must pass on both `ubuntu-latest` and `macos-latest`.
+
+## Notifications
+
+This project is monitored by superterm. When you need user input, are waiting
+for confirmation, or have completed a long-running task, notify the dashboard:
+
+    superterm notify
+    superterm notify --title "Need help"
+    superterm notify --title "Done" --body "All tests passed"
+
+If superterm is not installed, fall back to a terminal bell:
+
+    printf '\a'
+    
