@@ -1,6 +1,6 @@
 <div align="center">
 
-# gx
+<img src="assets/gx-logo.png" alt="gx" width="400">
 
 **A fast git project manager.
 Clone, jump, and organise repos from the terminal.**
