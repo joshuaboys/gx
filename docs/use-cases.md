@@ -303,11 +303,15 @@ code "$(gx resolve shared-lib)" "$(gx resolve api-server)" "$(gx resolve dashboa
 | Use Case                  | Key Commands                       |
 | ------------------------- | ---------------------------------- |
 | Context switching         | `gx <name>`                        |
+| Recent projects           | `gx recent`, `gx recent -n 5`      |
+| Resume with git context   | `gx resume <name>`                 |
 | Scripting with index      | `gx resolve`, `gx resolve --list`  |
+| Indexing repos            | `gx index`, `gx rebuild`           |
 | Machine onboarding        | `gx clone`, `gx ls`                |
 | Multi-language navigation | `gx <name>` with fuzzy matching    |
 | AI agent scaffolding      | `gx init`                          |
 | Code review               | `gx open --editor`                 |
+| Worktrees                 | `gx <name> wt`                     |
 | CI/CD path lookup         | `gx resolve <name>`                |
 | Workspace auditing        | `gx resolve --list` + git commands |
 | LLM context generation    | Index JSON + `gx resolve --list`   |

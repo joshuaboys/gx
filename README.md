@@ -23,6 +23,8 @@ Clone, jump, and organise repos from the terminal.**
 - **Shell integration** — tab completion and auto-`cd` for zsh, bash, and fish
 - **Open in any editor** — `gx open` launches VS Code, nvim, or whatever you use
 - **AI agent scaffolding** — `gx init` generates `.claude/` configs tailored to your project's language
+- **Recent and resume** — `gx recent` lists recently visited projects, `gx resume` shows git context
+- **Worktree support** — `gx myproject wt` integrates with worktrunk for git worktrees
 - **Single binary** — zero runtime dependencies, compiles with Bun
 
 ## Quick Start
@@ -140,13 +142,42 @@ gx init --force            # overwrite existing .claude/
 
 Creates `.claude/CLAUDE.md` and `.claude/commands/` with plan and review slash commands. Supports project types: `typescript-bun`, `typescript-node`, `rust`, `go`, `python`, `generic`.
 
-### Rebuild index
+### Recent and resume
 
 ```sh
-gx rebuild
+gx recent                # list recently visited projects
+gx recent -n 5           # show last 5
+gx resume myproject      # jump to project with git context (branch, status, log)
 ```
 
-Rescans the project directory and rebuilds the project index.
+### Index repos
+
+```sh
+gx index                 # scan project directory for new repos (additive)
+gx index ~/src/foo       # add a specific repo to the index
+gx rebuild               # rescan and rebuild entire index
+```
+
+### Worktrees
+
+Requires shell integration.
+
+```sh
+gx myproject wt          # jump to project and run wt (worktrunk)
+gx myproject wt -b feat  # pass args through to wt
+```
+
+### Planned: fork and sync
+
+> Not yet implemented — these commands will print a "not yet implemented" message.
+
+```sh
+gx fork user/repo              # fork on GitHub, clone, and jump
+gx fork user/repo --clone-only # clone existing fork, set upstream
+gx sync                        # fetch upstream and integrate changes
+gx sync --rebase               # override sync strategy
+gx sync --push                 # push to origin after syncing
+```
 
 ## Configuration
 
