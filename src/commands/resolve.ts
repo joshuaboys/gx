@@ -1,5 +1,10 @@
 import { ProjectIndex } from "../lib/index.ts";
-import { fuzzyMatch, AUTO_JUMP_THRESHOLD } from "../lib/fuzzy.ts";
+import {
+  resolveProjectName,
+  formatAmbiguous,
+  formatAutoMatch,
+} from "../lib/resolve-name.ts";
+import { CommandError } from "../lib/errors.ts";
 import type { Config } from "../types.ts";
 
 export async function resolve(
@@ -15,39 +20,26 @@ export async function resolve(
     return;
   }
 
-  // Try exact match first
-  const path = idx.resolve(name);
-  if (path) {
-    idx.touch(name);
-    await idx.save(indexPath);
-    console.log(path);
-    return;
-  }
+  const result = resolveProjectName(name, idx, config);
 
-  // Fall back to fuzzy matching
-  const entries = idx.list().map((e) => ({ name: e.name, path: e.path }));
-  const matches = fuzzyMatch(name, entries, config.similarityThreshold);
+  switch (result.kind) {
+    case "exact":
+      idx.touch(result.name);
+      await idx.save(indexPath);
+      console.log(result.path);
+      return;
 
-  if (matches.length === 0) {
-    console.error(`Project '${name}' not found`);
-    process.exit(1);
-  }
+    case "auto":
+      console.error(formatAutoMatch(result.query, result.name, result.score));
+      idx.touch(result.name);
+      await idx.save(indexPath);
+      console.log(result.path);
+      return;
 
-  const first = matches[0];
-  if (matches.length === 1 && first && first.score >= AUTO_JUMP_THRESHOLD) {
-    console.error(
-      `Fuzzy match: '${name}' -> '${first.name}' (${(first.score * 100).toFixed(0)}%)`,
-    );
-    idx.touch(first.name);
-    await idx.save(indexPath);
-    console.log(first.path);
-    return;
-  }
+    case "ambiguous":
+      throw new CommandError(formatAmbiguous(result.query, result.matches));
 
-  // Multiple candidates or single low-confidence match: show list
-  console.error(`No exact match for '${name}'. Did you mean:`);
-  for (const [i, m] of matches.entries()) {
-    console.error(`  ${i + 1}. ${m.name} (${(m.score * 100).toFixed(0)}%)`);
+    case "missing":
+      throw new CommandError(`Project '${name}' not found`);
   }
-  process.exit(1);
 }

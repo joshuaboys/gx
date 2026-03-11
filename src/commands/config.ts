@@ -4,6 +4,7 @@ import {
   getAgent,
   effectiveProjectDir,
 } from "../lib/config.ts";
+import { CommandError } from "../lib/errors.ts";
 import type { Config } from "../types.ts";
 
 const VALID_STRUCTURES = new Set(["flat", "owner", "host"]);
@@ -26,18 +27,18 @@ export async function setConfig(
 ): Promise<void> {
   const config = await loadConfig(configPath);
   if (!(key in config)) {
-    console.error(`Unknown config key: ${key}`);
-    console.error(`Valid keys: ${Object.keys(config).join(", ")}`);
-    process.exit(1);
+    throw new CommandError(
+      `Unknown config key: ${key}\nValid keys: ${Object.keys(config).join(", ")}`,
+    );
   }
 
   const k = key as keyof Config;
   const record = config as unknown as Record<string, unknown>;
   if (key === "structure") {
     if (!VALID_STRUCTURES.has(value)) {
-      console.error(`Invalid structure value: ${value}`);
-      console.error(`Valid values: flat, owner, host`);
-      process.exit(1);
+      throw new CommandError(
+        `Invalid structure value: ${value}\nValid values: flat, owner, host`,
+      );
     }
     record[key] = value;
   } else if (typeof config[k] === "boolean") {
@@ -45,8 +46,7 @@ export async function setConfig(
   } else if (typeof config[k] === "number") {
     const num = Number(value);
     if (Number.isNaN(num)) {
-      console.error(`Value for '${key}' must be a number`);
-      process.exit(1);
+      throw new CommandError(`Value for '${key}' must be a number`);
     }
     record[key] = num;
   } else {
