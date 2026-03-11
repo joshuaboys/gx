@@ -1,3 +1,5 @@
+import { CommandError } from "../lib/errors.ts";
+
 const SUPPORTED_SHELLS = ["zsh", "bash", "fish"] as const;
 type Shell = (typeof SUPPORTED_SHELLS)[number];
 
@@ -266,19 +268,17 @@ export function shellInit(shellArg?: string): void {
 
   if (shellArg) {
     if (!SUPPORTED_SHELLS.includes(shellArg as Shell)) {
-      console.error(`Unsupported shell: ${shellArg}`);
-      console.error(`Supported shells: ${SUPPORTED_SHELLS.join(", ")}`);
-      process.exit(1);
+      throw new CommandError(
+        `Unsupported shell: ${shellArg}\nSupported shells: ${SUPPORTED_SHELLS.join(", ")}`,
+      );
     }
     shell = shellArg as Shell;
   } else {
     shell = detectShell();
     if (!shell) {
-      console.error("Could not detect shell from $SHELL");
-      console.error(
-        `Specify one explicitly: gx shell-init <${SUPPORTED_SHELLS.join("|")}>`,
+      throw new CommandError(
+        `Could not detect shell from $SHELL\nSpecify one explicitly: gx shell-init <${SUPPORTED_SHELLS.join("|")}>`,
       );
-      process.exit(1);
     }
   }
 

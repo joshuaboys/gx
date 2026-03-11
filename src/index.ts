@@ -180,6 +180,7 @@ main().catch((err) => {
   if (err instanceof CommandError) {
     console.error(err.message);
     process.exit(err.exitCode);
+    return;
   }
   console.error(err.message);
   process.exit(1);

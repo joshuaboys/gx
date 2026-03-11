@@ -1,5 +1,6 @@
 import { test, expect, describe, beforeEach, afterEach, spyOn } from "bun:test";
 import { shellInit } from "../../src/commands/shell-init.ts";
+import { CommandError } from "../../src/lib/errors.ts";
 
 // Capture stdout by temporarily replacing console.log
 function captureOutput(fn: () => void): string {
@@ -17,12 +18,9 @@ function captureOutput(fn: () => void): string {
 describe("shellInit", () => {
   let origShell: string | undefined;
   let origOverride: string | undefined;
-  let origExit: typeof process.exit;
-
   beforeEach(() => {
     origShell = process.env.SHELL;
     origOverride = process.env.GX_SHELL_OVERRIDE;
-    origExit = process.exit;
   });
 
   afterEach(() => {
@@ -36,7 +34,6 @@ describe("shellInit", () => {
     } else {
       delete process.env.GX_SHELL_OVERRIDE;
     }
-    process.exit = origExit;
   });
 
   test("explicit zsh outputs zsh integration", () => {
@@ -85,25 +82,13 @@ describe("shellInit", () => {
     expect(output).toContain("complete -F _gx_completions gx");
   });
 
-  test("unsupported shell exits with error", () => {
-    let exitCode: number | undefined;
-    process.exit = ((code: number) => {
-      exitCode = code;
-      throw new Error("exit");
-    }) as never;
-    expect(() => shellInit("powershell")).toThrow("exit");
-    expect(exitCode).toBe(1);
+  test("unsupported shell throws CommandError", () => {
+    expect(() => shellInit("powershell")).toThrow(CommandError);
   });
 
-  test("unknown SHELL env exits with error", () => {
+  test("unknown SHELL env throws CommandError", () => {
     process.env.SHELL = "/usr/bin/tcsh";
-    let exitCode: number | undefined;
-    process.exit = ((code: number) => {
-      exitCode = code;
-      throw new Error("exit");
-    }) as never;
-    expect(() => shellInit()).toThrow("exit");
-    expect(exitCode).toBe(1);
+    expect(() => shellInit()).toThrow(CommandError);
   });
 
   test("zsh output includes shell-init in command list", () => {
