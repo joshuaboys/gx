@@ -1,6 +1,7 @@
-import { test, expect, describe, beforeEach, afterEach, spyOn } from "bun:test";
+import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { setConfig } from "../../src/commands/config.ts";
 import { loadConfig } from "../../src/lib/config.ts";
+import { CommandError } from "../../src/lib/errors.ts";
 import { join } from "path";
 import { mkdtemp, rm } from "fs/promises";
 import { tmpdir } from "os";
@@ -32,7 +33,6 @@ describe("setConfig", () => {
 
   test("coerces 'false' to boolean false for boolean fields", async () => {
     const configPath = join(tmpDir, "config.json");
-    // First set to true, then set to false
     await setConfig(configPath, "shallow", "true");
     await setConfig(configPath, "shallow", "false");
     const config = await loadConfig(configPath);
@@ -49,32 +49,23 @@ describe("setConfig", () => {
 
   test("rejects unknown config key", async () => {
     const configPath = join(tmpDir, "config.json");
-    const mockExit = spyOn(process, "exit").mockImplementation(() => { throw new Error("exit"); });
-    try {
-      await setConfig(configPath, "unknownKey", "value").catch(() => {});
-    } catch {}
-    expect(mockExit).toHaveBeenCalledWith(1);
-    mockExit.mockRestore();
+    await expect(setConfig(configPath, "unknownKey", "value")).rejects.toThrow(
+      CommandError,
+    );
   });
 
   test("rejects invalid structure value", async () => {
     const configPath = join(tmpDir, "config.json");
-    const mockExit = spyOn(process, "exit").mockImplementation(() => { throw new Error("exit"); });
-    try {
-      await setConfig(configPath, "structure", "nested").catch(() => {});
-    } catch {}
-    expect(mockExit).toHaveBeenCalledWith(1);
-    mockExit.mockRestore();
+    await expect(setConfig(configPath, "structure", "nested")).rejects.toThrow(
+      CommandError,
+    );
   });
 
   test("rejects non-numeric values for number fields", async () => {
     const configPath = join(tmpDir, "config.json");
-    const mockExit = spyOn(process, "exit").mockImplementation(() => { throw new Error("exit"); });
-    try {
-      await setConfig(configPath, "similarityThreshold", "abc").catch(() => {});
-    } catch {}
-    expect(mockExit).toHaveBeenCalledWith(1);
-    mockExit.mockRestore();
+    await expect(
+      setConfig(configPath, "similarityThreshold", "abc"),
+    ).rejects.toThrow(CommandError);
   });
 
   test("accepts valid structure value 'flat'", async () => {

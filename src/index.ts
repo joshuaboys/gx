@@ -2,6 +2,7 @@
 import { join } from "path";
 import { homedir } from "os";
 import { loadConfig, getConfigPath, getAgent } from "./lib/config.ts";
+import { CommandError } from "./lib/errors.ts";
 import { cloneRepo } from "./commands/clone.ts";
 import { ls } from "./commands/ls.ts";
 import { resolve } from "./commands/resolve.ts";
@@ -19,6 +20,14 @@ const VERSION = pkg.version;
 
 function getIndexPath(): string {
   return join(homedir(), ".config", "gx", "index.json");
+}
+
+function parseFlag(args: string[], flag: string): string | undefined {
+  const i = args.indexOf(flag);
+  if (i < 0) return undefined;
+  const value = args[i + 1];
+  if (!value || value.startsWith("-")) return undefined;
+  return value;
 }
 
 async function main() {
@@ -77,10 +86,7 @@ Options:
   switch (command) {
     case "clone": {
       const repo = args[1];
-      if (!repo) {
-        console.error("Usage: gx clone <repo>");
-        process.exit(1);
-      }
+      if (!repo) throw new CommandError("Usage: gx clone <repo>");
       const path = await cloneRepo(repo, config, indexPath);
       console.log(path);
       break;
@@ -104,31 +110,22 @@ Options:
       }
       break;
     case "open": {
-      const editorFlag = args.indexOf("--editor");
-      let editor: string | undefined;
-      if (editorFlag >= 0) {
-        editor = args[editorFlag + 1];
-        if (!editor || editor.startsWith("--")) {
-          console.error("Usage: gx open [name] --editor <name>");
-          process.exit(1);
-        }
+      const editor = parseFlag(args, "--editor");
+      if (args.includes("--editor") && !editor) {
+        throw new CommandError("Usage: gx open [name] --editor <name>");
       }
+      const editorIdx = args.indexOf("--editor");
       const name = args.find(
         (a, i) =>
-          i > 0 && a !== "--editor" && (editorFlag < 0 || i !== editorFlag + 1),
+          i > 0 && a !== "--editor" && (editorIdx < 0 || i !== editorIdx + 1),
       );
       await openProject(name, config, indexPath, editor);
       break;
     }
     case "init": {
-      const typeFlag = args.indexOf("--type");
-      let type: string | undefined;
-      if (typeFlag >= 0) {
-        type = args[typeFlag + 1];
-        if (!type || type.startsWith("--")) {
-          console.error("Usage: gx init --type <type>");
-          process.exit(1);
-        }
+      const type = parseFlag(args, "--type");
+      if (args.includes("--type") && !type) {
+        throw new CommandError("Usage: gx init --type <type>");
       }
       const force = args.includes("--force");
       await initAgent(process.cwd(), { type, force });
@@ -143,23 +140,19 @@ Options:
       } else if (args[1]) {
         await resolve(args[1], indexPath, config);
       } else {
-        console.error("Usage: gx resolve <name> | gx resolve --list");
-        process.exit(1);
+        throw new CommandError("Usage: gx resolve <name> | gx resolve --list");
       }
       break;
     case "recent": {
-      const nFlag = args.indexOf("-n");
+      const nValue = parseFlag(args, "-n");
+      if (args.includes("-n") && !nValue) {
+        throw new CommandError("Usage: gx recent [-n <count>]");
+      }
       let limit: number | undefined;
-      if (nFlag >= 0) {
-        const nValue = args[nFlag + 1];
-        if (!nValue || nValue.startsWith("-")) {
-          console.error("Usage: gx recent [-n <count>]");
-          process.exit(1);
-        }
+      if (nValue) {
         limit = parseInt(nValue, 10);
         if (isNaN(limit) || limit < 1) {
-          console.error("Usage: gx recent [-n <count>]");
-          process.exit(1);
+          throw new CommandError("Usage: gx recent [-n <count>]");
         }
       }
       await recent(indexPath, limit);
@@ -167,10 +160,7 @@ Options:
     }
     case "resume": {
       const name = args[1];
-      if (!name) {
-        console.error("Usage: gx resume <name>");
-        process.exit(1);
-      }
+      if (!name) throw new CommandError("Usage: gx resume <name>");
       await resume(name, indexPath, config);
       break;
     }
@@ -187,6 +177,10 @@ Options:
 }
 
 main().catch((err) => {
+  if (err instanceof CommandError) {
+    console.error(err.message);
+    process.exit(err.exitCode);
+  }
   console.error(err.message);
   process.exit(1);
 });

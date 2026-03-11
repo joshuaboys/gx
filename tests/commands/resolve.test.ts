@@ -1,6 +1,7 @@
 import { test, expect, describe, beforeEach, afterEach, spyOn } from "bun:test";
 import { resolve } from "../../src/commands/resolve.ts";
 import { ProjectIndex } from "../../src/lib/index.ts";
+import { CommandError } from "../../src/lib/errors.ts";
 import { DEFAULT_CONFIG } from "../../src/types.ts";
 import { join } from "path";
 import { mkdtemp, rm } from "fs/promises";
@@ -57,14 +58,9 @@ describe("resolve", () => {
     logSpy.mockRestore();
   });
 
-  test("no match exits with code 1", async () => {
-    const mockExit = spyOn(process, "exit").mockImplementation(() => {
-      throw new Error("exit");
-    });
-    try {
-      await resolve("nonexistent", indexPath, DEFAULT_CONFIG);
-    } catch {}
-    expect(mockExit).toHaveBeenCalledWith(1);
-    mockExit.mockRestore();
+  test("no match throws CommandError", async () => {
+    await expect(
+      resolve("nonexistent", indexPath, DEFAULT_CONFIG),
+    ).rejects.toThrow(CommandError);
   });
 });
