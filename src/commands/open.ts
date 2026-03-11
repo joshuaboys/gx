@@ -6,7 +6,6 @@ import {
 } from "../lib/resolve-name.ts";
 import { CommandError } from "../lib/errors.ts";
 import type { Config } from "../types.ts";
-import { which } from "bun";
 
 export const EDITORS: Record<string, { cmd: string; gui: boolean }> = {
   code: { cmd: "code", gui: true },
@@ -63,7 +62,7 @@ export async function openProject(
   const editorName = resolveEditor(config, editorOverride);
   const editorInfo = EDITORS[editorName] ?? { cmd: editorName, gui: false };
 
-  if (!which(editorInfo.cmd)) {
+  if (!Bun.which(editorInfo.cmd)) {
     throw new CommandError(`Editor '${editorInfo.cmd}' not found on PATH`);
   }
 
