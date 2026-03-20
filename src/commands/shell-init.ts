@@ -64,7 +64,7 @@ gx() {
                 return 1
             fi
             ;;
-        ls|recent|rebuild|config|open|init|shell-init|--help|-h|--version|-v)
+        ls|recent|rebuild|config|open|init|index|shell-init|--help|-h|--version|-v)
             "$_GX_BIN" "$@"
             ;;
         resolve)
@@ -97,14 +97,14 @@ gx() {
 # Tab completion
 _gx() {
     local -a commands projects
-    commands=(clone ls recent resume rebuild config resolve open init shell-init --help --version -h -v)
+    commands=(clone ls recent resume rebuild config resolve open init index shell-init --help --version -h -v)
 
     if (( CURRENT == 2 )); then
         projects=($("$_GX_BIN" resolve --list 2>/dev/null))
         compadd "\${commands[@]}" "\${projects[@]}"
     elif (( CURRENT == 3 )); then
         case "\${words[2]}" in
-            clone|ls|recent|resume|rebuild|config|resolve|open|init|shell-init|--help|--version|-h|-v)
+            clone|ls|recent|resume|rebuild|config|resolve|open|init|index|shell-init|--help|--version|-h|-v)
                 if [[ "\${words[2]}" == "config" ]]; then
                     compadd set
                 fi
@@ -149,7 +149,7 @@ gx() {
                 return 1
             fi
             ;;
-        ls|recent|rebuild|config|open|init|shell-init|--help|-h|--version|-v)
+        ls|recent|rebuild|config|open|init|index|shell-init|--help|-h|--version|-v)
             "$_GX_BIN" "$@"
             ;;
         resolve)
@@ -185,13 +185,13 @@ _gx_completions() {
     local prev="\${COMP_WORDS[COMP_CWORD-1]}"
 
     if [ "\$COMP_CWORD" -eq 1 ]; then
-        local commands="clone ls recent resume rebuild config resolve open init shell-init --help --version -h -v"
+        local commands="clone ls recent resume rebuild config resolve open init index shell-init --help --version -h -v"
         local projects
         projects=$("$_GX_BIN" resolve --list 2>/dev/null)
         COMPREPLY=($(compgen -W "$commands $projects" -- "$cur"))
     elif [ "\$COMP_CWORD" -eq 2 ]; then
         case "\${COMP_WORDS[1]}" in
-            clone|ls|recent|resume|rebuild|config|resolve|open|init|shell-init|--help|--version|-h|-v)
+            clone|ls|recent|resume|rebuild|config|resolve|open|init|index|shell-init|--help|--version|-h|-v)
                 if [ "\${COMP_WORDS[1]}" = "config" ]; then
                     COMPREPLY=($(compgen -W "set" -- "$cur"))
                 fi
@@ -232,7 +232,7 @@ function gx
             else
                 return 1
             end
-        case ls recent rebuild config open init shell-init --help -h --version -v resolve
+        case ls recent rebuild config open init index shell-init --help -h --version -v resolve
             $_GX_BIN $argv
         case ''
             $_GX_BIN --help
@@ -256,11 +256,11 @@ end
 
 # Tab completion
 complete -c gx -f
-complete -c gx -n "__fish_use_subcommand" -a "clone ls recent resume rebuild config resolve open init shell-init --help --version -h -v"
+complete -c gx -n "__fish_use_subcommand" -a "clone ls recent resume rebuild config resolve open init index shell-init --help --version -h -v"
 complete -c gx -n "__fish_use_subcommand" -a "($_GX_BIN resolve --list 2>/dev/null)"
 complete -c gx -n "__fish_seen_subcommand_from config" -a "set"
 complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost structure shallow similarityThreshold editor"
-complete -c gx -n "not __fish_seen_subcommand_from clone ls recent resume rebuild config resolve open init shell-init --help -h --version -v; and test (count (commandline -opc)) -eq 2" -a "wt"`;
+complete -c gx -n "not __fish_seen_subcommand_from clone ls recent resume rebuild config resolve open init index shell-init --help -h --version -v; and test (count (commandline -opc)) -eq 2" -a "wt"`;
 }
 
 export function shellInit(shellArg?: string): void {

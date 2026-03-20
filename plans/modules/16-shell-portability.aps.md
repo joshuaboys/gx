@@ -34,7 +34,7 @@ Expand `gx` beyond oh-my-zsh to increase adoption.
 
 ## Implementation Notes
 
-All three shells (zsh, bash, fish) are implemented in `src/commands/shell-init.ts` with full parity:
+All three shells (zsh, bash, fish) are implemented in `src/commands/shell-init.ts`:
 
 - `eval "$(gx shell-init)"` detects the shell from `GX_SHELL_OVERRIDE` or `$SHELL` (login shell; does not yet query the parent process directly)
 - `gx shell-init zsh|bash|fish` generates shell-specific integration
