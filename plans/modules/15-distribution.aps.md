@@ -1,8 +1,8 @@
 # Distribution & Install UX
 
-| ID | Owner | Status |
-|----|-------|--------|
-| DIST | @joshuaboys | Draft |
+| ID   | Owner       | Status      |
+| ---- | ----------- | ----------- |
+| DIST | @joshuaboys | In Progress |
 
 - Version: v5
 - Depends on: CLI
@@ -33,12 +33,26 @@ Make `gx` trivial to install and upgrade for first-time users.
 
 - `gx doctor` — health check command (index diagnostics contributed by IDXOB module)
 
+## Implementation Notes
+
+`install.sh` is production-ready:
+
+- Downloads prebuilt binaries from GitHub Releases with OS/arch detection
+- Falls back to building from source via bun if no binary available
+- Detects and installs shell integration into `.zshrc`, `.bashrc`, or Fish config
+- Ensures `~/.local/bin` is on PATH
+
+CI pipeline (`.github/workflows/ci.yml`) runs tests and builds on both `ubuntu-latest` and `macos-latest`.
+
 ## Ready Checklist
 
-- [ ] Purpose and scope are clear
-- [ ] Dependencies identified
-- [ ] At least one task defined
+- [x] Purpose and scope are clear
+- [x] Dependencies identified
+- [x] At least one task defined
 
-## Tasks
+## Work Items
 
-*No tasks yet — module is Draft*
+- [x] DIST-1: Create `install.sh` curl installer with OS/arch detection and source fallback
+- [x] DIST-2: CI pipeline for Linux and macOS builds
+- [ ] DIST-3: Implement `gx doctor` health check command
+- [ ] DIST-4: Release signing and checksum verification
