@@ -1,8 +1,8 @@
 # Shell Portability
 
-| ID    | Owner       | Status   |
-| ----- | ----------- | -------- |
-| SHELL | @joshuaboys | Complete |
+| ID    | Owner       | Status      |
+| ----- | ----------- | ----------- |
+| SHELL | @joshuaboys | In Progress |
 
 - Version: v5 (shipped early — landed alongside v3 work)
 - Depends on: Shell Plugin, CLI
@@ -36,7 +36,7 @@ Expand `gx` beyond oh-my-zsh to increase adoption.
 
 All three shells (zsh, bash, fish) are implemented in `src/commands/shell-init.ts` with full parity:
 
-- `eval "$(gx shell-init)"` auto-detects the parent shell
+- `eval "$(gx shell-init)"` detects the shell from `GX_SHELL_OVERRIDE` or `$SHELL` (login shell; does not yet query the parent process directly)
 - `gx shell-init zsh|bash|fish` generates shell-specific integration
 - Tab completions for all commands, project names, and config keys in each shell
 - `plugin/gx.plugin.zsh` remains as an oh-my-zsh compatibility shim
@@ -51,4 +51,4 @@ All three shells (zsh, bash, fish) are implemented in `src/commands/shell-init.t
 
 - [x] SHELL-1: Implement `gx shell-init bash` with cd wrapper and completions
 - [x] SHELL-2: Implement `gx shell-init fish` with cd wrapper and completions
-- [x] SHELL-3: Auto-detect parent shell in `gx shell-init` (no argument)
+- [ ] SHELL-3: Auto-detect parent shell in `gx shell-init` (no argument) — currently uses `$SHELL` (login shell), not parent-process detection
