@@ -35,7 +35,7 @@ Make `gx` trivial to install and upgrade for first-time users.
 
 ## Implementation Notes
 
-`install.sh` is production-ready:
+`install.sh` handles basic installation (checksum/signature verification is not yet implemented — see DIST-4):
 
 - Downloads prebuilt binaries from GitHub Releases with OS/arch detection
 - Falls back to building from source via bun if no binary available
