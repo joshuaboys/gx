@@ -60,13 +60,19 @@ export function parseUrl(
     };
   }
 
-  if (BARE_NAME_RE.test(trimmed) && defaultOwner) {
-    validateSegments(defaultOwner, trimmed);
+  if (BARE_NAME_RE.test(trimmed)) {
+    if (!defaultOwner) {
+      throw new Error(
+        `Bare repo name "${trimmed}" requires defaultOwner — run: gx config set defaultOwner <owner>`,
+      );
+    }
+    const repo = trimmed.replace(/\.git$/, "");
+    validateSegments(defaultOwner, repo);
     return {
       host: defaultHost,
       owner: defaultOwner,
-      repo: trimmed,
-      originalUrl: `https://${defaultHost}/${defaultOwner}/${trimmed}`,
+      repo,
+      originalUrl: `https://${defaultHost}/${defaultOwner}/${repo}`,
     };
   }
 

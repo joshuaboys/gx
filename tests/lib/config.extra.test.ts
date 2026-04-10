@@ -78,6 +78,20 @@ describe("loadConfig validation", () => {
     expect(config.projectDir).toBe("~/Projects/src");
   });
 
+  test("trims whitespace-only defaultOwner to empty string", async () => {
+    const configPath = join(tmpDir, "config.json");
+    await Bun.write(configPath, JSON.stringify({ defaultOwner: "  " }));
+    const config = await loadConfig(configPath);
+    expect(config.defaultOwner).toBe("");
+  });
+
+  test("trims surrounding whitespace from defaultOwner", async () => {
+    const configPath = join(tmpDir, "config.json");
+    await Bun.write(configPath, JSON.stringify({ defaultOwner: " eddacraft " }));
+    const config = await loadConfig(configPath);
+    expect(config.defaultOwner).toBe("eddacraft");
+  });
+
   test("accepts valid config values", async () => {
     const configPath = join(tmpDir, "config.json");
     const custom = {

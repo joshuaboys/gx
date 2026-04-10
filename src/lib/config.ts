@@ -46,8 +46,8 @@ function validateConfig(raw: unknown): Config {
         ? obj.defaultHost
         : DEFAULT_CONFIG.defaultHost,
     defaultOwner:
-      typeof obj.defaultOwner === "string"
-        ? obj.defaultOwner
+      typeof obj.defaultOwner === "string" && obj.defaultOwner.trim()
+        ? obj.defaultOwner.trim()
         : DEFAULT_CONFIG.defaultOwner,
     structure:
       obj.structure === "flat" ||

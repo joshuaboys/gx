@@ -75,12 +75,18 @@ test("explicit owner/repo takes precedence over defaultOwner", () => {
   expect(result.repo).toBe("thing");
 });
 
-test("bare repo name without defaultOwner throws", () => {
-  expect(() => parseUrl("anvil")).toThrow();
+test("bare repo name strips .git suffix", () => {
+  const result = parseUrl("anvil.git", "github.com", "eddacraft");
+  expect(result.repo).toBe("anvil");
+  expect(result.originalUrl).toBe("https://github.com/eddacraft/anvil");
 });
 
-test("bare repo name with empty defaultOwner throws", () => {
-  expect(() => parseUrl("anvil", "github.com", "")).toThrow();
+test("bare repo name without defaultOwner gives actionable error", () => {
+  expect(() => parseUrl("anvil")).toThrow(/defaultOwner/);
+});
+
+test("bare repo name with empty defaultOwner gives actionable error", () => {
+  expect(() => parseUrl("anvil", "github.com", "")).toThrow(/defaultOwner/);
 });
 
 // Errors
