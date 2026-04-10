@@ -60,6 +60,29 @@ test("parses URL with nested path (gitlab groups)", () => {
   expect(result.repo).toBe("repo");
 });
 
+// Bare repo name with defaultOwner
+test("parses bare repo name using defaultOwner", () => {
+  const result = parseUrl("anvil", "github.com", "eddacraft");
+  expect(result.host).toBe("github.com");
+  expect(result.owner).toBe("eddacraft");
+  expect(result.repo).toBe("anvil");
+  expect(result.originalUrl).toBe("https://github.com/eddacraft/anvil");
+});
+
+test("explicit owner/repo takes precedence over defaultOwner", () => {
+  const result = parseUrl("joshuaboys/thing", "github.com", "eddacraft");
+  expect(result.owner).toBe("joshuaboys");
+  expect(result.repo).toBe("thing");
+});
+
+test("bare repo name without defaultOwner throws", () => {
+  expect(() => parseUrl("anvil")).toThrow();
+});
+
+test("bare repo name with empty defaultOwner throws", () => {
+  expect(() => parseUrl("anvil", "github.com", "")).toThrow();
+});
+
 // Errors
 test("throws on empty input", () => {
   expect(() => parseUrl("")).toThrow();
