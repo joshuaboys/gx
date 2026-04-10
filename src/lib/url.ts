@@ -4,6 +4,7 @@ const HTTPS_RE = /^https?:\/\/([^/]+)\/(.+?)(?:\.git)?\/?$/;
 const SSH_RE = /^(?:ssh:\/\/)?[^@]+@([^/:]+)(?::\d+)?[:/](.+?)(?:\.git)?\/?$/;
 const GIT_RE = /^git:\/\/([^/]+)\/(.+?)(?:\.git)?\/?$/;
 const SHORTHAND_RE = /^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-][a-zA-Z0-9_.\-/]*)$/;
+const BARE_NAME_RE = /^[a-zA-Z0-9_.-]+$/;
 
 function validateSegments(owner: string, repo: string): void {
   for (const seg of [...owner.split("/"), repo]) {
@@ -20,7 +21,11 @@ function extract(match: RegExpMatchArray): [string, string] {
   return [match[1] ?? "", match[2] ?? ""];
 }
 
-export function parseUrl(input: string, defaultHost = "github.com"): ParsedRepo {
+export function parseUrl(
+  input: string,
+  defaultHost = "github.com",
+  defaultOwner = "",
+): ParsedRepo {
   const trimmed = input.trim();
   if (!trimmed) throw new Error("Empty repository URL");
 
@@ -52,6 +57,16 @@ export function parseUrl(input: string, defaultHost = "github.com"): ParsedRepo 
       owner,
       repo,
       originalUrl: `https://${defaultHost}/${owner}/${rawRepo}`,
+    };
+  }
+
+  if (BARE_NAME_RE.test(trimmed) && defaultOwner) {
+    validateSegments(defaultOwner, trimmed);
+    return {
+      host: defaultHost,
+      owner: defaultOwner,
+      repo: trimmed,
+      originalUrl: `https://${defaultHost}/${defaultOwner}/${trimmed}`,
     };
   }
 

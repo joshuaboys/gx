@@ -10,7 +10,7 @@ export async function cloneRepo(
   config: Config,
   indexPath: string,
 ): Promise<string> {
-  const parsed = parseUrl(input, config.defaultHost);
+  const parsed = parseUrl(input, config.defaultHost, config.defaultOwner);
   const targetDir = toPath(parsed, config);
 
   // Check if target already exists (handles .git as dir or file for worktrees)

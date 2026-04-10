@@ -83,6 +83,7 @@ describe("loadConfig validation", () => {
     const custom = {
       projectDir: "/custom/path",
       defaultHost: "gitlab.com",
+      defaultOwner: "",
       structure: "host" as const,
       shallow: true,
       similarityThreshold: 0.8,
