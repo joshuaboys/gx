@@ -83,6 +83,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [Index Reliability & Observability](./modules/17-index-observability.aps.md)              | Index diagnostics, stats, and scan telemetry                                                  | Draft               | v5      | Index, Tracking          |
 | [APS Runtime Provisioning & Project Config](./modules/18-aps-runtime-provisioning.aps.md) | Global APS runtime with per-project policy via `.apsrc.yaml` and init-time preference capture | Ready               | v6      | CLI, APS scaffolding     |
 | [Fork & Sync](./modules/19-fork.aps.md)                                                   | Fork repos via GitHub, clone locally, and keep forks synced with upstream                     | Draft               | v4      | Clone, Shell Plugin, CLI |
+| [Rust Port](./modules/20-rust-port.aps.md)                                                | Re-implement gx as a Rust binary with full behavior parity                                    | Draft               | v6      | All                      |
 
 ## Risks
 
@@ -128,3 +129,4 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - **D-009:** No separate `gx touch` command — `resolve` updates `lastVisited` as a side effect, eliminating a subprocess spawn per navigation — _accepted_
 - **D-007:** v3 before v4 — tracking and dashboard provide immediate value and inform TUI design — _proposed_
 - **D-008:** README includes Acknowledgements section crediting ghq and gclone as prior art — _accepted_
+- **D-010:** Port gx to Rust with strict behavior parity, preserving CLI surface, config and index schemas, and `gx shell-init` output (see `decisions/010-rust-port.md`) — _proposed_
