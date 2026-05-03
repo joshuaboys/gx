@@ -50,7 +50,7 @@ Re-implement gx as a Rust binary that is byte-for-byte compatible with the curre
 - **Fuzzy thresholds preserved:** `similarityThreshold = 0.7` default and `AUTO_JUMP_THRESHOLD = 0.85` constant
 - **Git via subprocess only:** no `git2`/libgit2 dependency
 - **No async runtime:** stay synchronous; defer `tokio` until a feature actually needs concurrency (`gx dash`)
-- **Reversible:** TS source must remain buildable through phases 0–5 so the experiment can be abandoned
+- **Reversible:** TS source must remain buildable through phase RST-6 so the experiment can be abandoned (RST-7 is the cutover that removes it)
 
 ## Ready Checklist
 
