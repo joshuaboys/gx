@@ -78,17 +78,17 @@ These are the invariants the snapshot harness enforces:
 
 **Neutral**
 
-- TS implementation stays buildable through phase 5; the experiment is reversible
+- TS implementation stays buildable through phase RST-6; the experiment is reversible
 - Shell-plugin users see no change while `shell-init` output is preserved verbatim
 
 ## Open Questions
 
 - **Q-1:** Workspace layout — single crate at root vs. `crates/gx/` with virtual manifest. Recommendation: start single-crate, restructure when a second crate exists.
-- **Q-2:** Bin name during transition — ship as `gx-rs` for one release before promoting, or feature-flag a single binary? Recommendation: `gx-rs` shadow release, then promote at phase 7.
+- **Q-2:** Bin name during transition — ship as `gx-rs` for one release before promoting, or feature-flag a single binary? Recommendation: `gx-rs` shadow release, then promote at phase RST-7.
 - **Q-3:** MSRV — pin to the current stable at port time (likely 1.75+), no nightly features.
 - **Q-4:** `gx shell-init` — verbatim port (chosen) vs. switch to `clap_complete`. Verbatim wins because user shells already eval the existing strings.
-- **Q-5:** Windows — produce binaries in CI from phase 7, but defer `install.sh` Windows support to a separate effort.
+- **Q-5:** Windows — produce binaries in CI from phase RST-7, but defer `install.sh` Windows support to a separate effort.
 
 ## Supersedes
 
-This decision modifies the constraint in `index.aps.md` ("TypeScript + Bun only (no Go, no Node)") to "Rust only (no JS runtime)" once the port reaches phase 6 (TS source removed).
+This decision modifies the constraint in `index.aps.md` ("TypeScript + Bun only (no Go, no Node)") to "Rust only (no JS runtime)" once the port reaches phase RST-7 (TS source removed).
