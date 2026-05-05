@@ -83,7 +83,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [Index Reliability & Observability](./modules/17-index-observability.aps.md)              | Index diagnostics, stats, and scan telemetry                                                  | Draft               | v5      | Index, Tracking          |
 | [APS Runtime Provisioning & Project Config](./modules/18-aps-runtime-provisioning.aps.md) | Global APS runtime with per-project policy via `.apsrc.yaml` and init-time preference capture | Ready               | v6      | CLI, APS scaffolding     |
 | [Fork & Sync](./modules/19-fork.aps.md)                                                   | Fork repos via GitHub, clone locally, and keep forks synced with upstream                     | Draft               | v4      | Clone, Shell Plugin, CLI |
-| [Rust Port](./modules/20-rust-port.aps.md)                                                | Re-implement gx as a Rust binary with full behavior parity                                    | Draft               | v6      | All                      |
+| [Rust Port](./modules/20-rust-port.aps.md)                                                | Re-implement gx as a Rust binary with full behavior parity                                    | Draft               | v5      | All                      |
 
 ## Risks
 
