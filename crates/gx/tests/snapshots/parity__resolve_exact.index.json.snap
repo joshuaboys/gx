@@ -1,0 +1,31 @@
+---
+source: crates/gx/tests/parity.rs
+expression: env.index_json()
+---
+{
+  "projects": {
+    "alpha": {
+      "path": "/projects/owner/alpha",
+      "url": "https://github.com/owner/alpha.git",
+      "clonedAt": "<TIMESTAMP>",
+      "lastVisited": "<TIMESTAMP>"
+    },
+    "beta": {
+      "path": "/projects/owner/beta",
+      "url": "https://github.com/owner/beta.git",
+      "clonedAt": "<TIMESTAMP>",
+      "lastVisited": "<TIMESTAMP>"
+    },
+    "gamma": {
+      "path": "/projects/other/gamma",
+      "url": "git@github.com:other/gamma.git",
+      "clonedAt": "<TIMESTAMP>"
+    },
+    "delta-svc": {
+      "path": "/projects/owner/delta-svc",
+      "url": "https://github.com/owner/delta-svc.git",
+      "clonedAt": "<TIMESTAMP>",
+      "lastVisited": "<TIMESTAMP>"
+    }
+  }
+}

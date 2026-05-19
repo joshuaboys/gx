@@ -15,3 +15,6 @@ path = "src/main.rs"
 [dependencies]
 
 [dev-dependencies]
+assert_cmd = "2"
+insta = { version = "1", features = ["filters"] }
+tempfile = "3"

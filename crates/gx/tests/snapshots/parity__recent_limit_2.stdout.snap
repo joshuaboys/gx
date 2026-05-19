@@ -1,0 +1,6 @@
+---
+source: crates/gx/tests/parity.rs
+expression: run.stdout
+---
+delta-svc  /projects/owner/delta-svc  <RELATIVE>
+beta       /projects/owner/beta  <RELATIVE>

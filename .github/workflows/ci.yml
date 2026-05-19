@@ -52,6 +52,18 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      # The parity harness in crates/gx/tests/parity.rs spawns the TS gx
+      # binary to verify the Rust port's snapshot contract. Build it here so
+      # cargo test can find it at the workspace root.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build TS binary for parity tests
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
       - name: Format check
         run: cargo fmt --check
 

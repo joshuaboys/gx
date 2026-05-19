@@ -1,0 +1,5 @@
+---
+source: crates/gx/tests/parity.rs
+expression: run.stdout
+---
+gx v0.2.0

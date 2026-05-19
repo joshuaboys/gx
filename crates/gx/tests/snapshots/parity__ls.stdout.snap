@@ -1,0 +1,8 @@
+---
+source: crates/gx/tests/parity.rs
+expression: run.stdout
+---
+alpha      /projects/owner/alpha
+beta       /projects/owner/beta
+delta-svc  /projects/owner/delta-svc
+gamma      /projects/other/gamma

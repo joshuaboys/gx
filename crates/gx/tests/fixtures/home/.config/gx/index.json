@@ -1,0 +1,27 @@
+{
+  "projects": {
+    "alpha": {
+      "path": "/projects/owner/alpha",
+      "url": "https://github.com/owner/alpha.git",
+      "clonedAt": "2026-01-15T10:30:00.000Z",
+      "lastVisited": "2026-05-10T08:00:00.000Z"
+    },
+    "beta": {
+      "path": "/projects/owner/beta",
+      "url": "https://github.com/owner/beta.git",
+      "clonedAt": "2026-02-20T14:15:00.000Z",
+      "lastVisited": "2026-05-15T12:00:00.000Z"
+    },
+    "gamma": {
+      "path": "/projects/other/gamma",
+      "url": "git@github.com:other/gamma.git",
+      "clonedAt": "2026-03-01T09:00:00.000Z"
+    },
+    "delta-svc": {
+      "path": "/projects/owner/delta-svc",
+      "url": "https://github.com/owner/delta-svc.git",
+      "clonedAt": "2026-04-05T16:45:00.000Z",
+      "lastVisited": "2026-05-18T20:00:00.000Z"
+    }
+  }
+}

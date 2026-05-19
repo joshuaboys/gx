@@ -1,0 +1,13 @@
+---
+source: crates/gx/tests/parity.rs
+expression: run.stdout
+---
+{
+  "projectDir": "/projects",
+  "defaultHost": "github.com",
+  "defaultOwner": "owner",
+  "structure": "owner",
+  "shallow": false,
+  "similarityThreshold": 0.7,
+  "editor": "nvim"
+}

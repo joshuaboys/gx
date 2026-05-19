@@ -1,0 +1,5 @@
+---
+source: crates/gx/tests/parity.rs
+expression: run.stderr
+---
+Fuzzy match: 'alphaa' -> 'alpha' (97%)

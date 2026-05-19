@@ -1,0 +1,85 @@
+---
+source: crates/gx/tests/parity.rs
+expression: run.stdout
+---
+# gx — git project manager shell integration
+# Add to ~/.zshrc: eval "$(gx shell-init)"
+
+_GX_BIN="gx"
+
+gx() {
+    case "$1" in
+        clone)
+            local output
+            output=$("$_GX_BIN" clone "${@:2}")
+            if [ -n "$output" ] && [ -d "$output" ]; then
+                cd "$output"
+            fi
+            ;;
+        resume)
+            local output
+            output=$("$_GX_BIN" resume "${@:2}")
+            local status=$?
+            if [ "$status" -ne 0 ]; then
+                return "$status"
+            fi
+            if [ -n "$output" ] && [ -d "$output" ]; then
+                cd "$output"
+            else
+                return 1
+            fi
+            ;;
+        ls|recent|rebuild|config|open|init|index|shell-init|--help|-h|--version|-v)
+            "$_GX_BIN" "$@"
+            ;;
+        resolve)
+            "$_GX_BIN" "$@"
+            ;;
+        "")
+            "$_GX_BIN" --help
+            ;;
+        *)
+            local target
+            target=$("$_GX_BIN" resolve "$1")
+            if [ -n "$target" ] && [ -d "$target" ]; then
+                cd "$target"
+            else
+                return 1
+            fi
+            if [ "$2" = "wt" ]; then
+                if ! command -v wt >/dev/null 2>&1; then
+                    echo "gx: wt (worktrunk) not found on PATH" >&2
+                    echo "Install: brew install worktrunk" >&2
+                    return 1
+                fi
+                shift 2
+                wt "$@"
+            fi
+            ;;
+    esac
+}
+
+# Tab completion
+_gx() {
+    local -a commands projects
+    commands=(clone ls recent resume rebuild config resolve open init index shell-init --help --version -h -v)
+
+    if (( CURRENT == 2 )); then
+        projects=($("$_GX_BIN" resolve --list 2>/dev/null))
+        compadd "${commands[@]}" "${projects[@]}"
+    elif (( CURRENT == 3 )); then
+        case "${words[2]}" in
+            clone|ls|recent|resume|rebuild|config|resolve|open|init|index|shell-init|--help|--version|-h|-v)
+                if [[ "${words[2]}" == "config" ]]; then
+                    compadd set
+                fi
+                ;;
+            *)
+                compadd wt
+                ;;
+        esac
+    elif (( CURRENT == 4 )) && [[ "${words[2]}" == "config" ]] && [[ "${words[3]}" == "set" ]]; then
+        compadd projectDir defaultHost structure shallow similarityThreshold editor
+    fi
+}
+(( $+functions[compdef] )) && compdef _gx gx

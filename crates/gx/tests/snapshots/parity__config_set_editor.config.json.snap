@@ -1,0 +1,13 @@
+---
+source: crates/gx/tests/parity.rs
+expression: env.config_json()
+---
+{
+  "projectDir": "/projects",
+  "defaultHost": "github.com",
+  "defaultOwner": "owner",
+  "structure": "owner",
+  "shallow": false,
+  "similarityThreshold": 0.7,
+  "editor": "code"
+}

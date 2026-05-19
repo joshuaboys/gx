@@ -1,0 +1,7 @@
+---
+source: crates/gx/tests/parity.rs
+expression: run.stderr
+---
+Warning: compiled gx not found on PATH.
+The generated shell code will use bare `gx` and require it on PATH.
+Run `bun run build` and ensure gx is on your PATH, then re-run `gx shell-init`.
