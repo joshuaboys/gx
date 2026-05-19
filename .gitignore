@@ -4,6 +4,9 @@
 # Compiled binary
 /gx
 
+# Rust artefacts
+/target/
+
 # Dependencies
 node_modules/
 

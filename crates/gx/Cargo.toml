@@ -1,0 +1,17 @@
+[package]
+name = "gx"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "A fast git project manager (Rust port — work in progress)"
+publish = false
+
+[[bin]]
+name = "gx"
+path = "src/main.rs"
+
+[dependencies]
+
+[dev-dependencies]
