@@ -1,0 +1,14 @@
+[workspace]
+members = ["crates/gx"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+repository = "https://github.com/joshuaboys/gx"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
