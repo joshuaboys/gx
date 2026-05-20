@@ -80,8 +80,15 @@ Change status to **Ready** when:
     `resolve --list`, `resolve <missing>`, `recent`, `recent -n`, `config`
     show with/without fixture, fallback resolve of unknown name). Mutating-
     command goldens are added as those commands get ported in RST-5/RST-6.
-- [ ] **RST-3:** Pure-logic ports
-  - `url`, `path`, `fuzzy`, `time`, `detect`, `templates`, `types`, `config` ported with unit tests mirroring `tests/lib/`
+- [x] **RST-3:** Pure-logic ports
+  - `crates/gx/src/{types,errors,time,url,fuzzy,detect,templates,config,path}.rs`
+    port the eight TS pure-logic modules with parity unit tests (111 total
+    across config/detect/fuzzy/path/templates/time/url, mirroring
+    `tests/lib/`). `effective_project_dir_for` / `to_path_for` /
+    `validate_agent` take the agent string explicitly so tests don't depend
+    on global env state. Atomic config save preserves the temp-then-rename
+    invariant; pretty-print emits 2-space indent + trailing newline matching
+    TS. Deps added: `serde`, `serde_json`, `regex`, `thiserror`, `dirs`.
 - [ ] **RST-4:** `index_store` port
   - Load, save, scan, additive and scoped rebuild ported; round-trips a real `index.json` byte-equal; symlink-cycle test passes
 - [ ] **RST-5:** Read-only commands
