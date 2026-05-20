@@ -1,0 +1,16 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 0
+---- stdout ----
+{
+  "projectDir": "~/Projects/src",
+  "defaultHost": "github.com",
+  "defaultOwner": "",
+  "structure": "owner",
+  "shallow": false,
+  "similarityThreshold": 0.7,
+  "editor": ""
+}
+
+---- stderr ----

@@ -63,3 +63,27 @@ jobs:
 
       - name: Build release
         run: cargo build --release --workspace
+
+  snapshots:
+    name: Parity Snapshots (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install JS dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run snapshot harness against TS binary
+        run: tools/run-ts-snapshots.sh

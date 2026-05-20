@@ -1,0 +1,9 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 0
+---- stdout ----
+gamma-utils  /snapshot/projects/github.com/widgets/gamma-utils  <TIME_AGO>
+alpha        /snapshot/projects/github.com/acme/alpha  <TIME_AGO>
+
+---- stderr ----

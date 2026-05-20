@@ -1,0 +1,10 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 0
+---- stdout ----
+alpha
+beta
+gamma-utils
+
+---- stderr ----

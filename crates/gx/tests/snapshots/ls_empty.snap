@@ -1,0 +1,8 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 0
+---- stdout ----
+
+---- stderr ----
+No projects indexed. Clone a repo or run 'gx rebuild'.

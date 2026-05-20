@@ -1,0 +1,9 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 1
+---- stdout ----
+
+---- stderr ----
+Unsupported shell: powershell
+Supported shells: zsh, bash, fish

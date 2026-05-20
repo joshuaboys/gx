@@ -1,0 +1,8 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 1
+---- stdout ----
+
+---- stderr ----
+Project 'nonexistent-xyzzy' not found

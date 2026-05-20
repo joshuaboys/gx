@@ -67,8 +67,19 @@ Change status to **Ready** when:
 
 - [ ] **RST-1:** Cargo scaffolding and CI matrix
   - Cargo manifest, empty binary, `cargo {fmt,clippy,test,build}` jobs added to `ci.yml`
-- [ ] **RST-2:** Snapshot harness against the current TS binary
-  - Fixture index/config and golden outputs committed for every command; harness reproduces them when run against the TS binary
+- [x] **RST-2:** Snapshot harness against the current TS binary
+  - Harness in `crates/gx/tests/snapshots.rs` runs the binary under test in an
+    isolated `HOME` populated from `crates/gx/tests/fixtures/`, captures
+    stdout/stderr/exit, and asserts against goldens under
+    `crates/gx/tests/snapshots/`. Tests are `#[ignore]`d so `cargo test` stays
+    green during the port; goldens get verified by pointing `GX_SNAPSHOT_BIN`
+    at the freshly built TS binary via `tools/run-ts-snapshots.sh`, which is
+    also wired into CI as the `snapshots` job. Initial coverage:
+    deterministic read-only surfaces (`--help`, `--version`,
+    `shell-init zsh|bash|fish`, `shell-init <bad>`, `ls`, `ls` empty,
+    `resolve --list`, `resolve <missing>`, `recent`, `recent -n`, `config`
+    show with/without fixture, fallback resolve of unknown name). Mutating-
+    command goldens are added as those commands get ported in RST-5/RST-6.
 - [ ] **RST-3:** Pure-logic ports
   - `url`, `path`, `fuzzy`, `time`, `detect`, `templates`, `types`, `config` ported with unit tests mirroring `tests/lib/`
 - [ ] **RST-4:** `index_store` port

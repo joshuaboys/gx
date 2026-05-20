@@ -1,0 +1,21 @@
+{
+  "projects": {
+    "alpha": {
+      "path": "/snapshot/projects/github.com/acme/alpha",
+      "url": "git@github.com:acme/alpha.git",
+      "clonedAt": "2025-01-01T00:00:00.000Z",
+      "lastVisited": "2025-04-15T12:00:00.000Z"
+    },
+    "beta": {
+      "path": "/snapshot/projects/github.com/acme/beta",
+      "url": "https://github.com/acme/beta.git",
+      "clonedAt": "2025-02-10T00:00:00.000Z"
+    },
+    "gamma-utils": {
+      "path": "/snapshot/projects/github.com/widgets/gamma-utils",
+      "url": "git@github.com:widgets/gamma-utils.git",
+      "clonedAt": "2025-03-20T00:00:00.000Z",
+      "lastVisited": "2025-05-19T00:00:00.000Z"
+    }
+  }
+}
