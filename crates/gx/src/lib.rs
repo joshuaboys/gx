@@ -9,6 +9,7 @@ pub mod config;
 pub mod detect;
 pub mod errors;
 pub mod fuzzy;
+pub mod index_store;
 pub mod path;
 pub mod templates;
 pub mod time;

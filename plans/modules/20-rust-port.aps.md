@@ -89,8 +89,22 @@ Change status to **Ready** when:
     on global env state. Atomic config save preserves the temp-then-rename
     invariant; pretty-print emits 2-space indent + trailing newline matching
     TS. Deps added: `serde`, `serde_json`, `regex`, `thiserror`, `dirs`.
-- [ ] **RST-4:** `index_store` port
-  - Load, save, scan, additive and scoped rebuild ported; round-trips a real `index.json` byte-equal; symlink-cycle test passes
+- [x] **RST-4:** `index_store` port
+  - `crates/gx/src/index_store.rs` ports `ProjectIndex` with the full TS
+    surface: `load`/`save`/`add`/`merge`/`resolve`/`touch`/`recent`/`list`/
+    `names`/`rebuild`/`scoped_rebuild`/`additive_scan`/`get_remote_url`.
+    `types::Index::projects` is now an `indexmap::IndexMap` so a canonical
+    `index.json` round-trips byte-equal (locked in by
+    `round_trip_is_byte_equal`). Atomic save reuses
+    `config::atomic_write` (temp-file-then-rename in the same directory).
+    Scanner mirrors the TS rules: max depth 10, skip
+    `{node_modules,vendor,target,.build,dist,build}` and hidden dirs,
+    detect `.git` as directory OR file (worktrees), realpath-based
+    visited set breaks symlink cycles (`scan_breaks_symlink_cycles`).
+    `last_visited` stamping reproduces `new Date().toISOString()` shape
+    (`YYYY-MM-DDTHH:MM:SS.sssZ`). 25 unit tests mirror
+    `tests/lib/index.test.ts` including `get_remote_url` against a real
+    `git init` repo. Dep added: `indexmap` with `serde` feature.
 - [ ] **RST-5:** Read-only commands
   - `ls`, `recent`, `resolve`, `config`, `shell-init` wired through clap; snapshot harness green
 - [ ] **RST-6:** Mutating commands

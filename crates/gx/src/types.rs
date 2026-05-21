@@ -1,5 +1,5 @@
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -74,5 +74,5 @@ pub struct IndexEntry {
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Index {
-    pub projects: BTreeMap<String, IndexEntry>,
+    pub projects: IndexMap<String, IndexEntry>,
 }

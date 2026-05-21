@@ -124,6 +124,7 @@ name = "gx"
 version = "0.0.0"
 dependencies = [
  "dirs",
+ "indexmap",
  "insta",
  "regex",
  "serde",
