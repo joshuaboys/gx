@@ -133,10 +133,7 @@ fn parse_iso_ms(iso: &str) -> Option<i64> {
     }
 
     let days = days_from_civil(year, month as i64, day as i64);
-    let seconds_utc = days * 86_400
-        + (hour as i64) * 3600
-        + (minute as i64) * 60
-        + second as i64
+    let seconds_utc = days * 86_400 + (hour as i64) * 3600 + (minute as i64) * 60 + second as i64
         - tz_offset_minutes * 60;
     Some(seconds_utc * 1000 + frac_ms)
 }

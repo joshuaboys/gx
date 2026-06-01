@@ -131,7 +131,10 @@ pub fn to_clone_url(parsed: &ParsedRepo) -> String {
     if parsed.original_url.starts_with("git@") || parsed.original_url.starts_with("ssh://") {
         parsed.original_url.clone()
     } else {
-        format!("https://{}/{}/{}.git", parsed.host, parsed.owner, parsed.repo)
+        format!(
+            "https://{}/{}/{}.git",
+            parsed.host, parsed.owner, parsed.repo
+        )
     }
 }
 

@@ -136,7 +136,8 @@ Include:
 4. Potential edge cases
 ";
 
-const REVIEW_COMMAND: &str = "Review the following code changes for bugs, style issues, and improvements:
+const REVIEW_COMMAND: &str =
+    "Review the following code changes for bugs, style issues, and improvements:
 
 $ARGUMENTS
 

@@ -11,7 +11,14 @@ use crate::types::{Index, IndexEntry};
 const MAX_SCAN_DEPTH: usize = 10;
 
 fn skip_dirs() -> &'static [&'static str] {
-    &["node_modules", "vendor", "target", ".build", "dist", "build"]
+    &[
+        "node_modules",
+        "vendor",
+        "target",
+        ".build",
+        "dist",
+        "build",
+    ]
 }
 
 /// In-memory view of `~/.config/gx/index.json` with the same surface as the
@@ -94,8 +101,14 @@ impl ProjectIndex {
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
         entries.sort_by(|a, b| {
-            let ta = a.1.last_visited.as_deref().unwrap_or(a.1.cloned_at.as_str());
-            let tb = b.1.last_visited.as_deref().unwrap_or(b.1.cloned_at.as_str());
+            let ta =
+                a.1.last_visited
+                    .as_deref()
+                    .unwrap_or(a.1.cloned_at.as_str());
+            let tb =
+                b.1.last_visited
+                    .as_deref()
+                    .unwrap_or(b.1.cloned_at.as_str());
             tb.cmp(ta)
         });
         if let Some(n) = limit {
@@ -339,10 +352,7 @@ mod tests {
                 last_visited: None,
             },
         );
-        assert_eq!(
-            idx.resolve("gx"),
-            Some("/home/user/src/joshuaboys/gx")
-        );
+        assert_eq!(idx.resolve("gx"), Some("/home/user/src/joshuaboys/gx"));
     }
 
     #[test]
@@ -585,10 +595,7 @@ mod tests {
 
         let mut idx = ProjectIndex::default();
         idx.add("external", entry("/other/dir/external"));
-        idx.add(
-            "repoA",
-            entry(a.to_string_lossy().as_ref()),
-        );
+        idx.add("repoA", entry(a.to_string_lossy().as_ref()));
 
         idx.scoped_rebuild(tmp.path()).unwrap();
 
@@ -605,14 +612,8 @@ mod tests {
         let user_repo = make_repo(tmp.path(), "org/userrepo");
 
         let mut idx = ProjectIndex::default();
-        idx.add(
-            "agentrepo",
-            entry(agent_repo.to_string_lossy().as_ref()),
-        );
-        idx.add(
-            "userrepo",
-            entry(user_repo.to_string_lossy().as_ref()),
-        );
+        idx.add("agentrepo", entry(agent_repo.to_string_lossy().as_ref()));
+        idx.add("userrepo", entry(user_repo.to_string_lossy().as_ref()));
 
         idx.scoped_rebuild(tmp.path()).unwrap();
 
@@ -633,14 +634,8 @@ mod tests {
         let user_repo = make_repo(tmp.path(), "org/userrepo");
 
         let mut idx = ProjectIndex::default();
-        idx.add(
-            "agentrepo",
-            entry(agent_repo.to_string_lossy().as_ref()),
-        );
-        idx.add(
-            "userrepo",
-            entry(user_repo.to_string_lossy().as_ref()),
-        );
+        idx.add("agentrepo", entry(agent_repo.to_string_lossy().as_ref()));
+        idx.add("userrepo", entry(user_repo.to_string_lossy().as_ref()));
 
         idx.scoped_rebuild(&agent_dir).unwrap();
 

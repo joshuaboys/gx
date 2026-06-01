@@ -1,8 +1,8 @@
 # Rust Port
 
-| ID  | Owner       | Status |
-| --- | ----------- | ------ |
-| RST | @joshuaboys | Draft  |
+| ID  | Owner       | Status    |
+| --- | ----------- | --------- |
+| RST | @joshuaboys | Committed |
 
 ## Purpose
 
@@ -65,7 +65,7 @@ Change status to **Ready** when:
 
 ## Work Items
 
-- [ ] **RST-1:** Cargo scaffolding and CI matrix
+- [x] **RST-1:** Cargo scaffolding and CI matrix
   - Cargo manifest, empty binary, `cargo {fmt,clippy,test,build}` jobs added to `ci.yml`
 - [x] **RST-2:** Snapshot harness against the current TS binary
   - Harness in `crates/gx/tests/snapshots.rs` runs the binary under test in an

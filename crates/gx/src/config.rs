@@ -183,8 +183,13 @@ pub(crate) fn atomic_write(path: &Path, contents: &[u8]) -> GxResult<()> {
         f.write_all(contents)
             .map_err(|e| GxError::Other(format!("write {}: {e}", tmp.display())))?;
     }
-    fs::rename(&tmp, path)
-        .map_err(|e| GxError::Other(format!("rename {} -> {}: {e}", tmp.display(), path.display())))
+    fs::rename(&tmp, path).map_err(|e| {
+        GxError::Other(format!(
+            "rename {} -> {}: {e}",
+            tmp.display(),
+            path.display()
+        ))
+    })
 }
 
 #[cfg(test)]
@@ -208,12 +213,18 @@ mod tests {
 
     #[test]
     fn expand_tilde_absolute_unchanged() {
-        assert_eq!(expand_tilde("/usr/local/bin"), PathBuf::from("/usr/local/bin"));
+        assert_eq!(
+            expand_tilde("/usr/local/bin"),
+            PathBuf::from("/usr/local/bin")
+        );
     }
 
     #[test]
     fn expand_tilde_relative_unchanged() {
-        assert_eq!(expand_tilde("relative/path"), PathBuf::from("relative/path"));
+        assert_eq!(
+            expand_tilde("relative/path"),
+            PathBuf::from("relative/path")
+        );
     }
 
     // --- validate_agent ---------------------------------------------------
@@ -225,12 +236,18 @@ mod tests {
 
     #[test]
     fn agent_lowercased() {
-        assert_eq!(validate_agent(Some("Morgan")).unwrap(), Some("morgan".into()));
+        assert_eq!(
+            validate_agent(Some("Morgan")).unwrap(),
+            Some("morgan".into())
+        );
     }
 
     #[test]
     fn agent_trimmed() {
-        assert_eq!(validate_agent(Some("  morgan  ")).unwrap(), Some("morgan".into()));
+        assert_eq!(
+            validate_agent(Some("  morgan  ")).unwrap(),
+            Some("morgan".into())
+        );
     }
 
     #[test]
