@@ -26,3 +26,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# AI CLI
+.claude
