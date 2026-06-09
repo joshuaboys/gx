@@ -89,6 +89,9 @@ Change status to **Ready** when:
     on global env state. Atomic config save preserves the temp-then-rename
     invariant; pretty-print emits 2-space indent + trailing newline matching
     TS. Deps added: `serde`, `serde_json`, `regex`, `thiserror`, `dirs`.
+    Name resolution (`resolve-name.ts`) is the one library module deferred
+    out of this batch — it composes `index_store` + `fuzzy`, so it lands on
+    top of `index_store` in RST-4 rather than here.
 - [x] **RST-4:** `index_store` port
   - `crates/gx/src/index_store.rs` ports `ProjectIndex` with the full TS
     surface: `load`/`save`/`add`/`merge`/`resolve`/`touch`/`recent`/`list`/
@@ -105,6 +108,14 @@ Change status to **Ready** when:
     (`YYYY-MM-DDTHH:MM:SS.sssZ`). 25 unit tests mirror
     `tests/lib/index.test.ts` including `get_remote_url` against a real
     `git init` repo. Dep added: `indexmap` with `serde` feature.
+    `crates/gx/src/resolve_name.rs` then ports `resolve-name.ts` on top:
+    `resolve_project_name` returns the `Exact`/`Auto`/`Ambiguous`/`Missing`
+    `ResolveResult` enum and `format_ambiguous`/`format_auto_match` reproduce
+    the suggestion and auto-jump strings verbatim (`(score*100).toFixed(0)`
+    percentages). 7 unit tests mirror `tests/lib/resolve-name.test.ts`;
+    library unit-test total is now 143. The command-layer goldens for the
+    `Ambiguous`/`Auto` stderr output land with the `resolve`/`open`/`resume`
+    ports in RST-5/RST-6.
 - [ ] **RST-5:** Read-only commands
   - `ls`, `recent`, `resolve`, `config`, `shell-init` wired through clap; snapshot harness green
 - [ ] **RST-6:** Mutating commands
