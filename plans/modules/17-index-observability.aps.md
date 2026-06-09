@@ -1,8 +1,8 @@
 # Index Reliability & Observability
 
-| ID | Owner | Status |
-|----|-------|--------|
-| IDXOB | @joshuaboys | Draft |
+| ID    | Owner       | Status |
+| ----- | ----------- | ------ |
+| IDXOB | @joshuaboys | Draft  |
 
 - Version: v5
 - Depends on: Index, Tracking
@@ -39,6 +39,6 @@ Increase trust in `gx` behaviour at scale with diagnostics and stats.
 - [ ] Dependencies identified
 - [ ] At least one task defined
 
-## Tasks
+## Work Items
 
-*No tasks yet — module is Draft*
+_No work items yet — module is Draft_
