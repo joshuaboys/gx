@@ -1,0 +1,8 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 1
+---- stdout ----
+
+---- stderr ----
+Unknown project type 'bogus'. Valid types: typescript-bun, typescript-node, rust, go, python, generic

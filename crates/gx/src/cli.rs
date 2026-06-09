@@ -8,7 +8,9 @@
 use std::io::IsTerminal;
 use std::path::PathBuf;
 
-use crate::commands::{config_cmd, ls, recent, resolve, shell_init};
+use crate::commands::{
+    clone, config_cmd, index_repos, init, ls, open, rebuild, recent, resolve, resume, shell_init,
+};
 use crate::config::{get_agent, get_config_path, load_config};
 use crate::errors::{GxError, GxResult};
 
@@ -120,12 +122,47 @@ fn dispatch(args: &[String]) -> GxResult<()> {
     }
 
     match command {
-        "clone" | "index" | "rebuild" | "open" | "init" | "resume" => {
-            // Ported in RST-6; the shipped binary remains the TS build until
-            // the RST-7 cutover.
-            Err(GxError::command(format!(
-                "{command}: not yet ported (RST-6)"
-            )))
+        "clone" => {
+            let repo = args.get(1).filter(|r| !r.is_empty());
+            let Some(repo) = repo else {
+                return Err(GxError::command("Usage: gx clone <repo>"));
+            };
+            let path = clone::clone_repo(repo, &config, &index_path)?;
+            println!("{path}");
+            Ok(())
+        }
+        "index" => index_repos::index_repos(&args[1..], &config, &index_path),
+        "rebuild" => rebuild::rebuild(&config, &index_path),
+        "open" => {
+            let editor = parse_flag(args, "--editor");
+            if args.iter().any(|a| a == "--editor") && editor.is_none() {
+                return Err(GxError::command("Usage: gx open [name] --editor <name>"));
+            }
+            let editor_idx = args.iter().position(|a| a == "--editor");
+            let name = args.iter().enumerate().find_map(|(i, a)| {
+                if i > 0 && a != "--editor" && editor_idx.map_or(true, |ei| i != ei + 1) {
+                    Some(a.as_str())
+                } else {
+                    None
+                }
+            });
+            open::open_project(name, &config, &index_path, editor)
+        }
+        "init" => {
+            let type_opt = parse_flag(args, "--type");
+            if args.iter().any(|a| a == "--type") && type_opt.is_none() {
+                return Err(GxError::command("Usage: gx init --type <type>"));
+            }
+            let force = args.iter().any(|a| a == "--force");
+            let cwd = std::env::current_dir().map_err(|e| GxError::Other(format!("cwd: {e}")))?;
+            init::init_agent(&cwd, type_opt, force)
+        }
+        "resume" => {
+            let name = args.get(1).filter(|n| !n.is_empty());
+            let Some(name) = name else {
+                return Err(GxError::command("Usage: gx resume <name>"));
+            };
+            resume::resume(name, &index_path, &config)
         }
         "ls" => {
             ls::ls(&index_path);

@@ -139,7 +139,22 @@ Change status to **Ready** when:
     `argv[0]`; Rust's `current_exe()` is reliable, always resolves, and never
     emits the "not on PATH" warning. The value is scrubbed to `<BIN>` in
     snapshots, so output stays parity-clean.
-- [ ] **RST-6:** Mutating commands
-  - `clone`, `init`, `index`, `rebuild`, `open`, `resume` ported; full snapshot harness green; manual smoke on real repos
+- [x] **RST-6:** Mutating commands
+  - `crates/gx/src/commands/{clone,init,index_repos,rebuild,open,resume}.rs`
+    port the six mutating commands and the dispatcher wires their flag parsing
+    (`--editor`, `--type`, `--force`, `-n`). git runs as a subprocess
+    (`std::process::Command`, no `git2`); `clone`/`index` stamp
+    `clonedAt`/`lastVisited` via the now-public `index_store::iso_now`;
+    `index` lexically resolves paths (`path.resolve` parity, symlinks
+    preserved); `open` ports the editor table, `$VISUAL`/`$EDITOR` precedence,
+    and a `Bun.which`-equivalent PATH probe. Five deterministic error-path
+    snapshot goldens added (`clone_no_arg`, `resume_no_arg`, `resume_missing`,
+    `open_missing`, `init_bad_type`) — 20 snapshots now green against the Rust
+    binary. 6 unit tests cover `resolve_editor`/`editor_info`. Manual smoke
+    ran every mutating command (init, index, rebuild, clone success +
+    already-exists, resume) through both binaries in isolated `HOME`s against
+    real git repos: stdout, stderr, and `index.json` (modulo timestamps) are
+    byte-identical. `cargo test --workspace`: 149 unit + 1 smoke + 20
+    snapshots.
 - [ ] **RST-7:** Distribution cutover
   - `install.sh` and release workflow ship the Rust binary; TS source removed; `AGENTS.md` rewritten for Rust

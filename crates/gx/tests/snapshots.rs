@@ -294,3 +294,62 @@ fn snapshot_unknown_arg_resolves_as_name() {
     });
     assert_snapshot("unknown_arg_resolves_as_name", &format_capture(&cap));
 }
+
+// --- Mutating-command error paths (deterministic; no real git / timestamps) -
+
+#[test]
+fn snapshot_clone_no_arg() {
+    let h = Harness::new();
+    let cap = run({
+        let mut c = h.command();
+        c.arg("clone");
+        c
+    });
+    assert_snapshot("clone_no_arg", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_resume_no_arg() {
+    let h = Harness::new();
+    let cap = run({
+        let mut c = h.command();
+        c.arg("resume");
+        c
+    });
+    assert_snapshot("resume_no_arg", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_resume_missing() {
+    let h = Harness::new().with_fixture_index();
+    let cap = run({
+        let mut c = h.command();
+        c.args(["resume", "nonexistent-xyzzy"]);
+        c
+    });
+    assert_snapshot("resume_missing", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_open_missing() {
+    let h = Harness::new().with_fixture_index();
+    let cap = run({
+        let mut c = h.command();
+        c.args(["open", "nonexistent-xyzzy"]);
+        c
+    });
+    assert_snapshot("open_missing", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_init_bad_type() {
+    // `--type <bad>` errors during type resolution, before any filesystem
+    // access, so this is independent of the process cwd.
+    let h = Harness::new();
+    let cap = run({
+        let mut c = h.command();
+        c.args(["init", "--type", "bogus"]);
+        c
+    });
+    assert_snapshot("init_bad_type", &format_capture(&cap));
+}
