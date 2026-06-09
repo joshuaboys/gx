@@ -35,14 +35,24 @@ Make `gx` trivial to install and upgrade for first-time users.
 
 ## Implementation Notes
 
-`install.sh` handles basic installation (checksum/signature verification is not yet implemented — see DIST-4):
+`install.sh` handles installation with release checksum verification:
 
 - Downloads prebuilt binaries from GitHub Releases with OS/arch detection
+- Verifies downloaded binaries against the release `SHA256SUMS` manifest before installing
 - Falls back to building from source via bun if no binary available
 - Detects and installs shell integration into `.zshrc`, `.bashrc`, or Fish config
 - Ensures `~/.local/bin` is on PATH
 
 CI pipeline (`.github/workflows/ci.yml`) runs tests and builds on both `ubuntu-latest` and `macos-latest`.
+
+Release pipeline (`.github/workflows/release.yml`) publishes native hosted binaries, uploads `SHA256SUMS`, and emits GitHub artifact attestations for the release assets and checksum manifest.
+
+`gx doctor` reports installation health without mutating user state:
+
+- Runtime and `gx` binary availability on `PATH`
+- Config, project directory, and index paths
+- Indexed project count plus stale path count
+- Shell integration presence for zsh, bash, or fish
 
 ## Ready Checklist
 
@@ -54,5 +64,5 @@ CI pipeline (`.github/workflows/ci.yml`) runs tests and builds on both `ubuntu-l
 
 - [x] DIST-1: Create `install.sh` curl installer with OS/arch detection and source fallback
 - [x] DIST-2: CI pipeline for Linux and macOS builds
-- [ ] DIST-3: Implement `gx doctor` health check command
-- [ ] DIST-4: Release signing and checksum verification
+- [x] DIST-3: Implement `gx doctor` health check command
+- [x] DIST-4: Release signing and checksum verification
