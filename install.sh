@@ -16,6 +16,40 @@ error() { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
+download() {
+  local url="$1" dest="$2"
+  if command_exists curl; then
+    curl -fsSL "$url" -o "$dest"
+  elif command_exists wget; then
+    wget -qO "$dest" "$url"
+  else
+    error "Need curl or wget to download gx"
+  fi
+}
+
+sha256_file() {
+  if command_exists sha256sum; then
+    sha256sum "$1" | awk '{print $1}'
+  elif command_exists shasum; then
+    shasum -a 256 "$1" | awk '{print $1}'
+  else
+    error "Need sha256sum or shasum to verify release checksums"
+  fi
+}
+
+verify_checksum() {
+  local asset="$1" file="$2" sums="$3" expected actual
+  expected=$(awk -v asset="$asset" '$2 == asset || $2 == "*" asset {print $1; exit}' "$sums")
+  if [ -z "$expected" ]; then
+    error "Checksum for ${asset} not found in SHA256SUMS"
+  fi
+
+  actual=$(sha256_file "$file")
+  if [ "$actual" != "$expected" ]; then
+    error "Checksum verification failed for ${asset}"
+  fi
+}
+
 detect_os() {
   case "$(uname -s)" in
     Linux*)  echo "linux" ;;
@@ -58,78 +92,43 @@ shell_rc_file() {
   esac
 }
 
-# --- install strategies ---
+# --- install strategy ---
 
-try_prebuilt() {
+# Temp dir for the download, cleaned up on exit. Script-scoped (not `local`)
+# so the EXIT trap still sees it after install_prebuilt returns.
+GX_TMPDIR=""
+cleanup() { [ -n "$GX_TMPDIR" ] && rm -rf "$GX_TMPDIR"; }
+trap cleanup EXIT
+
+install_prebuilt() {
   local os="$1" arch="$2"
   local asset="gx-${os}-${arch}"
-  local url="https://github.com/${REPO}/releases/latest/download/${asset}"
+  local base="https://github.com/${REPO}/releases/latest/download"
 
-  info "Checking for prebuilt binary ($os-$arch)..."
-  local http_code
-  if command_exists curl; then
-    http_code=$(curl -sL -o /dev/null -w "%{http_code}" "$url" 2>/dev/null) || http_code="000"
-  elif command_exists wget; then
-    http_code=$(wget --spider -S "$url" 2>&1 | grep "HTTP/" | tail -1 | awk '{print $2}') || http_code="000"
-  else
-    return 1
+  if ! command_exists curl && ! command_exists wget; then
+    error "Need curl or wget to install gx"
   fi
 
-  if [ "$http_code" != "200" ]; then
-    info "No prebuilt binary available, building from source..."
-    return 1
+  info "Downloading prebuilt binary ($os-$arch)..."
+  GX_TMPDIR=$(mktemp -d)
+  local bin="$GX_TMPDIR/$asset"
+  local sums="$GX_TMPDIR/SHA256SUMS"
+
+  # Download directly; a 404 (no asset for this target) makes curl -f / wget
+  # exit non-zero, which we turn into a clear error (no source fallback).
+  if ! download "$base/$asset" "$bin" 2>/dev/null; then
+    error "No prebuilt binary for ${os}-${arch} in the latest release.
+Supported targets: linux-x64, linux-aarch64, darwin-x64, darwin-aarch64.
+Download manually from https://github.com/${REPO}/releases, or build from
+source with a Rust toolchain: 'cargo build --release -p gx'."
   fi
-
-  info "Downloading prebuilt binary..."
-  mkdir -p "$INSTALL_DIR"
-  if command_exists curl; then
-    curl -fsSL "$url" -o "$GX_BIN"
-  else
-    wget -qO "$GX_BIN" "$url"
-  fi
-  chmod +x "$GX_BIN"
-  return 0
-}
-
-build_from_source() {
-  # Ensure bun is available
-  if ! command_exists bun; then
-    info "Bun not found, installing..."
-    if command_exists curl; then
-      curl -fsSL https://bun.sh/install | bash
-    elif command_exists wget; then
-      wget -qO- https://bun.sh/install | bash
-    else
-      error "Need curl or wget to install Bun"
-    fi
-    # Source bun into current session
-    export BUN_INSTALL="$HOME/.bun"
-    export PATH="$BUN_INSTALL/bin:$PATH"
-    if ! command_exists bun; then
-      error "Bun installation failed"
-    fi
-  fi
-
-  local tmpdir
-  tmpdir=$(mktemp -d)
-  trap 'rm -rf "$tmpdir"' EXIT
-
-  info "Cloning gx..."
-  if command_exists git; then
-    git clone --depth 1 "https://github.com/${REPO}.git" "$tmpdir/gx"
-  else
-    error "Git is required to build from source"
-  fi
-
-  info "Building..."
-  cd "$tmpdir/gx"
-  bun install --frozen-lockfile || bun install || error "bun install failed"
-  bun run build || error "bun build failed"
+  download "$base/SHA256SUMS" "$sums"
+  verify_checksum "$asset" "$bin" "$sums"
+  info "Verified SHA-256 checksum"
 
   mkdir -p "$INSTALL_DIR"
-  cp gx "$GX_BIN"
+  mv "$bin" "$GX_BIN"
   chmod +x "$GX_BIN"
-  cd - >/dev/null
 }
 
 # --- shell integration ---
@@ -204,9 +203,7 @@ main() {
   os=$(detect_os)
   arch=$(detect_arch)
 
-  if ! try_prebuilt "$os" "$arch"; then
-    build_from_source
-  fi
+  install_prebuilt "$os" "$arch"
 
   setup_shell
   ensure_path

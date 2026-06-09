@@ -2,52 +2,60 @@
 
 ## Project Overview
 
-`gx` is a Bun-based TypeScript CLI for managing Git project directories.
+`gx` is a Rust CLI for managing Git project directories. It compiles to a
+single statically-linkable binary with no runtime dependencies.
 
 ## Project Structure
 
-- `src/index.ts`: CLI entrypoint and command routing.
-- `src/commands/*.ts`: user-facing commands (`clone`, `open`, `init`, `shell-init`, etc.).
-- `src/lib/*.ts`: shared logic (config, indexing, path/url parsing, templates, fuzzy matching).
-- `tests/commands/` and `tests/lib/`: test suites that mirror source structure.
+- `crates/gx/src/main.rs`: binary entrypoint (`gx::cli::run`).
+- `crates/gx/src/cli.rs`: argument dispatch, `--help`/`--version`, command routing.
+- `crates/gx/src/commands/*.rs`: user-facing commands (`clone`, `open`, `init`, `shell_init`, etc.).
+- `crates/gx/src/*.rs`: shared logic — `config`, `index_store`, `path`, `url`, `templates`, `fuzzy`, `resolve_name`, `detect`, `time`, `types`, `errors`.
+- `crates/gx/tests/`: integration tests — `smoke.rs` and the behaviour-parity `snapshots.rs` harness (goldens under `tests/snapshots/`, fixtures under `tests/fixtures/`). Unit tests live in `#[cfg(test)]` modules next to the code.
 - `plugin/gx.plugin.zsh`: oh-my-zsh compatibility shim.
-- `install.sh`: curl installer; `.github/workflows/ci.yml`: CI checks.
+- `install.sh`: curl installer (downloads + checksum-verifies prebuilt release assets).
+- `.github/workflows/ci.yml`: fmt/clippy/test/build. `.github/workflows/release.yml`: tag-triggered cross-platform binaries.
 
-## Tooling — Bun, Not Node
+## Tooling — Cargo
 
-Always use Bun. Never use Node.js, npm, yarn, pnpm, npx, jest, vitest, webpack, esbuild, dotenv, express, or execa.
+| Task            | Command                                            |
+| --------------- | -------------------------------------------------- |
+| Run from source | `cargo run -p gx -- <args>`                        |
+| Build (debug)   | `cargo build`                                      |
+| Build (release) | `cargo build --release`                            |
+| Run tests       | `cargo test --workspace`                           |
+| Format          | `cargo fmt`                                        |
+| Lint            | `cargo clippy --all-targets --workspace -- -D warnings` |
 
-| Task          | Command              |
-| ------------- | -------------------- |
-| Run a file    | `bun <file>`         |
-| Install deps  | `bun install`        |
-| Run a script  | `bun run <script>`   |
-| Run a package | `bunx <package>`     |
-| Run tests     | `bun test`           |
-| Type check    | `bun x tsc --noEmit` |
-| Build binary  | `bun run build`      |
-
-Prefer Bun-native APIs: `Bun.file` over `node:fs`, `Bun.$\`cmd\``over child_process/execa. Bun auto-loads`.env` — don't use dotenv.
+Prefer the standard library and the existing dependency set (`serde`,
+`serde_json`, `regex`, `thiserror`, `dirs`, `indexmap`). Git operations run as
+`std::process::Command` subprocesses — do not add `git2`/libgit2. Stay
+synchronous; do not add an async runtime until a feature genuinely needs one.
 
 ## Development Commands
 
-- `bun run dev`: run CLI from source.
-- `bun run build`: compile standalone binary to `./gx`.
-- Pre-PR check: `bun x tsc --noEmit && bun test && bun run build`.
+- `cargo run -p gx -- <args>`: run the CLI from source.
+- `cargo build --release`: compile the standalone binary to `target/release/gx`.
+- Pre-PR check: `cargo fmt --check && cargo clippy --all-targets --workspace -- -D warnings && cargo test --workspace`.
 
 ## Coding Style
 
-- TypeScript (ES modules), `strict` type checking enabled.
-- 2-space indentation, semicolons, double quotes, trailing commas for multiline.
-- Command handlers in `src/commands/`; reusable logic in `src/lib/`.
-- Lowercase filenames with concise names (e.g. `shell-init.ts`, `config.ts`).
+- Rust 2021, MSRV 1.75. `rustfmt` defaults (4-space indent); keep `cargo fmt` clean.
+- No `clippy` warnings (`-D warnings` in CI).
+- Command handlers in `crates/gx/src/commands/`; reusable logic in sibling modules.
+- Snake_case module files mirroring the command name (e.g. `shell_init.rs`, `config_cmd.rs`).
+- Typed errors via `GxError`/`GxResult`; reserve `?`-propagation for failures and print user-facing messages through the error model.
 
 ## Testing
 
-- Framework: `bun:test` (`import { test, expect } from "bun:test"`).
-- Test files: `*.test.ts`, mirroring source paths.
-- Use temp directories with `beforeEach`/`afterEach` cleanup for filesystem tests.
-- Prefer deterministic tests; mock external dependencies where practical.
+- Unit tests: `#[cfg(test)] mod tests` next to the code under test.
+- Integration/parity: `crates/gx/tests/snapshots.rs` runs the binary in an
+  isolated `HOME` from `tests/fixtures/` and asserts stdout/stderr/exit
+  byte-for-byte against goldens in `tests/snapshots/`. The goldens are the
+  behaviour contract — update them deliberately (e.g. `INSTA_UPDATE=always`)
+  and review every diff.
+- Use `tempfile::TempDir` for filesystem tests; keep tests deterministic
+  (the harness scrubs binary paths and relative times).
 
 ## Commits & Pull Requests
 

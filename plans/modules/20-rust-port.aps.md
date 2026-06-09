@@ -156,5 +156,19 @@ Change status to **Ready** when:
     real git repos: stdout, stderr, and `index.json` (modulo timestamps) are
     byte-identical. `cargo test --workspace`: 149 unit + 1 smoke + 20
     snapshots.
-- [ ] **RST-7:** Distribution cutover
-  - `install.sh` and release workflow ship the Rust binary; TS source removed; `AGENTS.md` rewritten for Rust
+- [x] **RST-7:** Distribution cutover
+  - `.github/workflows/release.yml` cross-compiles the Rust binary to all four
+    targets (`gx-{linux,darwin}-{x64,aarch64}`) on native runners (linux-aarch64
+    via the `gcc-aarch64-linux-gnu` cross-linker, darwin-x64 via the macOS SDK),
+    publishes a `SHA256SUMS` manifest, and emits build-provenance attestations.
+    `install.sh` downloads the prebuilt asset, verifies its SHA-256 against the
+    manifest, and installs it — the Bun build-from-source fallback is gone (it
+    errors with build-from-source-with-cargo guidance when no asset matches).
+    `ci.yml` is Rust-only (fmt + clippy `-D warnings` + `cargo test` + release
+    build on ubuntu/macos); the Bun `check` job and the TS-parity `snapshots`
+    job are removed — `cargo test` runs the parity snapshots against the Rust
+    binary directly. TS source is deleted (`src/`, `tests/`, `package.json`,
+    `bun.lock`, `tsconfig.json`, `.husky/`, `tools/run-ts-snapshots.sh`); the
+    snapshot goldens are frozen as the behaviour contract. `AGENTS.md` rewritten
+    for cargo conventions; `README.md` install/build sections retargeted to
+    Rust. The snapshot harness no longer references Bun.

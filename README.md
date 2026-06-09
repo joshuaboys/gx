@@ -9,7 +9,7 @@ Clone, jump, and organise repos from the terminal.**
 
 [![CI](https://github.com/joshuaboys/gx/actions/workflows/ci.yml/badge.svg)](https://github.com/joshuaboys/gx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Built with Bun](https://img.shields.io/badge/Built%20with-Bun-f9f1e1?logo=bun)](https://bun.sh)
+[![Built with Rust](https://img.shields.io/badge/Built%20with-Rust-dea584?logo=rust)](https://www.rust-lang.org)
 
 </div>
 
@@ -23,7 +23,7 @@ Clone, jump, and organise repos from the terminal.**
 - **Shell integration** — tab completion and auto-`cd` for zsh, bash, and fish
 - **Open in any editor** — `gx open` launches VS Code, nvim, or whatever you use
 - **AI agent scaffolding** — `gx init` generates `.claude/` configs tailored to your project's language
-- **Single binary** — zero runtime dependencies, compiles with Bun
+- **Single binary** — zero runtime dependencies, compiled from Rust
 
 ## Quick Start
 
@@ -43,7 +43,7 @@ That's it. Shell integration and tab completion are set up automatically.
 
 ## Install
 
-The curl installer downloads (or builds) the `gx` binary, puts it on your `PATH`, and sets up shell integration with tab completion.
+The curl installer downloads the `gx` binary (verifying its SHA-256 checksum), puts it on your `PATH`, and sets up shell integration with tab completion.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
@@ -54,13 +54,13 @@ curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
 <details>
 <summary><strong>Manual install</strong></summary>
 
-Requires [Bun](https://bun.sh) v1.0+.
+Requires a [Rust](https://www.rust-lang.org/tools/install) toolchain (1.75+).
 
 ```sh
 git clone https://github.com/joshuaboys/gx
 cd gx
-bun install && bun run build
-cp gx ~/.local/bin/
+cargo build --release
+cp target/release/gx ~/.local/bin/
 ```
 
 Add shell integration to your config file:
