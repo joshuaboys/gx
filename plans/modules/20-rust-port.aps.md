@@ -2,7 +2,7 @@
 
 | ID  | Owner       | Status |
 | --- | ----------- | ------ |
-| RST | @joshuaboys | Draft  |
+| RST | @joshuaboys | Ready  |
 
 ## Purpose
 
@@ -57,15 +57,15 @@ Re-implement gx as a Rust binary that is byte-for-byte compatible with the curre
 Change status to **Ready** when:
 
 - [x] Decision recorded as ADR — see `decisions/010-rust-port.md`
-- [ ] Crate selection finalised (clap, serde, serde_json, walkdir, tempfile, regex, thiserror, dirs)
-- [ ] Snapshot-harness shape agreed (`assert_cmd` + `insta`, fixtures under `tests/fixtures/`)
-- [ ] Workspace layout decided (single crate at root vs. `crates/gx/` with virtual manifest)
-- [ ] Phase ordering validated against module dependencies
-- [ ] Distribution asset naming agreed (preserve `gx-{linux,darwin}-{x64,aarch64}`)
+- [x] Crate selection finalised — `serde`, `serde_json`, `regex`, `thiserror`, `dirs`, `indexmap` locked in via RST-3/RST-4; `clap` lands with RST-5
+- [x] Snapshot-harness shape agreed — `crates/gx/tests/snapshots.rs` with fixtures under `crates/gx/tests/fixtures/` and goldens under `crates/gx/tests/snapshots/` (RST-2)
+- [x] Workspace layout decided — `crates/gx/` layout (RST-1 scaffolding)
+- [x] Phase ordering validated against module dependencies — RST-1→7 sequence; pure-logic before index_store before commands
+- [x] Distribution asset naming agreed — preserve `gx-{linux,darwin}-{x64,aarch64}` (RST-7 scope)
 
 ## Work Items
 
-- [ ] **RST-1:** Cargo scaffolding and CI matrix
+- [x] **RST-1:** Cargo scaffolding and CI matrix
   - Cargo manifest, empty binary, `cargo {fmt,clippy,test,build}` jobs added to `ci.yml`
 - [x] **RST-2:** Snapshot harness against the current TS binary
   - Harness in `crates/gx/tests/snapshots.rs` runs the binary under test in an
