@@ -37,7 +37,7 @@ Increase trust in `gx` behaviour at scale with diagnostics and stats.
 
 - [ ] Purpose and scope are clear
 - [ ] Dependencies identified
-- [ ] At least one task defined
+- [ ] At least one work item defined
 
 ## Work Items
 
