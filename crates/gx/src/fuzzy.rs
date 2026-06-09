@@ -99,7 +99,11 @@ pub fn fuzzy_match(query: &str, entries: &[FuzzyEntry], threshold: f64) -> Vec<F
         })
         .filter(|r| r.score >= threshold)
         .collect();
-    results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    results.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     results
 }
 

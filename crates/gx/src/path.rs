@@ -8,7 +8,10 @@ use crate::types::{Config, ParsedRepo, Structure};
 pub fn to_path_for(parsed: &ParsedRepo, config: &Config, agent: Option<&str>) -> PathBuf {
     let base = effective_project_dir_for(config, agent);
     match config.structure {
-        Structure::Host => base.join(&parsed.host).join(&parsed.owner).join(&parsed.repo),
+        Structure::Host => base
+            .join(&parsed.host)
+            .join(&parsed.owner)
+            .join(&parsed.repo),
         Structure::Flat => base.join(&parsed.repo),
         Structure::Owner => base.join(&parsed.owner).join(&parsed.repo),
     }
