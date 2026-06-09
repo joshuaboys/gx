@@ -11,6 +11,7 @@ pub mod errors;
 pub mod fuzzy;
 pub mod index_store;
 pub mod path;
+pub mod resolve_name;
 pub mod templates;
 pub mod time;
 pub mod types;

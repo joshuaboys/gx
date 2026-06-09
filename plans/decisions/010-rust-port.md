@@ -2,7 +2,7 @@
 
 | Status   | Date       | Owner       |
 | -------- | ---------- | ----------- |
-| Proposed | 2026-05-03 | @joshuaboys |
+| Accepted | 2026-06-09 | @joshuaboys |
 
 ## Context
 
@@ -28,17 +28,17 @@ Work is tracked under module `RST` (`plans/modules/20-rust-port.aps.md`) in seve
 
 ## Crate Selection
 
-| Concern             | Choice                              | Rationale                                                                                                  |
-| ------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| CLI parsing         | `clap` 4 (derive)                   | Mature, ergonomic, generates good `--help`                                                                 |
-| JSON                | `serde` + `serde_json`              | Pretty-print matches TS `JSON.stringify(.., null, 2)` output                                               |
-| Atomic file writes  | `tempfile::NamedTempFile`           | Same-dir tempfile + atomic rename; preserves the current invariant                                         |
-| Filesystem walk     | `walkdir`                           | Configurable depth and skip rules; canonicalise for symlink-cycle detection                                |
-| Regex               | `regex`                             | URL, agent, and segment validation                                                                         |
-| Path utilities      | `std::path` + `dirs`                | `dirs::home_dir()` replaces `os.homedir()`                                                                 |
-| Errors              | `thiserror`                         | Typed errors with `exit_code()`; `anyhow` only at `main`                                                   |
-| Fuzzy matching      | hand-port of the current Jaro-Winkler | TS impl is case-insensitive with prefix cap of 4 and `p=0.1`; verify against `strsim` before substituting |
-| Tests               | `assert_cmd` + `insta` + `tempfile` | End-to-end snapshots match the parity-first plan                                                           |
+| Concern            | Choice                                | Rationale                                                                                                 |
+| ------------------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| CLI parsing        | `clap` 4 (derive)                     | Mature, ergonomic, generates good `--help`                                                                |
+| JSON               | `serde` + `serde_json`                | Pretty-print matches TS `JSON.stringify(.., null, 2)` output                                              |
+| Atomic file writes | `tempfile::NamedTempFile`             | Same-dir tempfile + atomic rename; preserves the current invariant                                        |
+| Filesystem walk    | `walkdir`                             | Configurable depth and skip rules; canonicalise for symlink-cycle detection                               |
+| Regex              | `regex`                               | URL, agent, and segment validation                                                                        |
+| Path utilities     | `std::path` + `dirs`                  | `dirs::home_dir()` replaces `os.homedir()`                                                                |
+| Errors             | `thiserror`                           | Typed errors with `exit_code()`; `anyhow` only at `main`                                                  |
+| Fuzzy matching     | hand-port of the current Jaro-Winkler | TS impl is case-insensitive with prefix cap of 4 and `p=0.1`; verify against `strsim` before substituting |
+| Tests              | `assert_cmd` + `insta` + `tempfile`   | End-to-end snapshots match the parity-first plan                                                          |
 
 Explicitly rejected:
 
