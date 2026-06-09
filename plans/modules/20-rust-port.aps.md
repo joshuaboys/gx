@@ -1,8 +1,8 @@
 # Rust Port
 
-| ID  | Owner       | Status |
-| --- | ----------- | ------ |
-| RST | @joshuaboys | Ready  |
+| ID  | Owner       | Status      |
+| --- | ----------- | ----------- |
+| RST | @joshuaboys | In Progress |
 
 ## Purpose
 
@@ -116,8 +116,29 @@ Change status to **Ready** when:
     library unit-test total is now 143. The command-layer goldens for the
     `Ambiguous`/`Auto` stderr output land with the `resolve`/`open`/`resume`
     ports in RST-5/RST-6.
-- [ ] **RST-5:** Read-only commands
-  - `ls`, `recent`, `resolve`, `config`, `shell-init` wired through clap; snapshot harness green
+- [x] **RST-5:** Read-only commands
+  - `crates/gx/src/cli.rs` dispatches argv (hand-rolled, not clap — see note
+    below) and `crates/gx/src/commands/{ls,recent,resolve,config_cmd,shell_init}.rs`
+    port the read-only surface plus `--help`/`--version` and the
+    unknown-command-resolves-as-name fallback. Crate version bumped to `0.2.0`
+    so the version/help banners match. All 15 RST-2 snapshot goldens are now
+    live (the `#[ignore]`s are removed) and green against the Rust binary;
+    `tools/run-ts-snapshots.sh` switched to `--include-ignored` so the TS
+    binary stays verified against the same goldens. `cargo test --workspace`
+    is the parity gate (143 unit + 1 smoke + 15 snapshots).
+  - **Deviation from plan/ADR (clap):** the read-only commands are dispatched
+    by a hand-rolled parser, not `clap`. The parity contract requires the
+    verbatim hand-written `--help` text, custom `Usage:`/error strings, and a
+    default arm that resolves an unknown token as a project name — all of
+    which clap's generated help, version, and strict-subcommand error
+    formatting would break. clap is reconsidered if/when a future feature
+    needs richer parsing; for the port, byte-parity wins.
+  - **Deviation (`_GX_BIN` resolution):** `shell-init` embeds
+    `std::env::current_exe()` instead of a PATH lookup of `gx`. The TS port
+    PATH-looks-up because Bun compiled binaries report an unreliable
+    `argv[0]`; Rust's `current_exe()` is reliable, always resolves, and never
+    emits the "not on PATH" warning. The value is scrubbed to `<BIN>` in
+    snapshots, so output stays parity-clean.
 - [ ] **RST-6:** Mutating commands
   - `clone`, `init`, `index`, `rebuild`, `open`, `resume` ported; full snapshot harness green; manual smoke on real repos
 - [ ] **RST-7:** Distribution cutover
