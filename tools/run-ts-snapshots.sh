@@ -17,6 +17,12 @@ bun run build
 
 export GX_SNAPSHOT_BIN="$PWD/gx"
 
+# `gx shell-init` resolves the binary via `Bun.which("gx")` (PATH lookup) and
+# warns to stderr when it can't find one. Goldens are captured with gx on PATH,
+# so make the freshly built binary discoverable to keep stderr clean and the
+# embedded `_GX_BIN` path stable across environments (CI has no gx on PATH).
+export PATH="$PWD:$PATH"
+
 if [[ "${1:-}" == "--update" ]]; then
   export INSTA_UPDATE=always
 else
