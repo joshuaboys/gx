@@ -6,7 +6,7 @@ exit: 0
 # gx — git project manager shell integration
 # Add to ~/.zshrc: eval "$(gx shell-init)"
 
-_GX_BIN="<BIN>"
+_GX_BIN='<BIN>'
 
 gx() {
     case "$1" in

@@ -6,7 +6,7 @@ exit: 0
 # gx — git project manager shell integration
 # Add to ~/.config/fish/conf.d/gx.fish: gx shell-init | source
 
-set -g _GX_BIN "<BIN>"
+set -g _GX_BIN '<BIN>'
 
 function gx
     switch $argv[1]

@@ -41,23 +41,29 @@ fn is_executable(path: &Path) -> bool {
     path.is_file()
 }
 
-fn shell_rc_file(shell_path: &str) -> Option<PathBuf> {
-    let home = env::var_os("HOME").map(PathBuf::from)?;
+fn shell_rc_files(shell_path: &str) -> Vec<PathBuf> {
+    let Some(home) = env::var_os("HOME").map(PathBuf::from) else {
+        return Vec::new();
+    };
     let shell = Path::new(shell_path)
         .file_name()
         .and_then(|s| s.to_str())
         .unwrap_or(shell_path);
     match shell {
-        "zsh" => Some(home.join(".zshrc")),
+        "zsh" => vec![home.join(".zshrc")],
         "bash" => {
             if cfg!(target_os = "macos") {
-                Some(home.join(".bash_profile"))
+                vec![
+                    home.join(".bash_profile"),
+                    home.join(".profile"),
+                    home.join(".bashrc"),
+                ]
             } else {
-                Some(home.join(".bashrc"))
+                vec![home.join(".bashrc")]
             }
         }
-        "fish" => Some(home.join(".config/fish/conf.d/gx.fish")),
-        _ => None,
+        "fish" => vec![home.join(".config/fish/conf.d/gx.fish")],
+        _ => Vec::new(),
     }
 }
 
@@ -65,29 +71,34 @@ fn shell_check() -> Check {
     let shell = env::var("GX_SHELL_OVERRIDE")
         .or_else(|_| env::var("SHELL"))
         .unwrap_or_default();
-    let Some(rc) = shell_rc_file(&shell) else {
+    let rc_files = shell_rc_files(&shell);
+    if rc_files.is_empty() {
         return Check {
             name: "shell",
             status: "warn",
             message: "unsupported shell; run gx shell-init <zsh|bash|fish>".to_string(),
         };
-    };
-    if let Ok(text) = fs::read_to_string(&rc) {
-        if text.contains("gx shell-init") || text.contains("gx.plugin.zsh") {
-            return Check {
-                name: "shell",
-                status: "ok",
-                message: format!("integration found in {}", rc.display()),
-            };
+    }
+    for rc in &rc_files {
+        if let Ok(text) = fs::read_to_string(rc) {
+            if text.contains("gx shell-init") || text.contains("gx.plugin.zsh") {
+                return Check {
+                    name: "shell",
+                    status: "ok",
+                    message: format!("integration found in {}", rc.display()),
+                };
+            }
         }
     }
+    let candidates = rc_files
+        .iter()
+        .map(|p| p.display().to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
     Check {
         name: "shell",
         status: "warn",
-        message: format!(
-            "integration not found in {}; run gx shell-init",
-            rc.display()
-        ),
+        message: format!("integration not found in {candidates}; run gx shell-init"),
     }
 }
 

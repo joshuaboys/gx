@@ -35,12 +35,20 @@ function resolveGxBin(): string {
   return "gx";
 }
 
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
+function fishQuote(value: string): string {
+  return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+}
+
 function zshInit(): string {
-  const bin = resolveGxBin();
+  const bin = shellQuote(resolveGxBin());
   return `# gx — git project manager shell integration
 # Add to ~/.zshrc: eval "$(gx shell-init)"
 
-_GX_BIN="${bin}"
+_GX_BIN=${bin}
 
 gx() {
     case "$1" in
@@ -121,11 +129,11 @@ _gx() {
 }
 
 function bashInit(): string {
-  const bin = resolveGxBin();
+  const bin = shellQuote(resolveGxBin());
   return `# gx — git project manager shell integration
 # Add to ~/.bashrc: eval "$(gx shell-init)"
 
-_GX_BIN="${bin}"
+_GX_BIN=${bin}
 
 gx() {
     case "$1" in
@@ -208,11 +216,11 @@ complete -F _gx_completions gx`;
 }
 
 function fishInit(): string {
-  const bin = resolveGxBin();
+  const bin = fishQuote(resolveGxBin());
   return `# gx — git project manager shell integration
 # Add to ~/.config/fish/conf.d/gx.fish: gx shell-init | source
 
-set -g _GX_BIN "${bin}"
+set -g _GX_BIN ${bin}
 
 function gx
     switch $argv[1]
