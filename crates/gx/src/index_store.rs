@@ -289,8 +289,9 @@ fn scan_for_repos(
     }
 }
 
-/// `new Date().toISOString()` parity: `YYYY-MM-DDTHH:MM:SS.sssZ`.
-fn iso_now() -> String {
+/// `new Date().toISOString()` parity: `YYYY-MM-DDTHH:MM:SS.sssZ`. Public so
+/// commands that stamp `clonedAt`/`lastVisited` (clone, index) share it.
+pub fn iso_now() -> String {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default();
