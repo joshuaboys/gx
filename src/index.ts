@@ -14,7 +14,6 @@ import { shellInit } from "./commands/shell-init.ts";
 import { indexRepos } from "./commands/index-repos.ts";
 import { recent } from "./commands/recent.ts";
 import { resume } from "./commands/resume.ts";
-import { doctor } from "./commands/doctor.ts";
 import pkg from "../package.json";
 
 const VERSION = pkg.version;
@@ -49,7 +48,6 @@ Usage:
   gx recent                List recently visited projects
   gx recent -n <N>         Show last N projects
   gx resume <name>         Jump to project with git context
-  gx doctor                Check gx installation health
   gx config                Show config
   gx config set <key> <v>  Set config value
   gx init                  Scaffold .claude/ agent config
@@ -166,9 +164,6 @@ Options:
       await resume(name, indexPath, config);
       break;
     }
-    case "doctor":
-      await doctor(configPath, indexPath, config);
-      break;
     default:
       // Default: treat as project name to resolve
       await resolve(command, indexPath, config);

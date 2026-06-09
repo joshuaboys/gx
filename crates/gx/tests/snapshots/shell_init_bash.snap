@@ -30,7 +30,7 @@ gx() {
                 return 1
             fi
             ;;
-        ls|recent|rebuild|config|open|init|index|doctor|shell-init|--help|-h|--version|-v)
+        ls|recent|rebuild|config|open|init|index|shell-init|--help|-h|--version|-v)
             "$_GX_BIN" "$@"
             ;;
         resolve)
@@ -66,13 +66,13 @@ _gx_completions() {
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     if [ "$COMP_CWORD" -eq 1 ]; then
-        local commands="clone ls recent resume rebuild config resolve open init index doctor shell-init --help --version -h -v"
+        local commands="clone ls recent resume rebuild config resolve open init index shell-init --help --version -h -v"
         local projects
         projects=$("$_GX_BIN" resolve --list 2>/dev/null)
         COMPREPLY=($(compgen -W "$commands $projects" -- "$cur"))
     elif [ "$COMP_CWORD" -eq 2 ]; then
         case "${COMP_WORDS[1]}" in
-            clone|ls|recent|resume|rebuild|config|resolve|open|init|index|doctor|shell-init|--help|--version|-h|-v)
+            clone|ls|recent|resume|rebuild|config|resolve|open|init|index|shell-init|--help|--version|-h|-v)
                 if [ "${COMP_WORDS[1]}" = "config" ]; then
                     COMPREPLY=($(compgen -W "set" -- "$cur"))
                 fi
