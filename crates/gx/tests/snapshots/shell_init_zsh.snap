@@ -30,7 +30,7 @@ gx() {
                 return 1
             fi
             ;;
-        ls|recent|rebuild|config|open|init|index|doctor|shell-init|--help|-h|--version|-v)
+        ls|recent|rebuild|config|open|init|index|shell-init|--help|-h|--version|-v)
             "$_GX_BIN" "$@"
             ;;
         resolve)
@@ -63,14 +63,14 @@ gx() {
 # Tab completion
 _gx() {
     local -a commands projects
-    commands=(clone ls recent resume rebuild config resolve open init index doctor shell-init --help --version -h -v)
+    commands=(clone ls recent resume rebuild config resolve open init index shell-init --help --version -h -v)
 
     if (( CURRENT == 2 )); then
         projects=($("$_GX_BIN" resolve --list 2>/dev/null))
         compadd "${commands[@]}" "${projects[@]}"
     elif (( CURRENT == 3 )); then
         case "${words[2]}" in
-            clone|ls|recent|resume|rebuild|config|resolve|open|init|index|doctor|shell-init|--help|--version|-h|-v)
+            clone|ls|recent|resume|rebuild|config|resolve|open|init|index|shell-init|--help|--version|-h|-v)
                 if [[ "${words[2]}" == "config" ]]; then
                     compadd set
                 fi
