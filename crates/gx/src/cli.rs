@@ -9,7 +9,8 @@ use std::io::IsTerminal;
 use std::path::PathBuf;
 
 use crate::commands::{
-    clone, config_cmd, index_repos, init, ls, open, rebuild, recent, resolve, resume, shell_init,
+    clone, config_cmd, doctor, index_repos, init, ls, open, rebuild, recent, resolve, resume,
+    shell_init,
 };
 use crate::config::{get_agent, get_config_path, load_config};
 use crate::errors::{GxError, GxResult};
@@ -39,6 +40,7 @@ Usage:
   gx recent                List recently visited projects
   gx recent -n <N>         Show last N projects
   gx resume <name>         Jump to project with git context
+  gx doctor                Check gx installation health
   gx config                Show config
   gx config set <key> <v>  Set config value
   gx init                  Scaffold .claude/ agent config
@@ -164,6 +166,7 @@ fn dispatch(args: &[String]) -> GxResult<()> {
             };
             resume::resume(name, &index_path, &config)
         }
+        "doctor" => doctor::doctor(&config_path, &index_path, &config),
         "ls" => {
             ls::ls(&index_path);
             Ok(())

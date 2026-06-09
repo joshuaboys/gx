@@ -16,6 +16,40 @@ error() { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
+download() {
+  local url="$1" dest="$2"
+  if command_exists curl; then
+    curl -fsSL "$url" -o "$dest"
+  elif command_exists wget; then
+    wget -qO "$dest" "$url"
+  else
+    error "Need curl or wget to download gx"
+  fi
+}
+
+sha256_file() {
+  if command_exists sha256sum; then
+    sha256sum "$1" | awk '{print $1}'
+  elif command_exists shasum; then
+    shasum -a 256 "$1" | awk '{print $1}'
+  else
+    error "Need sha256sum or shasum to verify release checksums"
+  fi
+}
+
+verify_checksum() {
+  local asset="$1" file="$2" sums="$3" expected actual
+  expected=$(awk -v asset="$asset" '$2 == asset || $2 == "*" asset {print $1; exit}' "$sums")
+  if [ -z "$expected" ]; then
+    error "Checksum for ${asset} not found in SHA256SUMS"
+  fi
+
+  actual=$(sha256_file "$file")
+  if [ "$actual" != "$expected" ]; then
+    error "Checksum verification failed for ${asset}"
+  fi
+}
+
 detect_os() {
   case "$(uname -s)" in
     Linux*)  echo "linux" ;;
@@ -64,6 +98,7 @@ try_prebuilt() {
   local os="$1" arch="$2"
   local asset="gx-${os}-${arch}"
   local url="https://github.com/${REPO}/releases/latest/download/${asset}"
+  local sums_url="https://github.com/${REPO}/releases/latest/download/SHA256SUMS"
 
   info "Checking for prebuilt binary ($os-$arch)..."
   local http_code
@@ -82,12 +117,19 @@ try_prebuilt() {
 
   info "Downloading prebuilt binary..."
   mkdir -p "$INSTALL_DIR"
-  if command_exists curl; then
-    curl -fsSL "$url" -o "$GX_BIN"
-  else
-    wget -qO "$GX_BIN" "$url"
-  fi
+
+  local tmpdir bin sums
+  tmpdir=$(mktemp -d)
+  bin="$tmpdir/$asset"
+  sums="$tmpdir/SHA256SUMS"
+  download "$url" "$bin"
+  download "$sums_url" "$sums"
+  verify_checksum "$asset" "$bin" "$sums"
+
+  mv "$bin" "$GX_BIN"
+  rm -rf "$tmpdir"
   chmod +x "$GX_BIN"
+  info "Verified SHA-256 checksum"
   return 0
 }
 
