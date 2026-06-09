@@ -117,9 +117,7 @@ fn assert_snapshot(name: &str, value: &str) {
     settings.set_omit_expression(true);
     // Resolved binary path leaks into `gx shell-init` as `_GX_BIN="..."`.
     settings.add_filter(r#"_GX_BIN="[^"]*""#, r#"_GX_BIN="<BIN>""#);
-    settings.add_filter(r#"_GX_BIN='[^']*'"#, r#"_GX_BIN='<BIN>'"#);
     settings.add_filter(r#"set -g _GX_BIN "[^"]*""#, r#"set -g _GX_BIN "<BIN>""#);
-    settings.add_filter(r#"set -g _GX_BIN '[^']*'"#, r#"set -g _GX_BIN '<BIN>'"#);
     // `gx recent` prints relative times against Date.now(); normalize.
     settings.add_filter(r"\d+ (minute|hour|day|week|month)s? ago", "<TIME_AGO>");
     settings.add_filter(r"just now", "<TIME_AGO>");

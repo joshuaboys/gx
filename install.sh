@@ -134,9 +134,22 @@ try_prebuilt() {
 }
 
 build_from_source() {
-  # Ensure cargo is available for source builds.
-  if ! command_exists cargo; then
-    error "No prebuilt binary available and Cargo is not installed. Install Rust from https://rustup.rs/ and re-run this installer."
+  # Ensure bun is available
+  if ! command_exists bun; then
+    info "Bun not found, installing..."
+    if command_exists curl; then
+      curl -fsSL https://bun.sh/install | bash
+    elif command_exists wget; then
+      wget -qO- https://bun.sh/install | bash
+    else
+      error "Need curl or wget to install Bun"
+    fi
+    # Source bun into current session
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
+    if ! command_exists bun; then
+      error "Bun installation failed"
+    fi
   fi
 
   local tmpdir
@@ -152,10 +165,11 @@ build_from_source() {
 
   info "Building..."
   cd "$tmpdir/gx"
-  cargo build --release --workspace || error "cargo build failed"
+  bun install --frozen-lockfile || bun install || error "bun install failed"
+  bun run build || error "bun build failed"
 
   mkdir -p "$INSTALL_DIR"
-  cp target/release/gx "$GX_BIN"
+  cp gx "$GX_BIN"
   chmod +x "$GX_BIN"
   cd - >/dev/null
 }
@@ -208,8 +222,7 @@ ensure_path() {
   shell=$(detect_shell)
   rc_file=$(shell_rc_file "$shell")
 
-  if [ -n "$rc_file" ]; then
-    mkdir -p "$(dirname "$rc_file")"
+  if [ -n "$rc_file" ] && [ -f "$rc_file" ]; then
     if ! grep -qF "$INSTALL_DIR" "$rc_file" 2>/dev/null; then
       if [ "$shell" = "fish" ]; then
         printf '\nfish_add_path %s\n' "$INSTALL_DIR" >> "$rc_file"
@@ -237,8 +250,8 @@ main() {
     build_from_source
   fi
 
-  ensure_path
   setup_shell
+  ensure_path
 
   echo ""
   info "gx installed to $GX_BIN"

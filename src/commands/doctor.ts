@@ -21,29 +21,29 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-function shellRcFiles(shellPath: string): string[] {
+function shellRcFile(shellPath: string): string | null {
   const home = process.env.HOME ?? "";
-  if (!home) return [];
+  if (!home) return null;
   const shell = shellPath.split("/").pop() ?? shellPath;
   switch (shell) {
     case "zsh":
-      return [`${home}/.zshrc`];
+      return `${home}/.zshrc`;
     case "bash":
       if (process.platform === "darwin") {
-        return [`${home}/.bash_profile`, `${home}/.profile`, `${home}/.bashrc`];
+        return `${home}/.bash_profile`;
       }
-      return [`${home}/.bashrc`];
+      return `${home}/.bashrc`;
     case "fish":
-      return [`${home}/.config/fish/conf.d/gx.fish`];
+      return `${home}/.config/fish/conf.d/gx.fish`;
     default:
-      return [];
+      return null;
   }
 }
 
 async function shellCheck(): Promise<Check> {
   const shell = process.env.GX_SHELL_OVERRIDE ?? process.env.SHELL ?? "";
-  const rcFiles = shellRcFiles(shell);
-  if (rcFiles.length === 0) {
+  const rc = shellRcFile(shell);
+  if (!rc) {
     return {
       name: "shell",
       status: "warn",
@@ -51,25 +51,23 @@ async function shellCheck(): Promise<Check> {
     };
   }
 
-  for (const rc of rcFiles) {
-    try {
-      const text = await readFile(rc, "utf8");
-      if (text.includes("gx shell-init") || text.includes("gx.plugin.zsh")) {
-        return {
-          name: "shell",
-          status: "ok",
-          message: `integration found in ${rc}`,
-        };
-      }
-    } catch {
-      // Missing shell rc files are common on fresh machines.
+  try {
+    const text = await readFile(rc, "utf8");
+    if (text.includes("gx shell-init") || text.includes("gx.plugin.zsh")) {
+      return {
+        name: "shell",
+        status: "ok",
+        message: `integration found in ${rc}`,
+      };
     }
+  } catch {
+    // Missing shell rc files are common on fresh machines.
   }
 
   return {
     name: "shell",
     status: "warn",
-    message: `integration not found in ${rcFiles.join(", ")}; run gx shell-init`,
+    message: `integration not found in ${rc}; run gx shell-init`,
   };
 }
 

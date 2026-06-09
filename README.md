@@ -9,7 +9,7 @@ Clone, jump, and organise repos from the terminal.**
 
 [![CI](https://github.com/joshuaboys/gx/actions/workflows/ci.yml/badge.svg)](https://github.com/joshuaboys/gx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/Rust-binary-orange?logo=rust)](https://www.rust-lang.org/)
+[![Built with Bun](https://img.shields.io/badge/Built%20with-Bun-f9f1e1?logo=bun)](https://bun.sh)
 
 </div>
 
@@ -23,7 +23,7 @@ Clone, jump, and organise repos from the terminal.**
 - **Shell integration** — tab completion and auto-`cd` for zsh, bash, and fish
 - **Open in any editor** — `gx open` launches VS Code, nvim, or whatever you use
 - **AI agent scaffolding** — `gx init` generates `.claude/` configs tailored to your project's language
-- **Single binary** — zero runtime dependencies, distributed as a native Rust binary
+- **Single binary** — zero runtime dependencies, compiles with Bun
 
 ## Quick Start
 
@@ -56,13 +56,13 @@ Release binaries are published with a `SHA256SUMS` manifest. The installer verif
 <details>
 <summary><strong>Manual install</strong></summary>
 
-Requires [Rust](https://rustup.rs/) 1.75+.
+Requires [Bun](https://bun.sh) v1.0+.
 
 ```sh
 git clone https://github.com/joshuaboys/gx
 cd gx
-cargo build --release --workspace
-cp target/release/gx ~/.local/bin/
+bun install && bun run build
+cp gx ~/.local/bin/
 ```
 
 Add shell integration to your config file:

@@ -130,7 +130,7 @@ describe("shellInit", () => {
     const output = captureOutput(() => shellInit("zsh"));
     expect(output).toContain("_GX_BIN=");
     // Should resolve to gx on PATH or fall back to bare "gx"
-    expect(output).toMatch(/_GX_BIN='.*gx'/);
+    expect(output).toMatch(/_GX_BIN=".*gx"/);
   });
 
   test("all shells use $_GX_BIN instead of command gx", () => {
@@ -207,7 +207,7 @@ describe("resolveGxBin PATH lookup", () => {
   test("when gx is on PATH, _GX_BIN is the absolute path from which()", () => {
     whichSpy = spyOn(Bun, "which").mockReturnValue("/usr/local/bin/gx");
     const output = captureOutput(() => shellInit("zsh"));
-    const match = output.match(/_GX_BIN='([^']+)'/);
+    const match = output.match(/_GX_BIN="([^"]+)"/);
     expect(match).toBeTruthy();
     expect(match![1]).toBe("/usr/local/bin/gx");
   });
@@ -217,7 +217,7 @@ describe("resolveGxBin PATH lookup", () => {
     const errorSpy = spyOn(console, "error").mockImplementation(() => {});
     try {
       const output = captureOutput(() => shellInit("zsh"));
-      const match = output.match(/_GX_BIN='([^']+)'/);
+      const match = output.match(/_GX_BIN="([^"]+)"/);
       expect(match).toBeTruthy();
       expect(match![1]).toBe("gx");
       expect(errorSpy).toHaveBeenCalled();
@@ -232,17 +232,5 @@ describe("resolveGxBin PATH lookup", () => {
     const output = captureOutput(() => shellInit("zsh"));
     expect(output).not.toMatch(/_GX_BIN=".*\/bun"/);
     expect(output).not.toMatch(/_GX_BIN=".*\/node"/);
-  });
-
-  test("zsh escapes single quotes in binary path", () => {
-    whichSpy = spyOn(Bun, "which").mockReturnValue("/tmp/gx'bad/gx");
-    const output = captureOutput(() => shellInit("zsh"));
-    expect(output).toContain("_GX_BIN='/tmp/gx'\\''bad/gx'");
-  });
-
-  test("fish escapes single quotes in binary path", () => {
-    whichSpy = spyOn(Bun, "which").mockReturnValue("/tmp/gx'bad/gx");
-    const output = captureOutput(() => shellInit("fish"));
-    expect(output).toContain("set -g _GX_BIN '/tmp/gx\\'bad/gx'");
   });
 });

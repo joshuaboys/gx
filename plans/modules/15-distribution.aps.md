@@ -39,13 +39,13 @@ Make `gx` trivial to install and upgrade for first-time users.
 
 - Downloads prebuilt binaries from GitHub Releases with OS/arch detection
 - Verifies downloaded binaries against the release `SHA256SUMS` manifest before installing
-- Falls back to building the Rust workspace from source via Cargo if no binary is available
+- Falls back to building from source via bun if no binary available
 - Detects and installs shell integration into `.zshrc`, `.bashrc`, or Fish config
 - Ensures `~/.local/bin` is on PATH
 
 CI pipeline (`.github/workflows/ci.yml`) runs tests and builds on both `ubuntu-latest` and `macos-latest`.
 
-Release pipeline (`.github/workflows/release.yml`) builds the Rust binary for `linux-x64`, `linux-aarch64`, `darwin-x64`, and `darwin-aarch64`, uploads `SHA256SUMS`, and emits GitHub artifact attestations for the release assets and checksum manifest.
+Release pipeline (`.github/workflows/release.yml`) publishes native hosted binaries, uploads `SHA256SUMS`, and emits GitHub artifact attestations for the release assets and checksum manifest.
 
 `gx doctor` reports installation health without mutating user state:
 
