@@ -26,14 +26,6 @@ fn resolve_gx_bin() -> String {
         .unwrap_or_else(|| "gx".to_string())
 }
 
-fn shell_quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', "'\\''"))
-}
-
-fn fish_quote(value: &str) -> String {
-    format!("'{}'", value.replace('\\', "\\\\").replace('\'', "\\'"))
-}
-
 fn detect_shell() -> Option<Shell> {
     if let Ok(name) = std::env::var("GX_SHELL_OVERRIDE") {
         if name.ends_with("/zsh") || name == "zsh" {
@@ -82,11 +74,7 @@ pub fn shell_init(shell_arg: Option<&str>) -> GxResult<()> {
         })?,
     };
 
-    let raw_bin = resolve_gx_bin();
-    let bin = match shell {
-        Shell::Fish => fish_quote(&raw_bin),
-        Shell::Zsh | Shell::Bash => shell_quote(&raw_bin),
-    };
+    let bin = resolve_gx_bin();
     let template = match shell {
         Shell::Zsh => ZSH,
         Shell::Bash => BASH,
@@ -99,7 +87,7 @@ pub fn shell_init(shell_arg: Option<&str>) -> GxResult<()> {
 const ZSH: &str = r##"# gx — git project manager shell integration
 # Add to ~/.zshrc: eval "$(gx shell-init)"
 
-_GX_BIN=__GX_BIN__
+_GX_BIN="__GX_BIN__"
 
 gx() {
     case "$1" in
@@ -181,7 +169,7 @@ _gx() {
 const BASH: &str = r##"# gx — git project manager shell integration
 # Add to ~/.bashrc: eval "$(gx shell-init)"
 
-_GX_BIN=__GX_BIN__
+_GX_BIN="__GX_BIN__"
 
 gx() {
     case "$1" in
@@ -265,7 +253,7 @@ complete -F _gx_completions gx"##;
 const FISH: &str = r##"# gx — git project manager shell integration
 # Add to ~/.config/fish/conf.d/gx.fish: gx shell-init | source
 
-set -g _GX_BIN __GX_BIN__
+set -g _GX_BIN "__GX_BIN__"
 
 function gx
     switch $argv[1]
