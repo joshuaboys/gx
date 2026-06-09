@@ -29,4 +29,7 @@ else
   export INSTA_UPDATE=no
 fi
 
-cargo test -p gx --test snapshots -- --ignored --test-threads=1
+# `--include-ignored` runs both the live read-only snapshots and any
+# mutating-command snapshots still marked `#[ignore]` pending their port, so
+# the TS binary is verified against every committed golden.
+cargo test -p gx --test snapshots -- --include-ignored --test-threads=1

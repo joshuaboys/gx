@@ -4,7 +4,10 @@
 //! config (de)serialisation, project-type detection, scaffold templates,
 //! relative time, and the typed error model — live here so they can be
 //! exercised by unit tests and snapshot tests without spawning the binary.
+//! The `cli` and `commands` modules wire those into the user-facing binary.
 
+pub mod cli;
+pub mod commands;
 pub mod config;
 pub mod detect;
 pub mod errors;

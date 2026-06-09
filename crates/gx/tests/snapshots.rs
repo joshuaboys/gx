@@ -5,18 +5,18 @@
 //! against a golden snapshot under `tests/snapshots/`.
 //!
 //! By default the binary under test is the Rust crate's `gx`
-//! (`CARGO_BIN_EXE_gx`). Set `GX_SNAPSHOT_BIN` to point at any other build —
-//! typically the TypeScript binary produced by `bun run build` — to lock in
-//! goldens against it:
+//! (`CARGO_BIN_EXE_gx`), so `cargo test` asserts the Rust port matches the
+//! committed goldens. Set `GX_SNAPSHOT_BIN` to point at another build —
+//! typically the TypeScript binary produced by `bun run build` — to re-verify
+//! the goldens still match it:
 //!
 //! ```sh
 //! bun run build
-//! GX_SNAPSHOT_BIN="$PWD/gx" cargo test -p gx --test snapshots -- --ignored
+//! GX_SNAPSHOT_BIN="$PWD/gx" cargo test -p gx --test snapshots
 //! ```
 //!
-//! Tests are `#[ignore]` by default so `cargo test` stays green while the
-//! Rust port is incomplete. Once a command's Rust implementation lands, the
-//! corresponding `#[ignore]` is removed.
+//! Read-only commands (ported in RST-5) are live. Mutating-command snapshots
+//! land with their ports in RST-6 and are `#[ignore]`d until then.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -129,7 +129,6 @@ fn assert_snapshot(name: &str, value: &str) {
 // ---------------------------------------------------------------------------
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_help() {
     let h = Harness::new();
     let cap = run({
@@ -141,7 +140,6 @@ fn snapshot_help() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_version() {
     let h = Harness::new();
     let cap = run({
@@ -153,7 +151,6 @@ fn snapshot_version() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_shell_init_zsh() {
     let h = Harness::new();
     let cap = run({
@@ -165,7 +162,6 @@ fn snapshot_shell_init_zsh() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_shell_init_bash() {
     let h = Harness::new();
     let cap = run({
@@ -177,7 +173,6 @@ fn snapshot_shell_init_bash() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_shell_init_fish() {
     let h = Harness::new();
     let cap = run({
@@ -189,7 +184,6 @@ fn snapshot_shell_init_fish() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_shell_init_unsupported() {
     let h = Harness::new();
     let cap = run({
@@ -201,7 +195,6 @@ fn snapshot_shell_init_unsupported() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_ls() {
     let h = Harness::new().with_fixture_index();
     let cap = run({
@@ -213,7 +206,6 @@ fn snapshot_ls() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_ls_empty() {
     let h = Harness::new();
     let cap = run({
@@ -225,7 +217,6 @@ fn snapshot_ls_empty() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_resolve_list() {
     let h = Harness::new().with_fixture_index();
     let cap = run({
@@ -237,7 +228,6 @@ fn snapshot_resolve_list() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_resolve_missing() {
     let h = Harness::new().with_fixture_index();
     let cap = run({
@@ -249,7 +239,6 @@ fn snapshot_resolve_missing() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_recent() {
     let h = Harness::new().with_fixture_index();
     let cap = run({
@@ -261,7 +250,6 @@ fn snapshot_recent() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_recent_limit() {
     let h = Harness::new().with_fixture_index();
     let cap = run({
@@ -273,7 +261,6 @@ fn snapshot_recent_limit() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_config_show() {
     let h = Harness::new().with_fixture_config();
     let cap = run({
@@ -285,7 +272,6 @@ fn snapshot_config_show() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_config_show_defaults() {
     // No fixture config — should fall through to DEFAULT_CONFIG.
     let h = Harness::new();
@@ -298,7 +284,6 @@ fn snapshot_config_show_defaults() {
 }
 
 #[test]
-#[ignore = "RST-2 snapshot harness — run with --ignored against a built binary"]
 fn snapshot_unknown_arg_resolves_as_name() {
     // `gx <unknown>` falls through to resolve; with empty index, that's an error.
     let h = Harness::new();
