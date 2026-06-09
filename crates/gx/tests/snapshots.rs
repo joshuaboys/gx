@@ -4,19 +4,12 @@
 //! `tests/fixtures/`, captures stdout/stderr/exit, and asserts byte-for-byte
 //! against a golden snapshot under `tests/snapshots/`.
 //!
-//! By default the binary under test is the Rust crate's `gx`
-//! (`CARGO_BIN_EXE_gx`), so `cargo test` asserts the Rust port matches the
-//! committed goldens. Set `GX_SNAPSHOT_BIN` to point at another build —
-//! typically the TypeScript binary produced by `bun run build` — to re-verify
-//! the goldens still match it:
-//!
-//! ```sh
-//! bun run build
-//! GX_SNAPSHOT_BIN="$PWD/gx" cargo test -p gx --test snapshots
-//! ```
-//!
-//! Read-only commands (ported in RST-5) are live. Mutating-command snapshots
-//! land with their ports in RST-6 and are `#[ignore]`d until then.
+//! The binary under test is the Rust crate's `gx` (`CARGO_BIN_EXE_gx`), so
+//! `cargo test` asserts the binary matches the committed goldens. The goldens
+//! were originally captured from the TypeScript implementation during the
+//! port (RST-2…RST-6) and are now frozen — they define the behaviour contract.
+//! `GX_SNAPSHOT_BIN` can still point the harness at an alternate build to
+//! re-verify it against the same goldens.
 
 use std::fs;
 use std::path::{Path, PathBuf};
