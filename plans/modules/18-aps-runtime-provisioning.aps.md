@@ -39,7 +39,7 @@ Change status to **Ready** when:
 
 - [x] Purpose and scope are clear
 - [x] Dependencies identified
-- [x] At least one task defined
+- [x] At least one work item defined
 
 ## Work Items
 
