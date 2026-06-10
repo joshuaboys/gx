@@ -23,6 +23,7 @@ Clone, jump, and organise repos from the terminal.**
 - **Shell integration** — tab completion and auto-`cd` for zsh, bash, and fish
 - **Open in any editor** — `gx open` launches VS Code, nvim, or whatever you use
 - **AI agent scaffolding** — `gx init` generates `.claude/` configs tailored to your project's language
+- **Installation health checks** — `gx doctor` verifies the binary, shell integration, config, and index
 - **Single binary** — zero runtime dependencies, compiled from Rust
 
 ## Quick Start
@@ -147,6 +148,14 @@ gx rebuild
 ```
 
 Rescans the project directory and rebuilds the project index.
+
+### Check installation health
+
+```sh
+gx doctor
+```
+
+Reports whether the `gx` binary is on `PATH`, shell integration is configured, config/index paths exist, and indexed projects point at existing directories.
 
 ## Configuration
 
