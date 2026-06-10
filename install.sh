@@ -110,7 +110,9 @@ install_prebuilt() {
   fi
 
   info "Downloading prebuilt binary ($os-$arch)..."
-  GX_TMPDIR=$(mktemp -d)
+  # Portable temp dir: GNU mktemp accepts the bare `-d`; BSD/macOS mktemp
+  # needs a template, so fall back to the `-t` prefix form.
+  GX_TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t gx)
   local bin="$GX_TMPDIR/$asset"
   local sums="$GX_TMPDIR/SHA256SUMS"
 

@@ -45,7 +45,7 @@ jobs:
           key: ${{ matrix.target }}
 
       - name: Install cross linker
-        if: matrix.apt != ''
+        if: matrix.apt
         run: sudo apt-get update && sudo apt-get install -y ${{ matrix.apt }}
 
       - name: Build release binary
