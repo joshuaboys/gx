@@ -111,6 +111,11 @@ fn assert_snapshot(name: &str, value: &str) {
     // Resolved binary path leaks into `gx shell-init` as `_GX_BIN="..."`.
     settings.add_filter(r#"_GX_BIN="[^"]*""#, r#"_GX_BIN="<BIN>""#);
     settings.add_filter(r#"set -g _GX_BIN "[^"]*""#, r#"set -g _GX_BIN "<BIN>""#);
+    // `gx doctor` reports paths under the isolated HOME TempDir. TempDir uses
+    // platform-specific roots, so normalize both Linux and macOS forms.
+    settings.add_filter(r"/tmp/\.tmp[A-Za-z0-9]+", "<HOME>");
+    settings.add_filter(r"/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+", "<HOME>");
+    settings.add_filter(r"/private/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+", "<HOME>");
     // `gx recent` prints relative times against Date.now(); normalize.
     settings.add_filter(r"\d+ (minute|hour|day|week|month)s? ago", "<TIME_AGO>");
     settings.add_filter(r"just now", "<TIME_AGO>");
@@ -321,6 +326,17 @@ fn snapshot_resume_missing() {
         c
     });
     assert_snapshot("resume_missing", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_doctor_missing_paths() {
+    let h = Harness::new();
+    let cap = run({
+        let mut c = h.command();
+        c.arg("doctor").env("PATH", "");
+        c
+    });
+    assert_snapshot("doctor_missing_paths", &format_capture(&cap));
 }
 
 #[test]

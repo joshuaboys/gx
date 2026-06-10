@@ -3,6 +3,7 @@
 
 pub mod clone;
 pub mod config_cmd;
+pub mod doctor;
 pub mod index_repos;
 pub mod init;
 pub mod ls;
