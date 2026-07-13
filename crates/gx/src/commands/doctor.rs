@@ -108,12 +108,42 @@ fn shell_check() -> Check {
 
 pub fn doctor(config_path: &Path, index_path: &Path, config: &Config) -> GxResult<()> {
     let project_dir = effective_project_dir(config)?;
-    let idx = ProjectIndex::load(index_path);
-    let entries = idx.list();
-    let stale = entries
-        .iter()
-        .filter(|(_, entry)| !Path::new(&entry.path).exists())
-        .count();
+    let index_check = if !index_path.exists() {
+        Check {
+            name: "index",
+            status: "warn",
+            message: format!("missing; run gx rebuild ({})", index_path.display()),
+        }
+    } else {
+        match ProjectIndex::try_load(index_path) {
+            Ok(idx) => {
+                let entries = idx.list();
+                let stale = entries
+                    .iter()
+                    .filter(|(_, entry)| !Path::new(&entry.path).exists())
+                    .count();
+                Check {
+                    name: "index",
+                    status: if stale == 0 { "ok" } else { "warn" },
+                    message: if stale == 0 {
+                        format!("{} project(s), {}", entries.len(), index_path.display())
+                    } else {
+                        format!(
+                            "{} project(s), {} stale path(s), {}",
+                            entries.len(),
+                            stale,
+                            index_path.display()
+                        )
+                    },
+                }
+            }
+            Err(err) => Check {
+                name: "index",
+                status: "warn",
+                message: format!("{err}; run gx rebuild ({})", index_path.display()),
+            },
+        }
+    };
 
     let mut checks = vec![
         Check {
@@ -159,28 +189,7 @@ pub fn doctor(config_path: &Path, index_path: &Path, config: &Config) -> GxResul
                 message: format!("missing: {}", project_dir.display()),
             }
         },
-        if index_path.exists() {
-            Check {
-                name: "index",
-                status: if stale == 0 { "ok" } else { "warn" },
-                message: if stale == 0 {
-                    format!("{} project(s), {}", entries.len(), index_path.display())
-                } else {
-                    format!(
-                        "{} project(s), {} stale path(s), {}",
-                        entries.len(),
-                        stale,
-                        index_path.display()
-                    )
-                },
-            }
-        } else {
-            Check {
-                name: "index",
-                status: "warn",
-                message: format!("missing; run gx rebuild ({})", index_path.display()),
-            }
-        },
+        index_check,
         shell_check(),
     ];
 
