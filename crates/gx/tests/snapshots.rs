@@ -340,6 +340,22 @@ fn snapshot_doctor_missing_paths() {
 }
 
 #[test]
+fn snapshot_doctor_corrupt_index() {
+    let h = Harness::new();
+    fs::write(
+        h.home.path().join(".config/gx/index.json"),
+        "{not valid json",
+    )
+    .expect("write corrupt index");
+    let cap = run({
+        let mut c = h.command();
+        c.arg("doctor").env("PATH", "");
+        c
+    });
+    assert_snapshot("doctor_corrupt_index", &format_capture(&cap));
+}
+
+#[test]
 fn snapshot_open_missing() {
     let h = Harness::new().with_fixture_index();
     let cap = run({

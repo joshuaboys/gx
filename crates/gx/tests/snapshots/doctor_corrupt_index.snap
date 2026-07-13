@@ -1,0 +1,14 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 0
+---- stdout ----
+runtime     ok    native
+binary      warn  gx is not on PATH
+config      warn  missing; defaults are in use (<HOME>/.config/gx/config.json)
+projectDir  warn  missing: <HOME>/Projects/src
+index       warn  invalid index JSON: key must be a string at line 1 column 2; run gx rebuild (<HOME>/.config/gx/index.json)
+shell       warn  integration not found in <HOME>/.zshrc; run gx shell-init
+doctor: 5 warning(s); gx can still run
+
+---- stderr ----

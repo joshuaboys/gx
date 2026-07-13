@@ -33,13 +33,21 @@ impl ProjectIndex {
     /// Load the index from `path`. Missing file, unreadable file, or invalid
     /// JSON all yield an empty index (matching the TS fall-back).
     pub fn load(path: &Path) -> Self {
-        let Ok(raw) = fs::read_to_string(path) else {
-            return Self::default();
-        };
-        match serde_json::from_str::<Index>(&raw) {
-            Ok(data) => ProjectIndex { data },
-            Err(_) => Self::default(),
+        Self::try_load(path).unwrap_or_default()
+    }
+
+    /// Like `load`, but an existing file that cannot be read or parsed is an
+    /// error instead of a silent empty index. A missing file still yields an
+    /// empty index. Used by `gx doctor` to surface index corruption.
+    pub fn try_load(path: &Path) -> GxResult<Self> {
+        if !path.exists() {
+            return Ok(Self::default());
         }
+        let raw = fs::read_to_string(path)
+            .map_err(|e| GxError::command(format!("unreadable index file: {e}")))?;
+        let data = serde_json::from_str::<Index>(&raw)
+            .map_err(|e| GxError::command(format!("invalid index JSON: {e}")))?;
+        Ok(ProjectIndex { data })
     }
 
     /// Insert `entry` under `name`, overwriting any existing entry (with a
@@ -339,6 +347,23 @@ mod tests {
         let idx = ProjectIndex::load(&tmp.path().join("index.json"));
         assert!(idx.is_empty());
         assert!(idx.list().is_empty());
+    }
+
+    #[test]
+    fn try_load_invalid_json_errors_but_load_falls_back_empty() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("index.json");
+        fs::write(&path, "{not valid json").unwrap();
+        let err = ProjectIndex::try_load(&path).unwrap_err();
+        assert!(err.to_string().contains("invalid index JSON"));
+        assert!(ProjectIndex::load(&path).is_empty());
+    }
+
+    #[test]
+    fn try_load_missing_returns_empty() {
+        let tmp = TempDir::new().unwrap();
+        let idx = ProjectIndex::try_load(&tmp.path().join("index.json")).unwrap();
+        assert!(idx.is_empty());
     }
 
     #[test]
