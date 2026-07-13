@@ -67,4 +67,4 @@ Trust model: the installer trusts GitHub Releases as the distribution channel, v
 - [x] DIST-1: Create `install.sh` curl installer with OS/arch detection and source-build guidance
 - [x] DIST-2: CI pipeline for Linux and macOS builds
 - [x] DIST-3: Implement `gx doctor` health check command
-- [x] DIST-4: Release signing and checksum verification
+- [x] DIST-4: Release checksum verification (SHA256SUMS) and GitHub build provenance attestations
