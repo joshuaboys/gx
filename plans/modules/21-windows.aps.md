@@ -47,7 +47,7 @@ Windows conventions.
 
 Current state (verified against source, 2026-07-13):
 
-- Platform-specific code is already gated: `#[cfg(unix)]` with `#[cfg(not(unix))]` fallbacks in `commands/doctor.rs`, `commands/open.rs`, and a unix-only symlink test in `index_store.rs`. The crate is expected to compile for `x86_64-pc-windows-msvc`; WIN-1 confirms this and fixes what falls out.
+- Platform-specific code is already gated: `#[cfg(unix)]` with `#[cfg(not(unix))]` fallbacks in `commands/doctor.rs`, `commands/open.rs`, and a unix-only symlink test in `index_store.rs`. The crate is expected to compile for `x86_64-pc-windows-msvc`; WIN-001 confirms this and fixes what falls out.
 - `doctor` searches PATH for a file literally named `gx` (misses `gx.exe`) and reads `$HOME`/`$SHELL`, neither of which is set on native Windows.
 - `shell_init` supports zsh/bash/fish only and detects the shell from `$SHELL`.
 - Config and index live at `home_dir()/.config/gx/` via the `dirs` crate. Keep this location on Windows (`C:\Users\<user>\.config\gx\`) rather than moving to `%APPDATA%` — schema and path consistency across platforms outweighs Windows idiom, and it avoids a migration. Recorded as D-011 in the index.
