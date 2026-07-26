@@ -54,6 +54,15 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [ ] `gx doctor` and index diagnostics/stats for trust at scale
 - [ ] Native Windows support — release binary, PowerShell integration, installer (see Windows Support module)
 
+### v6 — Workspace Lifecycle (Draft)
+
+- [ ] `gx try <name>` creates and enters a dated experimental workspace
+- [ ] Empty, cloned and worktree-backed experiments share the normal workspace index
+- [ ] `gx try` provides recency-aware interactive discovery without filesystem-mtime heuristics
+- [ ] Experiments can be renamed and promoted into the permanent project hierarchy
+- [ ] Clean-up is restricted by workspace kind, canonical path containment and Git safety inspection
+- [ ] Machine-readable experiment inspection supports scripts and coding agents
+
 ## Constraints
 
 - Rust only (no JS runtime) — superseded the original "TypeScript + Bun only" constraint at the RST-7 cutover (see `decisions/010-rust-port.md`)
@@ -86,6 +95,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [Fork & Sync](./modules/19-fork.aps.md)                                                   | Fork repos via GitHub, clone locally, and keep forks synced with upstream                     | Draft               | v4      | Clone, Shell Plugin, CLI |
 | [Rust Port](./modules/20-rust-port.aps.md)                                                | Re-implement gx as a Rust binary with full behavior parity                                    | In Progress         | v5      | All                      |
 | [Windows Support](./modules/21-windows.aps.md)                                            | Windows binary, PowerShell shell-init, installer, and doctor awareness                        | Ready               | v5      | Distribution & Install UX, Shell Portability, CLI |
+| [Experimental Workspaces](./modules/22-experimental-workspaces.aps.md)                         | Create, discover, promote and safely clean up provisional directories, clones and worktrees              | Draft               | v6      | Index, Clone, Shell, Tracking, Rust Port |
 
 ## Risks
 
@@ -105,6 +115,9 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | Fork sync conflicts            | Rebase/merge on diverged forks can produce conflicts        | Abort cleanly, leave tree in resolvable state, print actionable guidance           |
 | Windows shell semantics        | PowerShell quoting/completion differ from POSIX shells      | Snapshot-test shell-init output per shell; dedicated Windows CI job                |
 
+| Destructive experiment clean-up | Valuable local work could be removed | Restrict clean-up to experiment kinds under the canonical experiment root; inspect dirty files and unique commits; require explicit confirmation |
+| Worktree lifecycle drift | Git metadata and indexed paths can disagree | Use Git-aware move/remove operations; retain source provenance; extend doctor diagnostics |
+
 ## Open Questions
 
 - [x] Which language? — TypeScript/Bun
@@ -122,6 +135,10 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [ ] Which TUI library for interactive mode? (ink, blessed, raw ANSI, or Bun-native)
 - [ ] Should Windows distribution include winget/scoop manifests, or installer + release asset only? (installer-only proposed)
 
+- [ ] Should experimental workspaces appear in unfiltered `gx recent` output by default?
+- [ ] Should Worktrunk or native Git be preferred when both experimental-worktree backends are available?
+- [ ] Should recoverable clean-up add a dependency or use platform capabilities when present?
+
 ## Decisions
 
 - **D-001:** Owner/repo directory structure by default (`owner`), `flat` (repo only) and `host` (host/owner/repo) modes via config — _accepted_
@@ -135,3 +152,4 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - **D-008:** README includes Acknowledgements section crediting ghq and gclone as prior art — _accepted_
 - **D-010:** Port gx to Rust with strict behavior parity, preserving CLI surface, config and index schemas, and `gx shell-init` output (see `decisions/010-rust-port.md`) — _proposed_
 - **D-011:** Keep config/index at `~/.config/gx/` on Windows (no `%APPDATA%` move) — cross-platform path and schema consistency, no migration needed — _proposed_
+- **D-012:** Experiments share the existing index through optional workspace-kind and lifecycle fields; entries without a kind remain permanent projects — _proposed_
