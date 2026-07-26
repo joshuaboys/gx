@@ -54,7 +54,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [ ] `gx doctor` and index diagnostics/stats for trust at scale
 - [ ] Native Windows support — release binary, PowerShell integration, installer (see Windows Support module)
 
-### v6 — Workspace Lifecycle (Draft)
+### v6: Workspace Lifecycle (Draft)
 
 - [ ] `gx try <name>` creates and enters a dated experimental workspace
 - [ ] Empty, cloned and worktree-backed experiments share the normal workspace index
@@ -152,4 +152,4 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - **D-008:** README includes Acknowledgements section crediting ghq and gclone as prior art — _accepted_
 - **D-010:** Port gx to Rust with strict behavior parity, preserving CLI surface, config and index schemas, and `gx shell-init` output (see `decisions/010-rust-port.md`) — _proposed_
 - **D-011:** Keep config/index at `~/.config/gx/` on Windows (no `%APPDATA%` move) — cross-platform path and schema consistency, no migration needed — _proposed_
-- **D-012:** Experiments share the existing index through optional workspace-kind and lifecycle fields; entries without a kind remain permanent projects — _proposed_
+- **D-012:** Experiments share the existing index through optional workspace-kind and lifecycle fields; entries without a kind remain permanent projects. _Proposed._
