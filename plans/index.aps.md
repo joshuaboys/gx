@@ -28,6 +28,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [x] `gx <name>` suggests fuzzy matches when exact match not found
 - [x] `gx open <name>` opens project in preferred editor
 - [x] `gx init` scaffolds AI agent configuration for a project
+- [x] `gx clone <repo> <dest>` clones to a one-off path without changing config (`CLN-002`)
 
 ### v3 — Project Awareness (Draft)
 
@@ -75,7 +76,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | Module                                                                                    | Purpose                                                                                       | Status              | Version | Dependencies             |
 | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------- | ------- | ------------------------ |
 | [URL & Path](./archive/modules/01-url.aps.md)                                             | Parse git URLs and map to filesystem paths                                                    | Complete (archived) | v1      | —                        |
-| [Clone](./archive/modules/02-clone.aps.md)                                                | Clone repos to organized directories                                                          | Complete (archived) | v1      | URL                      |
+| [Clone](./archive/modules/02-clone.aps.md)                                                | Clone repos to organized directories; optional one-off destination                            | Complete (archived) | v1      | URL                      |
 | [Index](./archive/modules/03-index.aps.md)                                                | Track projects and resolve names to paths                                                     | Complete (archived) | v1      | —                        |
 | [CLI](./archive/modules/04-cli.aps.md)                                                    | Subcommand routing and argument parsing                                                       | Complete (archived) | v1      | URL, Clone, Index        |
 | [Shell Plugin](./archive/modules/05-shell.aps.md)                                         | Zsh plugin for cd, completion, and shell integration                                          | Complete (archived) | v1      | CLI                      |
@@ -134,6 +135,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - [ ] Should hook trust be per-project or per-file-hash (re-trust on `.gx.json` change)?
 - [ ] Which TUI library for interactive mode? (ink, blessed, raw ANSI, or Bun-native)
 - [ ] Should Windows distribution include winget/scoop manifests, or installer + release asset only? (installer-only proposed)
+- [x] `gx clone` destination override: positional vs flag? — Positional `gx clone <repo> [dest]`, matching `git clone` (D-013)
 
 - [ ] Should experimental workspaces appear in unfiltered `gx recent` output by default?
 - [ ] Should Worktrunk or native Git be preferred when both experimental-worktree backends are available?
@@ -153,3 +155,5 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 - **D-010:** Port gx to Rust with strict behavior parity, preserving CLI surface, config and index schemas, and `gx shell-init` output (see `decisions/010-rust-port.md`) — _proposed_
 - **D-011:** Keep config/index at `~/.config/gx/` on Windows (no `%APPDATA%` move) — cross-platform path and schema consistency, no migration needed — _proposed_
 - **D-012:** Experiments share the existing index through optional workspace-kind and lifecycle fields; entries without a kind remain permanent projects. _Proposed._
+- **D-013:** `gx clone` takes an optional positional destination (`gx clone <repo> [dest]`) rather than a `--path`/`-C` flag — matches `git clone` muscle memory, and the repo argument is always first so the second positional is unambiguous. Relative destinations resolve against the cwd, as git does — _accepted_
+- **D-014:** A clone to an explicit destination is indexed under the destination's basename, not the repo name — consistent with `gx index <path>`, keeps the name the user chose reachable via `gx <name>`, and avoids clobbering an existing entry when the same repo is cloned to several places — _accepted_

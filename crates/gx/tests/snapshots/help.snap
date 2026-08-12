@@ -8,6 +8,7 @@ gx v0.2.0 — git project manager
 Usage:
   gx <name>                Jump to project
   gx clone <repo>          Clone and jump to repo
+  gx clone <repo> <dest>   Clone to an explicit path (one-off, no config change)
   gx open [name]           Open project in editor
   gx ls                    List indexed projects
   gx index                 Index new repos (additive scan)

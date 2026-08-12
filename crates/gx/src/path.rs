@@ -1,7 +1,32 @@
-use std::path::PathBuf;
+use std::path::{Component, PathBuf};
 
-use crate::config::effective_project_dir_for;
+use crate::config::{effective_project_dir_for, expand_tilde};
 use crate::types::{Config, ParsedRepo, Structure};
+
+/// Lexical absolute resolution, mirroring Node `path.resolve(expandTilde(p))`:
+/// make absolute against the cwd and collapse `.`/`..` without touching the
+/// filesystem (so symlinks are preserved, unlike `canonicalize`).
+pub fn lexical_resolve(raw: &str) -> PathBuf {
+    let expanded = expand_tilde(raw);
+    let abs = if expanded.is_absolute() {
+        expanded
+    } else {
+        std::env::current_dir()
+            .unwrap_or_else(|_| PathBuf::from("/"))
+            .join(expanded)
+    };
+    let mut out = PathBuf::new();
+    for comp in abs.components() {
+        match comp {
+            Component::ParentDir => {
+                out.pop();
+            }
+            Component::CurDir => {}
+            other => out.push(other.as_os_str()),
+        }
+    }
+    out
+}
 
 /// Pure path mapping: takes an explicit agent (instead of reading `GX_AGENT`)
 /// so tests don't have to mutate global env state.

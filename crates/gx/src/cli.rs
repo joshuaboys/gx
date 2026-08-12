@@ -32,6 +32,7 @@ fn help_text() -> String {
 Usage:
   gx <name>                Jump to project
   gx clone <repo>          Clone and jump to repo
+  gx clone <repo> <dest>   Clone to an explicit path (one-off, no config change)
   gx open [name]           Open project in editor
   gx ls                    List indexed projects
   gx index                 Index new repos (additive scan)
@@ -125,11 +126,22 @@ fn dispatch(args: &[String]) -> GxResult<()> {
 
     match command {
         "clone" => {
+            const USAGE: &str = "Usage: gx clone <repo> [dest]";
             let repo = args.get(1).filter(|r| !r.is_empty());
             let Some(repo) = repo else {
-                return Err(GxError::command("Usage: gx clone <repo>"));
+                return Err(GxError::command(USAGE));
             };
-            let path = clone::clone_repo(repo, &config, &index_path)?;
+            // Optional one-off destination; empty or extra positionals are a
+            // usage error rather than being silently ignored.
+            let dest = match args.get(2) {
+                Some(d) if d.is_empty() => return Err(GxError::command(USAGE)),
+                Some(d) => Some(d.as_str()),
+                None => None,
+            };
+            if args.len() > 3 {
+                return Err(GxError::command(USAGE));
+            }
+            let path = clone::clone_repo(repo, dest, &config, &index_path)?;
             println!("{path}");
             Ok(())
         }
