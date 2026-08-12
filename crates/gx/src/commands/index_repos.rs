@@ -1,12 +1,13 @@
 //! `gx index [path...]` — additive scan of the project dir, or add specific
 //! repo paths. Ported from `src/commands/index-repos.ts`.
 
-use std::path::{Component, Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Stdio};
 
-use crate::config::{effective_project_dir, expand_tilde};
+use crate::config::effective_project_dir;
 use crate::errors::{GxError, GxResult};
 use crate::index_store::{iso_now, ProjectIndex};
+use crate::path::lexical_resolve;
 use crate::types::{Config, IndexEntry};
 
 pub fn index_repos(paths: &[String], config: &Config, index_path: &Path) -> GxResult<()> {
@@ -15,31 +16,6 @@ pub fn index_repos(paths: &[String], config: &Config, index_path: &Path) -> GxRe
     } else {
         index_paths(paths, index_path)
     }
-}
-
-/// Lexical absolute resolution, mirroring Node `path.resolve(expandTilde(p))`:
-/// make absolute against the cwd and collapse `.`/`..` without touching the
-/// filesystem (so symlinks are preserved, unlike `canonicalize`).
-fn lexical_resolve(raw: &str) -> PathBuf {
-    let expanded = expand_tilde(raw);
-    let abs = if expanded.is_absolute() {
-        expanded
-    } else {
-        std::env::current_dir()
-            .unwrap_or_else(|_| PathBuf::from("/"))
-            .join(expanded)
-    };
-    let mut out = PathBuf::new();
-    for comp in abs.components() {
-        match comp {
-            Component::ParentDir => {
-                out.pop();
-            }
-            Component::CurDir => {}
-            other => out.push(other.as_os_str()),
-        }
-    }
-    out
 }
 
 fn index_paths(paths: &[String], index_path: &Path) -> GxResult<()> {

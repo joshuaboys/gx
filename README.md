@@ -115,6 +115,22 @@ gx clone git@github.com:user/repo.git
 
 Repositories are cloned to `~/Projects/src/<owner>/<repo>` by default and the shell `cd`s into the new directory.
 
+#### One-off destinations
+
+Pass an optional path to land a single clone outside the configured layout,
+without changing any config:
+
+```sh
+gx clone user/repo put-it-here  # -> ./put-it-here
+gx clone user/repo /tmp/scratch # -> /tmp/scratch
+```
+
+Relative paths resolve against the current directory, the same as `git clone`.
+The clone is still indexed — under the destination's directory name, so
+`gx put-it-here` jumps back to it. Everything else is unchanged: missing parent
+directories are created, an existing clone at the destination is skipped, and
+`projectDir` / `structure` are left alone.
+
 ### List projects
 
 ```sh

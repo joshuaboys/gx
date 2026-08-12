@@ -307,6 +307,30 @@ fn snapshot_clone_no_arg() {
 }
 
 #[test]
+fn snapshot_clone_empty_dest() {
+    // An empty destination is a usage error, not a silent fallback to the
+    // configured layout.
+    let h = Harness::new();
+    let cap = run({
+        let mut c = h.command();
+        c.args(["clone", "juev/gclone", ""]);
+        c
+    });
+    assert_snapshot("clone_empty_dest", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_clone_too_many_args() {
+    let h = Harness::new();
+    let cap = run({
+        let mut c = h.command();
+        c.args(["clone", "juev/gclone", "dest", "extra"]);
+        c
+    });
+    assert_snapshot("clone_too_many_args", &format_capture(&cap));
+}
+
+#[test]
 fn snapshot_resume_no_arg() {
     let h = Harness::new();
     let cap = run({
