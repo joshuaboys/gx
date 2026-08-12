@@ -88,6 +88,11 @@ impl Env {
 
         let work = root.join("work");
         fs::create_dir_all(&work).expect("mkdir work");
+        // Relative destinations resolve against the cwd as the OS reports it,
+        // which is fully resolved (on macOS the TempDir root `/var/...` is a
+        // symlink to `/private/var/...`). Canonicalize so expectations match
+        // what the binary prints. No-op on Linux.
+        let work = fs::canonicalize(&work).expect("canonicalize work");
 
         Env {
             home,
