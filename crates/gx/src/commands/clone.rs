@@ -37,7 +37,9 @@ fn resolve_target(
                 .map(|n| n.to_string_lossy().into_owned())
                 .filter(|n| !n.is_empty())
                 .ok_or_else(|| {
-                    GxError::Other(format!("invalid clone destination: {}", dir.display()))
+                    // Bad user input, not a runtime failure — classify it the
+                    // same way the dispatcher classifies a bad argument.
+                    GxError::command(format!("invalid clone destination: {}", dir.display()))
                 })?;
             Ok((dir, name))
         }
@@ -203,8 +205,28 @@ mod tests {
     }
 
     #[test]
-    fn root_dest_is_rejected() {
-        let err = resolve_target(&repo(), Some("/"), &config(), None);
-        assert!(err.is_err(), "expected root destination to be rejected");
+    fn root_dest_is_rejected_as_a_usage_error() {
+        let err = resolve_target(&repo(), Some("/"), &config(), None)
+            .expect_err("expected root destination to be rejected");
+        assert!(
+            matches!(err, GxError::Command { .. }),
+            "a bad destination is user input, not a runtime failure: {err:?}"
+        );
+        assert_eq!(err.exit_code(), 1);
+    }
+
+    #[test]
+    fn parent_segments_cannot_escape_the_root() {
+        // `PathBuf::pop` refuses to pop a root, so `..` collapses at `/`
+        // instead of turning an absolute destination into a relative one.
+        for (input, expected) in [
+            ("/../../tmp", "/tmp"),
+            ("/a/../../b", "/b"),
+            ("/tmp/../..", "/"),
+        ] {
+            let dir = lexical_resolve(input);
+            assert_eq!(dir, PathBuf::from(expected), "input {input}");
+            assert!(dir.is_absolute(), "input {input} became relative");
+        }
     }
 }
