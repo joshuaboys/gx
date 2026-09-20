@@ -66,13 +66,12 @@ impl Env {
             &seed,
         );
 
-        // Rewrite the https remote to the local bare repo.
+        // Rewrite the https remote to the local bare repo. Normalise separators
+        // so Git on Windows accepts the file:// URL.
+        let origin_url = root.join("origin").display().to_string().replace('\\', "/");
         fs::write(
             root.join(".gitconfig"),
-            format!(
-                "[url \"file://{}/\"]\n\tinsteadOf = https://github.com/\n",
-                root.join("origin").display()
-            ),
+            format!("[url \"file://{origin_url}/\"]\n\tinsteadOf = https://github.com/\n"),
         )
         .expect("write .gitconfig");
 
@@ -107,6 +106,9 @@ impl Env {
             .args(args)
             .current_dir(&self.work)
             .env("HOME", self.home.path())
+            .env("USERPROFILE", self.home.path())
+            .env_remove("HOMEDRIVE")
+            .env_remove("HOMEPATH")
             .env_remove("XDG_CONFIG_HOME")
             .env_remove("GX_AGENT")
             .output()

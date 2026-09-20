@@ -63,6 +63,9 @@ impl Harness {
         // Inherit PATH (so spawned `git` etc resolve) and TMPDIR, but pin every
         // gx-relevant env to a known value.
         cmd.env("HOME", self.home.path())
+            .env("USERPROFILE", self.home.path())
+            .env_remove("HOMEDRIVE")
+            .env_remove("HOMEPATH")
             .env_remove("XDG_CONFIG_HOME")
             .env_remove("GX_AGENT")
             .env_remove("GX_SHELL_OVERRIDE")
@@ -111,11 +114,25 @@ fn assert_snapshot(name: &str, value: &str) {
     // Resolved binary path leaks into `gx shell-init` as `_GX_BIN="..."`.
     settings.add_filter(r#"_GX_BIN="[^"]*""#, r#"_GX_BIN="<BIN>""#);
     settings.add_filter(r#"set -g _GX_BIN "[^"]*""#, r#"set -g _GX_BIN "<BIN>""#);
+    settings.add_filter(
+        r#"\$script:_GX_BIN = '[^']*'"#,
+        r#"$$script:_GX_BIN = '<BIN>'"#,
+    );
     // `gx doctor` reports paths under the isolated HOME TempDir. TempDir uses
-    // platform-specific roots, so normalize both Linux and macOS forms.
+    // platform-specific roots, so normalize Linux, macOS, and Windows forms.
     settings.add_filter(r"/tmp/\.tmp[A-Za-z0-9]+", "<HOME>");
     settings.add_filter(r"/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+", "<HOME>");
     settings.add_filter(r"/private/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+", "<HOME>");
+    settings.add_filter(
+        r"(?i)[A-Z]:\\Users\\[^\\]+\\AppData\\Local\\Temp\\.tmp[A-Za-z0-9]+",
+        "<HOME>",
+    );
+    settings.add_filter(
+        r"(?i)[A-Z]:/Users/[^/]+/AppData/Local/Temp/\.tmp[A-Za-z0-9]+",
+        "<HOME>",
+    );
+    // Remaining Windows separators after HOME substitution (doctor paths).
+    settings.add_filter(r"\\", "/");
     // `gx recent` prints relative times against Date.now(); normalize.
     settings.add_filter(r"\d+ (minute|hour|day|week|month)s? ago", "<TIME_AGO>");
     settings.add_filter(r"just now", "<TIME_AGO>");
@@ -182,11 +199,22 @@ fn snapshot_shell_init_fish() {
 }
 
 #[test]
-fn snapshot_shell_init_unsupported() {
+fn snapshot_shell_init_powershell() {
     let h = Harness::new();
     let cap = run({
         let mut c = h.command();
         c.args(["shell-init", "powershell"]);
+        c
+    });
+    assert_snapshot("shell_init_powershell", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_shell_init_unsupported() {
+    let h = Harness::new();
+    let cap = run({
+        let mut c = h.command();
+        c.args(["shell-init", "cmd"]);
         c
     });
     assert_snapshot("shell_init_unsupported", &format_capture(&cap));
@@ -361,6 +389,42 @@ fn snapshot_doctor_missing_paths() {
         c
     });
     assert_snapshot("doctor_missing_paths", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_doctor_powershell_missing_profile() {
+    let h = Harness::new();
+    let cap = run({
+        let mut c = h.command();
+        c.arg("doctor")
+            .env("PATH", "")
+            .env("GX_SHELL_OVERRIDE", "powershell");
+        c
+    });
+    assert_snapshot("doctor_powershell_missing_profile", &format_capture(&cap));
+}
+
+#[test]
+fn snapshot_doctor_powershell_profile_ok() {
+    let h = Harness::new();
+    let profile = h
+        .home
+        .path()
+        .join("Documents/PowerShell/Microsoft.PowerShell_profile.ps1");
+    fs::create_dir_all(profile.parent().unwrap()).expect("mkdir profile dir");
+    fs::write(
+        &profile,
+        "Invoke-Expression (& gx shell-init powershell | Out-String)\n",
+    )
+    .expect("write profile");
+    let cap = run({
+        let mut c = h.command();
+        c.arg("doctor")
+            .env("PATH", "")
+            .env("GX_SHELL_OVERRIDE", "powershell");
+        c
+    });
+    assert_snapshot("doctor_powershell_profile_ok", &format_capture(&cap));
 }
 
 #[test]

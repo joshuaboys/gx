@@ -6,13 +6,14 @@
 
 use crate::errors::{GxError, GxResult};
 
-const SUPPORTED_SHELLS: [&str; 3] = ["zsh", "bash", "fish"];
+const SUPPORTED_SHELLS: [&str; 4] = ["zsh", "bash", "fish", "powershell"];
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Shell {
     Zsh,
     Bash,
     Fish,
+    Pwsh,
 }
 
 /// Resolve the absolute path to embed as `_GX_BIN`. Unlike the TS port (which
@@ -27,46 +28,53 @@ fn resolve_gx_bin() -> String {
         .unwrap_or_else(|| "gx".to_string())
 }
 
+fn parse_shell_name(name: &str) -> Option<Shell> {
+    let trimmed = name.trim();
+    let normalized = trimmed.replace('\\', "/");
+    let file = std::path::Path::new(&normalized)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or(trimmed);
+    let file = file
+        .strip_suffix(".exe")
+        .or_else(|| file.strip_suffix(".EXE"))
+        .unwrap_or(file);
+    match file.to_ascii_lowercase().as_str() {
+        "zsh" => Some(Shell::Zsh),
+        "bash" => Some(Shell::Bash),
+        "fish" => Some(Shell::Fish),
+        "pwsh" | "powershell" => Some(Shell::Pwsh),
+        _ => None,
+    }
+}
+
 fn detect_shell() -> Option<Shell> {
     if let Ok(name) = std::env::var("GX_SHELL_OVERRIDE") {
-        if name.ends_with("/zsh") || name == "zsh" {
-            return Some(Shell::Zsh);
-        }
-        if name.ends_with("/bash") || name == "bash" {
-            return Some(Shell::Bash);
-        }
-        if name.ends_with("/fish") || name == "fish" {
-            return Some(Shell::Fish);
+        if let Some(shell) = parse_shell_name(&name) {
+            return Some(shell);
         }
     }
-    let shell = std::env::var("SHELL").unwrap_or_default();
-    if shell.ends_with("/zsh") {
-        return Some(Shell::Zsh);
+    if let Ok(shell) = std::env::var("SHELL") {
+        if let Some(s) = parse_shell_name(&shell) {
+            return Some(s);
+        }
     }
-    if shell.ends_with("/bash") {
-        return Some(Shell::Bash);
-    }
-    if shell.ends_with("/fish") {
-        return Some(Shell::Fish);
+    // PowerShell does not set $SHELL. PSModulePath is set in powershell/pwsh.
+    let shell_set = std::env::var("SHELL").ok().is_some_and(|s| !s.is_empty());
+    if !shell_set && std::env::var_os("PSModulePath").is_some() {
+        return Some(Shell::Pwsh);
     }
     None
 }
 
 pub fn shell_init(shell_arg: Option<&str>) -> GxResult<()> {
     let shell = match shell_arg {
-        Some(arg) => {
-            if !SUPPORTED_SHELLS.contains(&arg) {
-                return Err(GxError::command(format!(
-                    "Unsupported shell: {arg}\nSupported shells: {}",
-                    SUPPORTED_SHELLS.join(", ")
-                )));
-            }
-            match arg {
-                "zsh" => Shell::Zsh,
-                "bash" => Shell::Bash,
-                _ => Shell::Fish,
-            }
-        }
+        Some(arg) => parse_shell_name(arg).ok_or_else(|| {
+            GxError::command(format!(
+                "Unsupported shell: {arg}\nSupported shells: {}",
+                SUPPORTED_SHELLS.join(", ")
+            ))
+        })?,
         None => detect_shell().ok_or_else(|| {
             GxError::command(format!(
                 "Could not detect shell from $SHELL\nSpecify one explicitly: gx shell-init <{}>",
@@ -76,10 +84,15 @@ pub fn shell_init(shell_arg: Option<&str>) -> GxResult<()> {
     };
 
     let bin = resolve_gx_bin();
+    let bin = match shell {
+        Shell::Pwsh => bin.replace('\'', "''"),
+        _ => bin,
+    };
     let template = match shell {
         Shell::Zsh => ZSH,
         Shell::Bash => BASH,
         Shell::Fish => FISH,
+        Shell::Pwsh => POWERSHELL,
     };
     println!("{}", template.replace("__GX_BIN__", &bin));
     Ok(())
@@ -303,3 +316,136 @@ complete -c gx -n "__fish_use_subcommand" -a "($_GX_BIN resolve --list 2>/dev/nu
 complete -c gx -n "__fish_seen_subcommand_from config" -a "set"
 complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost structure shallow similarityThreshold editor"
 complete -c gx -n "not __fish_seen_subcommand_from clone ls recent resume rebuild config resolve open init index doctor shell-init --help -h --version -v; and test (count (commandline -opc)) -eq 2" -a "wt""##;
+
+const POWERSHELL: &str = r##"# gx — git project manager shell integration
+# Add to $PROFILE: Invoke-Expression (& gx shell-init powershell | Out-String)
+
+$script:_GX_BIN = '__GX_BIN__'
+
+function global:gx {
+    if ($args.Count -eq 0) {
+        & $script:_GX_BIN --help
+        return
+    }
+
+    $cmd = [string]$args[0]
+    switch ($cmd) {
+        'clone' {
+            $output = & $script:_GX_BIN @args
+            if ($LASTEXITCODE -ne 0) { return }
+            $line = $output | Select-Object -Last 1
+            if ($line -and (Test-Path -LiteralPath $line -PathType Container)) {
+                Set-Location -LiteralPath $line
+            }
+        }
+        'resume' {
+            $output = & $script:_GX_BIN @args
+            if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
+            $line = $output | Select-Object -Last 1
+            if ($line -and (Test-Path -LiteralPath $line -PathType Container)) {
+                Set-Location -LiteralPath $line
+            } else {
+                return 1
+            }
+        }
+        { $_ -in 'ls','recent','rebuild','config','open','init','index','doctor','shell-init','resolve','--help','-h','--version','-v' } {
+            & $script:_GX_BIN @args
+        }
+        default {
+            $target = & $script:_GX_BIN resolve $cmd
+            if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
+            $line = $target | Select-Object -Last 1
+            if ($line -and (Test-Path -LiteralPath $line -PathType Container)) {
+                Set-Location -LiteralPath $line
+            } else {
+                return 1
+            }
+            if ($args.Count -ge 2 -and $args[1] -eq 'wt') {
+                $wt = Get-Command wt -ErrorAction SilentlyContinue
+                if (-not $wt) {
+                    [Console]::Error.WriteLine('gx: wt (worktrunk) not found on PATH')
+                    [Console]::Error.WriteLine('Install: https://worktrunk.dev')
+                    return 1
+                }
+                if ($args.Count -gt 2) {
+                    & $wt.Source @($args[2..($args.Count - 1)])
+                } else {
+                    & $wt.Source
+                }
+            }
+        }
+    }
+}
+
+Register-ArgumentCompleter -CommandName gx -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+    $commands = @(
+        'clone','ls','recent','resume','rebuild','config','resolve',
+        'open','init','index','doctor','shell-init','--help','--version','-h','-v'
+    )
+    $elements = @($commandAst.CommandElements | ForEach-Object { $_.Extent.Text })
+
+    if ($elements.Count -le 2) {
+        $projects = @(& $script:_GX_BIN resolve --list 2>$null)
+        ($commands + $projects) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+        return
+    }
+
+    $first = $elements[1].Trim('"').Trim("'")
+    if ($first -eq 'config') {
+        if ($elements.Count -eq 3) {
+            @('set') | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            }
+            return
+        }
+        if ($elements.Count -ge 4 -and $elements[2].Trim('"').Trim("'") -eq 'set') {
+            @(
+                'projectDir','defaultHost','structure','shallow',
+                'similarityThreshold','editor'
+            ) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            }
+            return
+        }
+    }
+
+    if ($commands -notcontains $first) {
+        @('wt') | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+    }
+}
+"##;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_shell_name_posix() {
+        assert_eq!(parse_shell_name("zsh"), Some(Shell::Zsh));
+        assert_eq!(parse_shell_name("/bin/bash"), Some(Shell::Bash));
+        assert_eq!(parse_shell_name("/usr/bin/fish"), Some(Shell::Fish));
+    }
+
+    #[test]
+    fn parse_shell_name_powershell() {
+        assert_eq!(parse_shell_name("powershell"), Some(Shell::Pwsh));
+        assert_eq!(parse_shell_name("pwsh"), Some(Shell::Pwsh));
+        assert_eq!(
+            parse_shell_name(r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"),
+            Some(Shell::Pwsh)
+        );
+        assert_eq!(parse_shell_name("pwsh.exe"), Some(Shell::Pwsh));
+    }
+
+    #[test]
+    fn parse_shell_name_unknown() {
+        assert_eq!(parse_shell_name("cmd"), None);
+        assert_eq!(parse_shell_name("tcsh"), None);
+    }
+}

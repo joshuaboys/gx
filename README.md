@@ -20,7 +20,7 @@ Clone, jump, and organise repos from the terminal.**
 - **Instant project switching** — jump to any repo by name with fuzzy matching
 - **Structured organisation** — repos are cloned into a consistent `owner/repo` layout
 - **GitHub shorthand** — `gx clone user/repo` just works
-- **Shell integration** — tab completion and auto-`cd` for zsh, bash, and fish
+- **Shell integration** — tab completion and auto-`cd` for zsh, bash, fish, and PowerShell
 - **Open in any editor** — `gx open` launches VS Code, nvim, or whatever you use
 - **AI agent scaffolding** — `gx init` generates `.claude/` configs tailored to your project's language
 - **Installation health checks** — `gx doctor` verifies the binary, shell integration, config, and index
@@ -44,13 +44,25 @@ That's it. Shell integration and tab completion are set up automatically.
 
 ## Install
 
-The curl installer downloads the `gx` binary (verifying its SHA-256 checksum), puts it on your `PATH`, and sets up shell integration with tab completion.
+The installer downloads the `gx` binary (verifying its SHA-256 checksum), puts it on your `PATH`, and sets up shell integration with tab completion.
+
+**macOS / Linux:**
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
 ```
 
-> **Note:** Shell integration is required for `gx` to `cd` into projects. The installer sets this up automatically. If you installed manually, add `eval "$(gx shell-init)"` for bash/zsh or `gx shell-init | source` for fish to your shell config.
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/joshuaboys/gx/main/install.ps1 | iex
+```
+
+The Windows installer verifies `gx-windows-x64.exe` against the release `SHA256SUMS` manifest, installs it to `%LOCALAPPDATA%\gx\bin`, and adds that directory to your user `PATH`. x86_64 only; ARM64 Windows is not published yet.
+
+Git Bash can use `gx shell-init bash` once `gx.exe` is on `PATH`. WSL should use the Linux installer above.
+
+> **Note:** Shell integration is required for `gx` to `cd` into projects. The installer sets this up automatically. If you installed manually, add `eval "$(gx shell-init)"` for bash/zsh, `gx shell-init | source` for fish, or `Invoke-Expression (& gx shell-init powershell | Out-String)` for PowerShell.
 
 <details>
 <summary><strong>Manual install</strong></summary>
@@ -61,7 +73,8 @@ Requires a [Rust](https://www.rust-lang.org/tools/install) toolchain (1.75+).
 git clone https://github.com/joshuaboys/gx
 cd gx
 cargo build --release
-cp target/release/gx ~/.local/bin/
+cp target/release/gx ~/.local/bin/          # Unix
+# copy target\release\gx.exe %LOCALAPPDATA%\gx\bin\   # Windows
 ```
 
 Add shell integration to your config file:
@@ -76,6 +89,12 @@ eval "$(gx shell-init)"
 
 ```fish
 gx shell-init | source
+```
+
+**PowerShell** (`$PROFILE`):
+
+```powershell
+Invoke-Expression (& gx shell-init powershell | Out-String)
 ```
 
 </details>

@@ -1,0 +1,110 @@
+---
+source: crates/gx/tests/snapshots.rs
+---
+exit: 0
+---- stdout ----
+# gx — git project manager shell integration
+# Add to $PROFILE: Invoke-Expression (& gx shell-init powershell | Out-String)
+
+$script:_GX_BIN = '<BIN>'
+
+function global:gx {
+    if ($args.Count -eq 0) {
+        & $script:_GX_BIN --help
+        return
+    }
+
+    $cmd = [string]$args[0]
+    switch ($cmd) {
+        'clone' {
+            $output = & $script:_GX_BIN @args
+            if ($LASTEXITCODE -ne 0) { return }
+            $line = $output | Select-Object -Last 1
+            if ($line -and (Test-Path -LiteralPath $line -PathType Container)) {
+                Set-Location -LiteralPath $line
+            }
+        }
+        'resume' {
+            $output = & $script:_GX_BIN @args
+            if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
+            $line = $output | Select-Object -Last 1
+            if ($line -and (Test-Path -LiteralPath $line -PathType Container)) {
+                Set-Location -LiteralPath $line
+            } else {
+                return 1
+            }
+        }
+        { $_ -in 'ls','recent','rebuild','config','open','init','index','doctor','shell-init','resolve','--help','-h','--version','-v' } {
+            & $script:_GX_BIN @args
+        }
+        default {
+            $target = & $script:_GX_BIN resolve $cmd
+            if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
+            $line = $target | Select-Object -Last 1
+            if ($line -and (Test-Path -LiteralPath $line -PathType Container)) {
+                Set-Location -LiteralPath $line
+            } else {
+                return 1
+            }
+            if ($args.Count -ge 2 -and $args[1] -eq 'wt') {
+                $wt = Get-Command wt -ErrorAction SilentlyContinue
+                if (-not $wt) {
+                    [Console]::Error.WriteLine('gx: wt (worktrunk) not found on PATH')
+                    [Console]::Error.WriteLine('Install: https://worktrunk.dev')
+                    return 1
+                }
+                if ($args.Count -gt 2) {
+                    & $wt.Source @($args[2..($args.Count - 1)])
+                } else {
+                    & $wt.Source
+                }
+            }
+        }
+    }
+}
+
+Register-ArgumentCompleter -CommandName gx -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+    $commands = @(
+        'clone','ls','recent','resume','rebuild','config','resolve',
+        'open','init','index','doctor','shell-init','--help','--version','-h','-v'
+    )
+    $elements = @($commandAst.CommandElements | ForEach-Object { $_.Extent.Text })
+
+    if ($elements.Count -le 2) {
+        $projects = @(& $script:_GX_BIN resolve --list 2>$null)
+        ($commands + $projects) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+        return
+    }
+
+    $first = $elements[1].Trim('"').Trim("'")
+    if ($first -eq 'config') {
+        if ($elements.Count -eq 3) {
+            @('set') | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            }
+            return
+        }
+        if ($elements.Count -ge 4 -and $elements[2].Trim('"').Trim("'") -eq 'set') {
+            @(
+                'projectDir','defaultHost','structure','shallow',
+                'similarityThreshold','editor'
+            ) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            }
+            return
+        }
+    }
+
+    if ($commands -notcontains $first) {
+        @('wt') | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+    }
+}
+
+
+---- stderr ----
