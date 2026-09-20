@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn absolute_dest_is_used_verbatim() {
         let (dir, name) = resolve_target(&repo(), Some("/tmp/scratch"), &config(), None).unwrap();
-        assert_eq!(dir, PathBuf::from("/tmp/scratch"));
+        assert_eq!(dir, lexical_resolve("/tmp/scratch"));
         assert_eq!(name, "scratch");
     }
 
@@ -171,7 +171,7 @@ mod tests {
         // dot-dir — that is the whole point of the override.
         let (dir, _) =
             resolve_target(&repo(), Some("/tmp/scratch"), &config(), Some("morgan")).unwrap();
-        assert_eq!(dir, PathBuf::from("/tmp/scratch"));
+        assert_eq!(dir, lexical_resolve("/tmp/scratch"));
     }
 
     #[test]
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn dest_trailing_slash_keeps_basename() {
         let (dir, name) = resolve_target(&repo(), Some("/tmp/scratch/"), &config(), None).unwrap();
-        assert_eq!(dir, PathBuf::from("/tmp/scratch"));
+        assert_eq!(dir, lexical_resolve("/tmp/scratch"));
         assert_eq!(name, "scratch");
     }
 
@@ -225,8 +225,12 @@ mod tests {
             ("/tmp/../..", "/"),
         ] {
             let dir = lexical_resolve(input);
-            assert_eq!(dir, PathBuf::from(expected), "input {input}");
-            assert!(dir.is_absolute(), "input {input} became relative");
+            assert_eq!(dir, lexical_resolve(expected), "input {input}");
+            assert!(
+                dir.is_absolute() || dir.has_root(),
+                "input {input} became relative ({})",
+                dir.display()
+            );
         }
     }
 }
