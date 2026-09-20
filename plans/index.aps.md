@@ -95,7 +95,7 @@ Cloning and navigating git repositories requires too many steps. `git clone` dum
 | [APS Runtime Provisioning & Project Config](./modules/18-aps-runtime-provisioning.aps.md) | Global APS runtime with per-project policy via `.apsrc.yaml` and init-time preference capture | Ready               | v6      | CLI, APS scaffolding     |
 | [Fork & Sync](./modules/19-fork.aps.md)                                                   | Fork repos via GitHub, clone locally, and keep forks synced with upstream                     | Draft               | v4      | Clone, Shell Plugin, CLI |
 | [Rust Port](./modules/20-rust-port.aps.md)                                                | Re-implement gx as a Rust binary with full behavior parity                                    | In Progress         | v5      | All                      |
-| [Windows Support](./modules/21-windows.aps.md)                                            | Windows binary, PowerShell shell-init, installer, and doctor awareness                        | Ready               | v5      | Distribution & Install UX, Shell Portability, CLI |
+| [Windows Support](./modules/21-windows.aps.md)                                            | Windows binary, PowerShell shell-init, installer, and doctor awareness                        | In Progress         | v5      | Distribution & Install UX, Shell Portability, CLI |
 | [Experimental Workspaces](./modules/22-experimental-workspaces.aps.md)                         | Create, discover, promote and safely clean up provisional directories, clones and worktrees              | Draft               | v6      | Index, Clone, Shell, Tracking, Rust Port |
 
 ## Risks
