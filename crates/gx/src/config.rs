@@ -341,8 +341,7 @@ mod tests {
     #[test]
     fn config_path_under_config_gx() {
         let p = get_config_path();
-        let s = p.to_string_lossy();
-        assert!(s.contains(".config/gx/config.json"), "got {s}");
+        assert!(p.ends_with(".config/gx/config.json"), "got {}", p.display());
     }
 
     // --- load_config / save_config / validation -------------------------

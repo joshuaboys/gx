@@ -54,7 +54,7 @@ detect_os() {
   case "$(uname -s)" in
     Linux*)  echo "linux" ;;
     Darwin*) echo "darwin" ;;
-    *)       error "Unsupported OS: $(uname -s)" ;;
+    *)       error "Unsupported OS: $(uname -s). On Windows, use install.ps1." ;;
   esac
 }
 

@@ -16,11 +16,16 @@ struct Check {
 }
 
 fn binary_on_path() -> Option<PathBuf> {
-    let path = env::var_os("PATH")?;
-    for dir in env::split_paths(&path) {
-        let candidate = dir.join("gx");
-        if is_executable(&candidate) {
-            return Some(candidate);
+    binary_on_path_in(env::var_os("PATH")?)
+}
+
+fn binary_on_path_in(path_value: impl AsRef<std::ffi::OsStr>) -> Option<PathBuf> {
+    for dir in env::split_paths(path_value.as_ref()) {
+        for name in ["gx.exe", "gx"] {
+            let candidate = dir.join(name);
+            if is_executable(&candidate) {
+                return Some(candidate);
+            }
         }
     }
     None
@@ -41,16 +46,30 @@ fn is_executable(path: &Path) -> bool {
     path.is_file()
 }
 
-fn shell_rc_files(shell_path: &str) -> Vec<PathBuf> {
-    let Some(home) = env::var_os("HOME").map(PathBuf::from) else {
-        return Vec::new();
-    };
-    let shell = Path::new(shell_path)
+fn user_home() -> Option<PathBuf> {
+    dirs::home_dir()
+}
+
+fn powershell_profiles(home: &Path) -> Vec<PathBuf> {
+    vec![
+        home.join("Documents/PowerShell/Microsoft.PowerShell_profile.ps1"),
+        home.join("Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1"),
+        home.join(".config/powershell/Microsoft.PowerShell_profile.ps1"),
+    ]
+}
+
+fn shell_rc_files(shell_path: &str, home: &Path) -> Vec<PathBuf> {
+    let normalized = shell_path.replace('\\', "/");
+    let shell = Path::new(&normalized)
         .file_name()
         .and_then(|s| s.to_str())
         .unwrap_or(shell_path);
+    let shell = shell
+        .strip_suffix(".exe")
+        .or_else(|| shell.strip_suffix(".EXE"))
+        .unwrap_or(shell);
 
-    match shell {
+    match shell.to_ascii_lowercase().as_str() {
         "zsh" => vec![home.join(".zshrc")],
         "bash" => {
             if cfg!(target_os = "macos") {
@@ -64,15 +83,38 @@ fn shell_rc_files(shell_path: &str) -> Vec<PathBuf> {
             }
         }
         "fish" => vec![home.join(".config/fish/conf.d/gx.fish")],
+        "pwsh" | "powershell" => powershell_profiles(home),
         _ => Vec::new(),
     }
 }
 
+fn detect_shell_for_doctor() -> String {
+    if let Ok(v) = env::var("GX_SHELL_OVERRIDE") {
+        if !v.is_empty() {
+            return v;
+        }
+    }
+    if let Ok(v) = env::var("SHELL") {
+        if !v.is_empty() {
+            return v;
+        }
+    }
+    if env::var_os("PSModulePath").is_some() {
+        return "powershell".to_string();
+    }
+    String::new()
+}
+
 fn shell_check() -> Check {
-    let shell = env::var("GX_SHELL_OVERRIDE")
-        .or_else(|_| env::var("SHELL"))
-        .unwrap_or_default();
-    let rc_files = shell_rc_files(&shell);
+    let Some(home) = user_home() else {
+        return Check {
+            name: "shell",
+            status: "warn",
+            message: "could not resolve home directory".to_string(),
+        };
+    };
+    let shell = detect_shell_for_doctor();
+    let rc_files = shell_rc_files(&shell, &home);
 
     if rc_files.is_empty() {
         return Check {
@@ -223,4 +265,76 @@ pub fn doctor(config_path: &Path, index_path: &Path, config: &Config) -> GxResul
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::ffi::OsString;
+    use tempfile::TempDir;
+
+    fn make_executable(path: &Path) {
+        fs::write(path, "fake").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = fs::metadata(path).unwrap().permissions();
+            perms.set_mode(0o755);
+            fs::set_permissions(path, perms).unwrap();
+        }
+    }
+
+    #[test]
+    fn finds_gx_exe_on_path() {
+        let tmp = TempDir::new().unwrap();
+        let exe = tmp.path().join("gx.exe");
+        make_executable(&exe);
+        let found = binary_on_path_in(tmp.path().as_os_str());
+        assert_eq!(found.as_deref(), Some(exe.as_path()));
+    }
+
+    #[test]
+    fn finds_gx_when_exe_absent() {
+        let tmp = TempDir::new().unwrap();
+        let bin = tmp.path().join("gx");
+        make_executable(&bin);
+        let found = binary_on_path_in(tmp.path().as_os_str());
+        assert_eq!(found.as_deref(), Some(bin.as_path()));
+    }
+
+    #[test]
+    fn prefers_gx_exe_when_both_exist() {
+        let tmp = TempDir::new().unwrap();
+        make_executable(&tmp.path().join("gx"));
+        let exe = tmp.path().join("gx.exe");
+        make_executable(&exe);
+        let found = binary_on_path_in(tmp.path().as_os_str());
+        assert_eq!(found.as_deref(), Some(exe.as_path()));
+    }
+
+    #[test]
+    fn powershell_rc_files_cover_windows_and_pwsh_paths() {
+        let home = Path::new("/tmp/gx-home");
+        let files = shell_rc_files("powershell", home);
+        assert!(files
+            .iter()
+            .any(|p| p.ends_with("Documents/PowerShell/Microsoft.PowerShell_profile.ps1")));
+        assert!(files
+            .iter()
+            .any(|p| p.ends_with("Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1")));
+        assert!(files
+            .iter()
+            .any(|p| p.ends_with(".config/powershell/Microsoft.PowerShell_profile.ps1")));
+        assert_eq!(shell_rc_files("pwsh.exe", home), files);
+    }
+
+    #[test]
+    fn unknown_shell_has_no_rc_files() {
+        assert!(shell_rc_files("cmd", Path::new("/tmp")).is_empty());
+    }
+
+    #[test]
+    fn empty_path_finds_nothing() {
+        assert_eq!(binary_on_path_in(OsString::new()), None);
+    }
 }

@@ -32,6 +32,9 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             asset: gx-darwin-aarch64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset: gx-windows-x64.exe
 
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +62,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp "target/${{ matrix.target }}/release/gx" "${{ matrix.asset }}"
+          src="target/${{ matrix.target }}/release/gx"
+          if [ -f "${src}.exe" ]; then
+            src="${src}.exe"
+          fi
+          cp "$src" "${{ matrix.asset }}"
 
       - uses: actions/upload-artifact@v4
         with:
