@@ -12,8 +12,31 @@ pub fn get_config_path() -> PathBuf {
     home_dir().join(".config/gx/config.json")
 }
 
-fn home_dir() -> PathBuf {
-    dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"))
+/// Home directory for config/index paths.
+///
+/// `HOME` then `USERPROFILE` win so tests and Git Bash can isolate the
+/// profile. When both are unset, fall back to `dirs::home_dir()` (Known
+/// Folder Profile on native Windows, so `$HOME` is not required).
+pub fn home_dir() -> PathBuf {
+    resolve_home_dir(
+        std::env::var("HOME").ok().as_deref(),
+        std::env::var("USERPROFILE").ok().as_deref(),
+        dirs::home_dir(),
+    )
+}
+
+fn resolve_home_dir(
+    home: Option<&str>,
+    userprofile: Option<&str>,
+    fallback: Option<PathBuf>,
+) -> PathBuf {
+    if let Some(value) = home.filter(|s| !s.is_empty()) {
+        return PathBuf::from(value);
+    }
+    if let Some(value) = userprofile.filter(|s| !s.is_empty()) {
+        return PathBuf::from(value);
+    }
+    fallback.unwrap_or_else(|| PathBuf::from("/"))
 }
 
 /// Expand `~/...` and bare `~` against the current home directory. Other
@@ -197,6 +220,23 @@ mod tests {
     use super::*;
     use serde_json::json;
     use tempfile::TempDir;
+
+    #[test]
+    fn resolve_home_prefers_home_then_userprofile() {
+        assert_eq!(
+            resolve_home_dir(Some("/tmp/home"), Some("C:\\Users\\me"), None),
+            PathBuf::from("/tmp/home")
+        );
+        assert_eq!(
+            resolve_home_dir(Some(""), Some(r"C:\Users\me"), None),
+            PathBuf::from(r"C:\Users\me")
+        );
+        assert_eq!(
+            resolve_home_dir(None, None, Some(PathBuf::from("/fallback"))),
+            PathBuf::from("/fallback")
+        );
+        assert_eq!(resolve_home_dir(None, None, None), PathBuf::from("/"));
+    }
 
     // --- expand_tilde -----------------------------------------------------
 

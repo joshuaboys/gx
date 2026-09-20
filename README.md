@@ -29,7 +29,7 @@ Clone, jump, and organise repos from the terminal.**
 ## Quick Start
 
 ```sh
-# Install
+# Install (macOS / Linux)
 curl -fsSL https://raw.githubusercontent.com/joshuaboys/gx/main/install.sh | sh
 exec $SHELL   # reload to pick up PATH and shell integration
 
@@ -38,6 +38,12 @@ gx clone user/repo
 
 # Jump back to it later
 gx myproject
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/joshuaboys/gx/main/install.ps1 | iex
 ```
 
 That's it. Shell integration and tab completion are set up automatically.

@@ -46,10 +46,6 @@ fn is_executable(path: &Path) -> bool {
     path.is_file()
 }
 
-fn user_home() -> Option<PathBuf> {
-    dirs::home_dir()
-}
-
 fn powershell_profiles(home: &Path) -> Vec<PathBuf> {
     vec![
         home.join("Documents/PowerShell/Microsoft.PowerShell_profile.ps1"),
@@ -106,13 +102,7 @@ fn detect_shell_for_doctor() -> String {
 }
 
 fn shell_check() -> Check {
-    let Some(home) = user_home() else {
-        return Check {
-            name: "shell",
-            status: "warn",
-            message: "could not resolve home directory".to_string(),
-        };
-    };
+    let home = crate::config::home_dir();
     let shell = detect_shell_for_doctor();
     let rc_files = shell_rc_files(&shell, &home);
 
@@ -120,7 +110,7 @@ fn shell_check() -> Check {
         return Check {
             name: "shell",
             status: "warn",
-            message: "unsupported shell; run gx shell-init <zsh|bash|fish>".to_string(),
+            message: "unsupported shell; run gx shell-init <zsh|bash|fish|powershell>".to_string(),
         };
     }
 

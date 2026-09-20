@@ -17,12 +17,8 @@ use crate::errors::{GxError, GxResult};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-fn home_dir() -> PathBuf {
-    dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"))
-}
-
 fn index_path() -> PathBuf {
-    home_dir().join(".config/gx/index.json")
+    crate::config::home_dir().join(".config/gx/index.json")
 }
 
 fn help_text() -> String {
