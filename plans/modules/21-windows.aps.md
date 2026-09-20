@@ -2,7 +2,7 @@
 
 | ID  | Owner       | Status |
 | --- | ----------- | ------ |
-| WIN | @joshuaboys | Ready  |
+| WIN | @joshuaboys | In Progress |
 
 - Version: v5
 - Depends on: Distribution & Install UX, Shell Portability, CLI
