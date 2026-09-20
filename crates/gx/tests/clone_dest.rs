@@ -76,11 +76,13 @@ impl Env {
         .expect("write .gitconfig");
 
         let project_dir = root.join("projects");
+        // Forward slashes keep this valid JSON on Windows (unescaped `\` is
+        // an invalid JSON escape). PathBuf accepts both separators.
+        let project_dir_json = project_dir.display().to_string().replace('\\', "/");
         fs::write(
             root.join(".config/gx/config.json"),
             format!(
-                "{{\n  \"projectDir\": \"{}\",\n  \"structure\": \"owner\"\n}}\n",
-                project_dir.display()
+                "{{\n  \"projectDir\": \"{project_dir_json}\",\n  \"structure\": \"owner\"\n}}\n"
             ),
         )
         .expect("write config.json");

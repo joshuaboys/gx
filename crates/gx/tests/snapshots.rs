@@ -123,14 +123,8 @@ fn assert_snapshot(name: &str, value: &str) {
     settings.add_filter(r"/tmp/\.tmp[A-Za-z0-9]+", "<HOME>");
     settings.add_filter(r"/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+", "<HOME>");
     settings.add_filter(r"/private/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+", "<HOME>");
-    settings.add_filter(
-        r"(?i)[A-Z]:\\Users\\[^\\]+\\AppData\\Local\\Temp\\.tmp[A-Za-z0-9]+",
-        "<HOME>",
-    );
-    settings.add_filter(
-        r"(?i)[A-Z]:/Users/[^/]+/AppData/Local/Temp/\.tmp[A-Za-z0-9]+",
-        "<HOME>",
-    );
+    settings.add_filter(r"(?i)[A-Z]:\\[^\s,)]*?\\.tmp[A-Za-z0-9]+", "<HOME>");
+    settings.add_filter(r"(?i)[A-Z]:/[^\s,)]*?/\.tmp[A-Za-z0-9]+", "<HOME>");
     // Remaining Windows separators after HOME substitution (doctor paths).
     settings.add_filter(r"\\", "/");
     // `gx recent` prints relative times against Date.now(); normalize.
