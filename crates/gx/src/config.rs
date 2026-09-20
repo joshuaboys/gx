@@ -361,7 +361,7 @@ mod tests {
         let result = effective_project_dir_for(&cfg, None);
         let result_s = result.to_string_lossy();
         assert!(!result_s.contains('~'));
-        assert!(result_s.ends_with("/src"));
+        assert!(result.ends_with("src"), "got {result_s}");
     }
 
     #[test]
@@ -373,7 +373,10 @@ mod tests {
         let result = effective_project_dir_for(&cfg, Some("morgan"));
         let result_s = result.to_string_lossy();
         assert!(!result_s.contains('~'));
-        assert!(result_s.ends_with("/src/.morgan"));
+        assert!(
+            result.ends_with(std::path::Path::new("src/.morgan")),
+            "got {result_s}"
+        );
     }
 
     // --- get_config_path --------------------------------------------------

@@ -120,7 +120,10 @@ mod tests {
         let result = to_path_for(&repo(), &cfg, None);
         let s = result.to_string_lossy();
         assert!(!s.contains('~'));
-        assert!(s.ends_with("/juev/gclone"), "got {s}");
+        assert!(
+            result.ends_with(std::path::Path::new("juev/gclone")),
+            "got {s}"
+        );
     }
 
     #[test]
