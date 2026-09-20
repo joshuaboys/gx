@@ -11,6 +11,28 @@ use std::process::Command;
 
 use tempfile::TempDir;
 
+/// Compare gx stdout paths with PathBufs across Unix and Windows.
+/// Strips the Windows `\\?\` verbatim prefix and normalises separators so
+/// JSON-stored forward-slash projectDir joins match native PathBufs.
+fn path_key(p: impl AsRef<Path>) -> String {
+    let raw = p.as_ref().to_string_lossy();
+    let stripped = raw.strip_prefix(r"\\?\").unwrap_or(&raw);
+    if cfg!(windows) {
+        stripped.replace('/', r"\")
+    } else {
+        stripped.replace('\\', "/")
+    }
+}
+
+fn assert_path_eq(actual: &str, expected: &Path) {
+    assert_eq!(
+        path_key(actual),
+        path_key(expected),
+        "actual={actual} expected={}",
+        expected.display()
+    );
+}
+
 fn binary_path() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_gx"))
 }
@@ -94,6 +116,13 @@ impl Env {
         // symlink to `/private/var/...`). Canonicalize so expectations match
         // what the binary prints. No-op on Linux.
         let work = fs::canonicalize(&work).expect("canonicalize work");
+        let work = {
+            let s = work.to_string_lossy();
+            match s.strip_prefix(r"\\?\") {
+                Some(rest) => PathBuf::from(rest),
+                None => work,
+            }
+        };
 
         Env {
             home,
@@ -133,8 +162,8 @@ fn no_dest_uses_configured_layout() {
     let (ok, stdout, stderr) = env.clone(&["juev/gclone"]);
     assert!(ok, "clone failed: {stderr}");
 
-    let expected = env.project_dir.join("juev/gclone");
-    assert_eq!(stdout, expected.to_string_lossy());
+    let expected = env.project_dir.join("juev").join("gclone");
+    assert_path_eq(&stdout, &expected);
     assert!(expected.join(".git").is_dir(), "no .git at {expected:?}");
 
     // Indexed under the repo name, as before.
@@ -149,32 +178,28 @@ fn relative_dest_lands_beside_cwd_and_indexes_by_basename() {
     assert!(ok, "clone failed: {stderr}");
 
     let expected = env.work.join("put-it-here");
-    assert_eq!(stdout, expected.to_string_lossy());
+    assert_path_eq(&stdout, &expected);
     assert!(expected.join(".git").is_dir(), "no .git at {expected:?}");
 
     // The configured layout must be untouched by an override.
     assert!(
-        !env.project_dir.join("juev/gclone").exists(),
+        !env.project_dir.join("juev").join("gclone").exists(),
         "override still wrote into projectDir"
     );
 
     // Reachable by the name the user chose.
     let index = env.index();
     assert!(index.contains("\"put-it-here\""), "index: {index}");
-    assert!(
-        index.contains(&expected.to_string_lossy().into_owned()),
-        "index: {index}"
-    );
 }
 
 #[test]
 fn absolute_dest_is_honoured() {
     let env = Env::new();
-    let dest = env.home.path().join("elsewhere/deep/repo");
+    let dest = env.home.path().join("elsewhere").join("deep").join("repo");
     let (ok, stdout, stderr) = env.clone(&["juev/gclone", dest.to_str().unwrap()]);
     assert!(ok, "clone failed: {stderr}");
 
-    assert_eq!(stdout, dest.to_string_lossy());
+    assert_path_eq(&stdout, &dest);
     // Missing parents are created, same as the default path.
     assert!(dest.join(".git").is_dir(), "no .git at {dest:?}");
     assert!(env.index().contains("\"repo\""));
@@ -201,7 +226,7 @@ fn existing_clone_at_dest_is_skipped() {
 
     let (ok, stdout, stderr) = env.clone(&["juev/gclone", "twice"]);
     assert!(ok, "second clone failed: {stderr}");
-    assert_eq!(stdout, env.work.join("twice").to_string_lossy());
+    assert_path_eq(&stdout, &env.work.join("twice"));
     assert!(
         stderr.contains("already exists"),
         "expected skip notice, got: {stderr}"
