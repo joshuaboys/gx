@@ -247,8 +247,7 @@ fn scan_for_repos(
 
     // First pass: detect a real git work tree and stop — do not descend.
     // An empty `.git` directory or a file that is not a `gitdir:` pointer is
-    // not a repo. Treating those as a boundary hid nested projects, so
-    // `~/Projects/src/skills` (eddacraft/skills) never took the name `skills`.
+    // not a repo. Treating those as a boundary hid nested projects, so they never took the right name.
     for entry in &entries {
         let Ok(ft) = entry.file_type() else { continue };
         if entry.file_name() != ".git" {
