@@ -26,57 +26,58 @@ fn editor_info(name: &str) -> (String, bool) {
         "emacs" => ("emacs".to_string(), false),
         "emacs-gui" => ("emacs".to_string(), true),
         "subl" => ("subl".to_string(), true),
-        "notepad" => ("notepad".to_string(), true),
         other => (other.to_string(), false),
     }
 }
 
-pub fn resolve_editor(config: &Config, override_: Option<&str>) -> String {
+/// `None` only on Windows with nothing configured: it has no built-in
+/// terminal editor, and Notepad cannot open a project directory.
+pub fn resolve_editor(config: &Config, override_: Option<&str>) -> Option<String> {
     if let Some(o) = override_ {
         if !o.is_empty() {
-            return o.to_string();
+            return Some(o.to_string());
         }
     }
     if !config.editor.is_empty() {
-        return config.editor.clone();
+        return Some(config.editor.clone());
     }
     if let Ok(v) = std::env::var("VISUAL") {
         if !v.is_empty() {
-            return v;
+            return Some(v);
         }
     }
     if let Ok(e) = std::env::var("EDITOR") {
         if !e.is_empty() {
-            return e;
+            return Some(e);
         }
     }
-    default_editor().to_string()
+    default_editor().map(str::to_string)
 }
 
 #[cfg(windows)]
-fn default_editor() -> &'static str {
-    "notepad"
+fn default_editor() -> Option<&'static str> {
+    None
 }
 
 #[cfg(not(windows))]
-fn default_editor() -> &'static str {
-    "nano"
+fn default_editor() -> Option<&'static str> {
+    Some("nano")
 }
 
 /// Minimal `Bun.which` equivalent: resolve `cmd` against `PATH` (or treat a
 /// `cmd` with a path separator as a direct path), requiring an executable file.
 fn which(cmd: &str) -> Option<PathBuf> {
-    which_in(cmd, &std::env::var_os("PATH")?)
+    which_in(cmd, std::env::var_os("PATH").as_deref())
 }
 
-fn which_in(cmd: &str, paths: &OsStr) -> Option<PathBuf> {
+fn which_in(cmd: &str, paths: Option<&OsStr>) -> Option<PathBuf> {
     let p = Path::new(cmd);
     if p.components().count() > 1 {
         return executable_candidates(p)
             .into_iter()
             .find(|c| is_executable_file(c));
     }
-    std::env::split_paths(paths).find_map(|dir| {
+    std::env::split_paths(paths?).find_map(|dir| {
         executable_candidates(&dir.join(cmd))
             .into_iter()
             .find(|c| is_executable_file(c))
@@ -160,7 +161,11 @@ pub fn open_project(
             .into_owned(),
     };
 
-    let editor_name = resolve_editor(config, editor_override);
+    let Some(editor_name) = resolve_editor(config, editor_override) else {
+        return Err(GxError::command(
+            "No editor configured. Pass --editor, set \"editor\" in ~/.config/gx/config.json, or set VISUAL/EDITOR.",
+        ));
+    };
     let (cmd, gui) = editor_info(&editor_name);
 
     // Spawn the resolved path: `Command::new` alone only appends `.exe` on
@@ -204,17 +209,23 @@ mod tests {
     // are deterministic regardless of the test process's $VISUAL/$EDITOR.
     #[test]
     fn override_beats_config_editor() {
-        assert_eq!(resolve_editor(&cfg("vim"), Some("code")), "code");
+        assert_eq!(
+            resolve_editor(&cfg("vim"), Some("code")).as_deref(),
+            Some("code")
+        );
     }
 
     #[test]
     fn config_editor_used_when_no_override() {
-        assert_eq!(resolve_editor(&cfg("nvim"), None), "nvim");
+        assert_eq!(resolve_editor(&cfg("nvim"), None).as_deref(), Some("nvim"));
     }
 
     #[test]
     fn empty_override_falls_through_to_config_editor() {
-        assert_eq!(resolve_editor(&cfg("emacs"), Some("")), "emacs");
+        assert_eq!(
+            resolve_editor(&cfg("emacs"), Some("")).as_deref(),
+            Some("emacs")
+        );
     }
 
     #[test]
@@ -241,7 +252,30 @@ mod tests {
     #[test]
     fn which_in_misses_unknown_command() {
         let tmp = tempfile::TempDir::new().unwrap();
-        assert!(which_in("no-such-editor", tmp.path().as_os_str()).is_none());
+        assert!(which_in("no-such-editor", Some(tmp.path().as_os_str())).is_none());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn which_in_resolves_direct_path_without_path_var() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let tmp = tempfile::TempDir::new().unwrap();
+        let bin = tmp.path().join("fake-editor");
+        std::fs::write(&bin, "#!/bin/sh\n").unwrap();
+        std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+        assert_eq!(which_in(bin.to_str().unwrap(), None), Some(bin));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn which_in_resolves_direct_path_without_path_var() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let bin = tmp.path().join("fake-editor.exe");
+        std::fs::write(&bin, "").unwrap();
+
+        assert_eq!(which_in(bin.to_str().unwrap(), None), Some(bin));
     }
 
     #[cfg(unix)]
@@ -254,7 +288,10 @@ mod tests {
         std::fs::write(&bin, "#!/bin/sh\n").unwrap();
         std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755)).unwrap();
 
-        assert_eq!(which_in("fake-editor", tmp.path().as_os_str()), Some(bin));
+        assert_eq!(
+            which_in("fake-editor", Some(tmp.path().as_os_str())),
+            Some(bin)
+        );
     }
 
     #[cfg(windows)]
@@ -265,7 +302,7 @@ mod tests {
         let shim = tmp.path().join("fake-editor.cmd");
         std::fs::write(&shim, "@echo off\r\n").unwrap();
 
-        let found = which_in("fake-editor", tmp.path().as_os_str()).unwrap();
+        let found = which_in("fake-editor", Some(tmp.path().as_os_str())).unwrap();
         // PATHEXT entries are upper-case (`.CMD`); the filesystem is not.
         assert!(
             found
