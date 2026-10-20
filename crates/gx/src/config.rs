@@ -48,6 +48,10 @@ pub fn expand_tilde(p: &str) -> PathBuf {
     if let Some(rest) = p.strip_prefix("~/") {
         return home_dir().join(rest);
     }
+    #[cfg(windows)]
+    if let Some(rest) = p.strip_prefix("~\\") {
+        return home_dir().join(rest);
+    }
     PathBuf::from(p)
 }
 

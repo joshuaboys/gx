@@ -1,6 +1,7 @@
 //! `gx open [name] [--editor <name>]` — open a project (or the cwd) in an
 //! editor. Ported from `src/commands/open.ts`.
 
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -25,6 +26,7 @@ fn editor_info(name: &str) -> (String, bool) {
         "emacs" => ("emacs".to_string(), false),
         "emacs-gui" => ("emacs".to_string(), true),
         "subl" => ("subl".to_string(), true),
+        "notepad" => ("notepad".to_string(), true),
         other => (other.to_string(), false),
     }
 }
@@ -48,28 +50,62 @@ pub fn resolve_editor(config: &Config, override_: Option<&str>) -> String {
             return e;
         }
     }
-    "nano".to_string()
+    default_editor().to_string()
+}
+
+#[cfg(windows)]
+fn default_editor() -> &'static str {
+    "notepad"
+}
+
+#[cfg(not(windows))]
+fn default_editor() -> &'static str {
+    "nano"
 }
 
 /// Minimal `Bun.which` equivalent: resolve `cmd` against `PATH` (or treat a
-/// slash-containing `cmd` as a direct path), requiring an executable file.
+/// `cmd` with a path separator as a direct path), requiring an executable file.
 fn which(cmd: &str) -> Option<PathBuf> {
-    if cmd.contains('/') {
-        let p = PathBuf::from(cmd);
-        return if is_executable_file(&p) {
-            Some(p)
-        } else {
-            None
-        };
+    which_in(cmd, &std::env::var_os("PATH")?)
+}
+
+fn which_in(cmd: &str, paths: &OsStr) -> Option<PathBuf> {
+    let p = Path::new(cmd);
+    if p.components().count() > 1 {
+        return executable_candidates(p)
+            .into_iter()
+            .find(|c| is_executable_file(c));
     }
-    let paths = std::env::var_os("PATH")?;
-    for dir in std::env::split_paths(&paths) {
-        let full = dir.join(cmd);
-        if is_executable_file(&full) {
-            return Some(full);
-        }
+    std::env::split_paths(paths).find_map(|dir| {
+        executable_candidates(&dir.join(cmd))
+            .into_iter()
+            .find(|c| is_executable_file(c))
+    })
+}
+
+/// On Windows an extensionless name resolves through `PATHEXT` only: editor
+/// bin dirs (VS Code, Cursor) ship an extensionless shell script beside the
+/// `.cmd` shim, and that script cannot be spawned natively.
+#[cfg(windows)]
+fn executable_candidates(p: &Path) -> Vec<PathBuf> {
+    if p.extension().is_some() {
+        return vec![p.to_path_buf()];
     }
-    None
+    let pathext = std::env::var("PATHEXT").unwrap_or_else(|_| ".COM;.EXE;.BAT;.CMD".into());
+    pathext
+        .split(';')
+        .filter(|ext| !ext.is_empty())
+        .map(|ext| {
+            let mut s = p.as_os_str().to_owned();
+            s.push(ext);
+            PathBuf::from(s)
+        })
+        .collect()
+}
+
+#[cfg(not(windows))]
+fn executable_candidates(p: &Path) -> Vec<PathBuf> {
+    vec![p.to_path_buf()]
 }
 
 fn is_executable_file(p: &Path) -> bool {
@@ -127,14 +163,16 @@ pub fn open_project(
     let editor_name = resolve_editor(config, editor_override);
     let (cmd, gui) = editor_info(&editor_name);
 
-    if which(&cmd).is_none() {
+    // Spawn the resolved path: `Command::new` alone only appends `.exe` on
+    // Windows, so `.cmd` shims such as `code.cmd` would not launch.
+    let Some(program) = which(&cmd) else {
         return Err(GxError::command(format!(
             "Editor '{cmd}' not found on PATH"
         )));
-    }
+    };
 
     if gui {
-        Command::new(&cmd)
+        Command::new(&program)
             .arg(&project_path)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -143,7 +181,7 @@ pub fn open_project(
             .map_err(|e| GxError::Other(format!("spawn {cmd}: {e}")))?;
         eprintln!("Opened {project_path} in {editor_name}");
     } else {
-        Command::new(&cmd)
+        Command::new(&program)
             .arg(&project_path)
             .status()
             .map_err(|e| GxError::Other(format!("spawn {cmd}: {e}")))?;
@@ -198,5 +236,42 @@ mod tests {
     #[test]
     fn unknown_editor_maps_to_itself_non_gui() {
         assert_eq!(editor_info("helix"), ("helix".to_string(), false));
+    }
+
+    #[test]
+    fn which_in_misses_unknown_command() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        assert!(which_in("no-such-editor", tmp.path().as_os_str()).is_none());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn which_in_finds_executable_on_path() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let tmp = tempfile::TempDir::new().unwrap();
+        let bin = tmp.path().join("fake-editor");
+        std::fs::write(&bin, "#!/bin/sh\n").unwrap();
+        std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+        assert_eq!(which_in("fake-editor", tmp.path().as_os_str()), Some(bin));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn which_in_prefers_pathext_shim_over_extensionless_script() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        std::fs::write(tmp.path().join("fake-editor"), "#!/bin/sh\n").unwrap();
+        let shim = tmp.path().join("fake-editor.cmd");
+        std::fs::write(&shim, "@echo off\r\n").unwrap();
+
+        let found = which_in("fake-editor", tmp.path().as_os_str()).unwrap();
+        // PATHEXT entries are upper-case (`.CMD`); the filesystem is not.
+        assert!(
+            found
+                .to_string_lossy()
+                .eq_ignore_ascii_case(&shim.to_string_lossy()),
+            "found {found:?}"
+        );
     }
 }
