@@ -238,14 +238,15 @@ fn scan_for_repos(
     };
     let entries: Vec<_> = read.flatten().collect();
 
-    // First pass: detect a .git marker (directory OR file). If present,
-    // capture this repo and stop — do not descend.
+    // First pass: detect a real git work tree and stop — do not descend.
+    // An empty `.git` directory or a file that is not a `gitdir:` pointer is
+    // not a repo. Treating those as a boundary hid nested projects, so they never took the right name.
     for entry in &entries {
         let Ok(ft) = entry.file_type() else { continue };
         if entry.file_name() != ".git" {
             continue;
         }
-        if !(ft.is_dir() || ft.is_file()) {
+        if !is_git_worktree_marker(&entry.path(), &ft) {
             continue;
         }
         let name = dir
@@ -288,6 +289,23 @@ fn scan_for_repos(
         }
         scan_for_repos(idx, &dir.join(&name), depth + 1, visited);
     }
+}
+
+/// True when `path` is a git work-tree marker: a `.git` directory that
+/// contains `HEAD`, or a worktree `.git` file whose contents start with
+/// `gitdir:`.
+fn is_git_worktree_marker(path: &Path, ft: &fs::FileType) -> bool {
+    if ft.is_dir() {
+        return path.join("HEAD").is_file();
+    }
+    if ft.is_file() {
+        let Ok(bytes) = fs::read(path) else {
+            return false;
+        };
+        let text = String::from_utf8_lossy(&bytes);
+        return text.trim_start().starts_with("gitdir:");
+    }
+    false
 }
 
 /// `new Date().toISOString()` parity: `YYYY-MM-DDTHH:MM:SS.sssZ`. Public so
@@ -575,7 +593,9 @@ mod tests {
 
     fn make_repo(root: &Path, rel: &str) -> PathBuf {
         let path = root.join(rel);
-        fs::create_dir_all(path.join(".git")).unwrap();
+        let git = path.join(".git");
+        fs::create_dir_all(&git).unwrap();
+        fs::write(git.join("HEAD"), "ref: refs/heads/main\n").unwrap();
         path
     }
 
@@ -699,6 +719,44 @@ mod tests {
         idx.rebuild(tmp.path()).unwrap();
         assert!(idx.resolve("pkg").is_none(), "node_modules wasn't skipped");
         assert_eq!(idx.resolve("good").map(PathBuf::from), Some(good));
+    }
+
+    #[test]
+    fn scan_descends_past_empty_git_dir() {
+        let tmp = TempDir::new().unwrap();
+        // Stray empty `.git` at the project root, matching `~/Projects/src/.git`.
+        fs::create_dir_all(tmp.path().join(".git")).unwrap();
+        let skills = make_repo(tmp.path(), "skills");
+
+        let mut idx = ProjectIndex::default();
+        idx.rebuild(tmp.path()).unwrap();
+
+        assert_eq!(idx.resolve("skills").map(PathBuf::from), Some(skills));
+        let root_name = tmp
+            .path()
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
+        assert!(
+            idx.resolve(&root_name).is_none(),
+            "empty .git was indexed as a repository"
+        );
+    }
+
+    #[test]
+    fn scan_descends_past_non_gitdir_file() {
+        let tmp = TempDir::new().unwrap();
+        let container = tmp.path().join("container");
+        fs::create_dir_all(&container).unwrap();
+        fs::write(container.join(".git"), "not a gitdir\n").unwrap();
+        let skills = make_repo(&container, "skills");
+
+        let mut idx = ProjectIndex::default();
+        idx.rebuild(tmp.path()).unwrap();
+
+        assert_eq!(idx.resolve("skills").map(PathBuf::from), Some(skills));
+        assert!(idx.resolve("container").is_none());
     }
 
     #[test]
