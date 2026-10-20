@@ -3,7 +3,7 @@ source: crates/gx/tests/snapshots.rs
 ---
 exit: 0
 ---- stdout ----
-gx v0.2.0 — git project manager
+gx v0.3.0 — git project manager
 
 Usage:
   gx <name>                Jump to project
