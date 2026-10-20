@@ -158,23 +158,16 @@ impl ProjectIndex {
     /// Drop entries whose path lives inside `scope_dir` (skipping the
     /// dotdir agent-scope first segment) and rescan that scope.
     pub fn scoped_rebuild(&mut self, scope_dir: &Path) -> GxResult<()> {
-        let prefix = scope_dir.to_string_lossy().into_owned();
-        let prefix = if prefix.ends_with('/') {
-            prefix
-        } else {
-            format!("{prefix}/")
-        };
+        // Compare by path components, not a `/`-joined string prefix, so
+        // Windows `\` separators match too.
         let to_delete: Vec<String> = self
             .data
             .projects
             .iter()
             .filter_map(|(name, entry)| {
-                if !entry.path.starts_with(&prefix) {
-                    return None;
-                }
-                let rel = &entry.path[prefix.len()..];
-                let first = rel.split('/').next().unwrap_or("");
-                if !first.is_empty() && first.starts_with('.') {
+                let rel = Path::new(&entry.path).strip_prefix(scope_dir).ok()?;
+                let first = rel.components().next()?;
+                if first.as_os_str().to_string_lossy().starts_with('.') {
                     return None;
                 }
                 Some(name.clone())
@@ -628,6 +621,28 @@ mod tests {
         assert_eq!(idx.resolve("external"), Some("/other/dir/external"));
         assert_eq!(idx.resolve("repoA").map(PathBuf::from), Some(a));
         assert_eq!(idx.resolve("repoB").map(PathBuf::from), Some(b));
+    }
+
+    #[test]
+    fn scoped_rebuild_drops_stale_in_scope_entries() {
+        let tmp = TempDir::new().unwrap();
+        let live = make_repo(tmp.path(), "org/live");
+        let gone = tmp.path().join("org").join("gone");
+        let outside = TempDir::new().unwrap();
+        let elsewhere = outside.path().join("elsewhere");
+
+        let mut idx = ProjectIndex::default();
+        idx.add("gone", entry(gone.to_string_lossy().as_ref()));
+        idx.add("elsewhere", entry(elsewhere.to_string_lossy().as_ref()));
+
+        idx.scoped_rebuild(tmp.path()).unwrap();
+
+        assert!(
+            idx.resolve("gone").is_none(),
+            "stale entry survived rebuild"
+        );
+        assert_eq!(idx.resolve("elsewhere").map(PathBuf::from), Some(elsewhere));
+        assert_eq!(idx.resolve("live").map(PathBuf::from), Some(live));
     }
 
     #[test]
