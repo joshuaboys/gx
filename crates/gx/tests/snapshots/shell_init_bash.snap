@@ -30,11 +30,11 @@ gx() {
             fi
             ;;
         resume)
-            local output status
+            local output cmd_status
             output=$("$_GX_BIN" resume "${@:2}")
-            status=$?
-            if [ "$status" -ne 0 ]; then
-                return "$status"
+            cmd_status=$?
+            if [ "$cmd_status" -ne 0 ]; then
+                return "$cmd_status"
             fi
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"

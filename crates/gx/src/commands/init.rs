@@ -22,15 +22,28 @@ pub fn init_agent(dir: &Path, type_opt: Option<&str>, force: bool) -> GxResult<(
         None => detect_project_type(dir),
     };
 
-    // 2. Refuse to overwrite an existing CLAUDE.md unless forced.
+    // 2. Preflight every output before writing any files.
     let claude_dir = dir.join(".claude");
     let claude_md = claude_dir.join("CLAUDE.md");
     let commands_dir = claude_dir.join("commands");
 
-    if !force && claude_md.exists() {
-        return Err(GxError::Other(
-            ".claude/CLAUDE.md already exists. Use --force to overwrite.".to_string(),
-        ));
+    if !force {
+        for relative in [
+            ".claude/CLAUDE.md",
+            ".claude/commands/plan.md",
+            ".claude/commands/review.md",
+        ] {
+            // symlink_metadata also catches dangling links.
+            match std::fs::symlink_metadata(dir.join(relative)) {
+                Ok(_) => {
+                    return Err(GxError::Other(format!(
+                        "{relative} already exists. Use --force to overwrite."
+                    )))
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                Err(e) => return Err(GxError::Other(format!("inspect {relative}: {e}"))),
+            }
+        }
     }
 
     // 3. Create directories.
@@ -53,4 +66,32 @@ pub fn init_agent(dir: &Path, type_opt: Option<&str>, force: bool) -> GxResult<(
 fn write_file(path: &Path, contents: &str) -> GxResult<()> {
     std::fs::write(path, contents)
         .map_err(|e| GxError::Other(format!("write {}: {e}", path.display())))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn preserves_every_existing_output_without_force() {
+        for name in ["CLAUDE.md", "commands/plan.md", "commands/review.md"] {
+            let dir = tempfile::tempdir().unwrap();
+            let existing = dir.path().join(".claude").join(name);
+            std::fs::create_dir_all(existing.parent().unwrap()).unwrap();
+            std::fs::write(&existing, "user customization").unwrap();
+            assert!(init_agent(dir.path(), Some("generic"), false).is_err());
+            assert_eq!(
+                std::fs::read_to_string(&existing).unwrap(),
+                "user customization"
+            );
+            if name != "CLAUDE.md" {
+                assert!(!dir.path().join(".claude/CLAUDE.md").exists());
+            }
+            init_agent(dir.path(), Some("generic"), true).unwrap();
+            assert_ne!(
+                std::fs::read_to_string(existing).unwrap(),
+                "user customization"
+            );
+        }
+    }
 }

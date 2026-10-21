@@ -35,7 +35,7 @@ fn re_bare_name() -> &'static Regex {
 }
 
 fn validate_segments(owner: &str, repo: &str) -> GxResult<()> {
-    let segs = owner.split('/').chain(std::iter::once(repo));
+    let segs = owner.split('/').chain(repo.split('/'));
     for seg in segs {
         if seg == ".." || seg == "." || seg.is_empty() {
             return Err(GxError::command("Path traversal detected"));
@@ -97,14 +97,15 @@ pub fn parse_url(input: &str, default_host: &str, default_owner: &str) -> GxResu
     if let Some(c) = re_shorthand().captures(trimmed) {
         let owner = c.get(1).map(|m| m.as_str()).unwrap_or("").to_string();
         let raw_repo = c.get(2).map(|m| m.as_str()).unwrap_or("");
-        let repo = raw_repo.trim_end_matches('/').to_string();
-        validate_segments(&owner, &repo)?;
-        return Ok(ParsedRepo {
-            host: default_host.to_string(),
-            owner: owner.clone(),
-            repo,
-            original_url: format!("https://{default_host}/{owner}/{raw_repo}"),
-        });
+        let path = format!(
+            "{owner}/{}",
+            strip_git_suffix(raw_repo.trim_end_matches('/'))
+        );
+        return build_parsed(
+            default_host,
+            &path,
+            &format!("https://{default_host}/{path}"),
+        );
     }
     if re_bare_name().is_match(trimmed) {
         if default_owner.is_empty() {
@@ -128,7 +129,9 @@ pub fn parse_url(input: &str, default_host: &str, default_owner: &str) -> GxResu
 }
 
 pub fn to_clone_url(parsed: &ParsedRepo) -> String {
-    if parsed.original_url.starts_with("git@") || parsed.original_url.starts_with("ssh://") {
+    if parsed.original_url.starts_with("ssh://")
+        || (!parsed.original_url.contains("://") && re_ssh().is_match(&parsed.original_url))
+    {
         parsed.original_url.clone()
     } else {
         format!(
@@ -141,6 +144,36 @@ pub fn to_clone_url(parsed: &ParsedRepo) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn shorthand_validates_every_component() {
+        for input in [
+            "org/../../escape",
+            "org/group/../repo",
+            "org/group/./repo",
+            "org/sub//repo",
+        ] {
+            assert!(parse_url(input, "github.com", "").is_err(), "{input}");
+        }
+        let nested = parse("org/group/repo");
+        assert_eq!(nested.owner, "org/group");
+        assert_eq!(nested.repo, "repo");
+    }
+
+    #[test]
+    fn shorthand_normalizes_git_suffix() {
+        for input in ["org/repo.git", "org/repo.git/", "org/group/repo.git"] {
+            let parsed = parse(input);
+            assert_eq!(parsed.repo, "repo");
+            assert!(to_clone_url(&parsed).ends_with("/repo.git"));
+        }
+    }
+
+    #[test]
+    fn arbitrary_ssh_username_preserved() {
+        let input = "alice@example.com:team/repo.git";
+        assert_eq!(to_clone_url(&parse(input)), input);
+    }
 
     fn parse(s: &str) -> ParsedRepo {
         parse_url(s, "github.com", "").expect("parse ok")

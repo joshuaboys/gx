@@ -58,7 +58,7 @@ Planned (not yet implemented):
 Options:
   gx open --editor <name>  Override editor for this invocation
   gx init --type <type>    Override project type detection
-  gx init --force          Overwrite existing CLAUDE.md"
+  gx init --force          Overwrite existing agent config files"
     )
 }
 

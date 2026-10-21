@@ -66,7 +66,7 @@ fn now_ms() -> i64 {
 /// Minimal ISO-8601 parser sufficient for the index format
 /// (`YYYY-MM-DDTHH:MM:SS[.fff]Z` or `±HH:MM`). Returns milliseconds since
 /// the Unix epoch.
-fn parse_iso_ms(iso: &str) -> Option<i64> {
+pub(crate) fn parse_iso_ms(iso: &str) -> Option<i64> {
     let bytes = iso.as_bytes();
     if bytes.len() < 19 {
         return None;
@@ -101,11 +101,13 @@ fn parse_iso_ms(iso: &str) -> Option<i64> {
         while idx < bytes.len() && bytes[idx].is_ascii_digit() {
             idx += 1;
         }
-        let frac_str = std::str::from_utf8(&bytes[frac_start..idx]).ok()?;
-        if !frac_str.is_empty() {
-            let frac: i64 = frac_str.parse().ok()?;
-            let scale = 10_i64.pow(frac_str.len() as u32);
-            frac_ms = (frac * 1000) / scale;
+        // Milliseconds need only three digits; consume but never accumulate
+        // excess precision, avoiding overflow even for arbitrarily long input.
+        for place in 0..3 {
+            frac_ms *= 10;
+            if frac_start + place < idx {
+                frac_ms += i64::from(bytes[frac_start + place] - b'0');
+            }
         }
     }
 
@@ -151,6 +153,17 @@ fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn long_fraction_is_bounded() {
+        for digits in [16, 19, 64] {
+            let zeros = format!("2023-11-14T22:13:20.{}Z", "0".repeat(digits));
+            assert_eq!(relative_time_at(&zeros, NOW_MS), "just now");
+            let fraction = format!("2023-11-14T22:13:20.123{}Z", "9".repeat(digits));
+            assert_eq!(relative_time_at(&fraction, NOW_MS + 60_122), "just now");
+            assert_eq!(relative_time_at(&fraction, NOW_MS + 60_123), "1 minute ago");
+        }
+    }
 
     const NOW_MS: i64 = 1_700_000_000_000; // 2023-11-14T22:13:20Z
 

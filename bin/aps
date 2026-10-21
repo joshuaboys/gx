@@ -15,11 +15,11 @@ set -eo pipefail
 # Resolve through symlinks so global installs find lib/
 SOURCE="${BASH_SOURCE[0]}"
 while [[ -L "$SOURCE" ]]; do
-  DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+  DIR="$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd)"
   SOURCE="$(readlink "$SOURCE")"
   [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
 done
-SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd)"
 LIB_DIR="$SCRIPT_DIR/../lib"
 
 # Source library files
