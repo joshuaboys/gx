@@ -26,6 +26,14 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Install shells for integration tests (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
+
+      - name: Install shells for integration tests (macOS)
+        if: runner.os == 'macOS'
+        run: brew install fish
+
       - name: Format check
         run: cargo fmt --check
 

@@ -10,19 +10,31 @@ _GX_BIN="<BIN>"
 
 gx() {
     case "$1" in
+        clone|resume)
+            local arg
+            for arg in "$@"; do
+                case "$arg" in
+                    --help|-h) "$_GX_BIN" "$@"; return $? ;;
+                esac
+            done
+            ;;
+    esac
+    case "$1" in
         clone)
             local output
-            output=$("$_GX_BIN" clone "${@:2}")
+            output=$("$_GX_BIN" clone "${@:2}") || return $?
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
+            else
+                return 1
             fi
             ;;
         resume)
             local output
             output=$("$_GX_BIN" resume "${@:2}")
-            local status=$?
-            if [ "$status" -ne 0 ]; then
-                return "$status"
+            local cmd_status=$?
+            if [ "$cmd_status" -ne 0 ]; then
+                return "$cmd_status"
             fi
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
@@ -80,7 +92,7 @@ _gx() {
                 ;;
         esac
     elif (( CURRENT == 4 )) && [[ "${words[2]}" == "config" ]] && [[ "${words[3]}" == "set" ]]; then
-        compadd projectDir defaultHost structure shallow similarityThreshold editor
+        compadd projectDir defaultHost defaultOwner structure shallow similarityThreshold editor
     fi
 }
 (( $+functions[compdef] )) && compdef _gx gx

@@ -1,5 +1,10 @@
 # Tracking Feature Design
 
+> Historical design context, retained for provenance. Implementation paths,
+> commands and delivery status may be outdated after the Rust migration.
+> Use the [README](../../README.md), [contributor guide](../../CONTRIBUTING.md)
+> and [current APS plan](../../plans/index.aps.md) for current guidance.
+
 **Date:** 2026-03-04
 **Module:** 09-tracking
 **Branch:** feat/tracking

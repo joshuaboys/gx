@@ -181,7 +181,8 @@ ensure_path() {
   shell=$(detect_shell)
   rc_file=$(shell_rc_file "$shell")
 
-  if [ -n "$rc_file" ] && [ -f "$rc_file" ]; then
+  if [ -n "$rc_file" ]; then
+    mkdir -p "$(dirname "$rc_file")"
     if ! grep -qF "$INSTALL_DIR" "$rc_file" 2>/dev/null; then
       if [ "$shell" = "fish" ]; then
         printf '\nfish_add_path %s\n' "$INSTALL_DIR" >> "$rc_file"
@@ -207,8 +208,8 @@ main() {
 
   install_prebuilt "$os" "$arch"
 
-  setup_shell
   ensure_path
+  setup_shell
 
   echo ""
   info "gx installed to $GX_BIN"

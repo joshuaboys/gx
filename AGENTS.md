@@ -62,7 +62,7 @@ synchronous; do not add an async runtime until a feature genuinely needs one.
 - Conventional Commits: `feat:`, `fix:`, `docs:`, `ci:`, `chore:` with optional scopes.
 - Short, imperative subjects.
 - PRs: concise summary, linked issues, validation steps, doc updates for CLI changes.
-- CI must pass on both `ubuntu-latest` and `macos-latest`.
+- CI must pass on `ubuntu-latest`, `macos-latest` and `windows-latest`.
 
 ## Notifications
 

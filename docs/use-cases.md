@@ -33,7 +33,15 @@ gx api-server           # back in seconds
 
 Shell integration (`eval "$(gx shell-init)"`) is required for `gx <name>` to auto-`cd`. Without it, the command prints the resolved path to stdout instead of changing directories.
 
-No need to remember directory paths or keep multiple terminals open per project.
+To find your most recent work and restore Git context:
+
+```sh
+gx recent -n 5
+gx resume api-server   # jump and show branch, dirty files and last commit
+```
+
+For existing repositories, start with `gx index /path/to/repo`, or set
+`projectDir` and run `gx index` to scan that directory.
 
 ---
 
@@ -43,8 +51,9 @@ No need to remember directory paths or keep multiple terminals open per project.
 
 ```sh
 # Find repos with uncommitted changes
-gx resolve --list | while read -r name; do
-  dir=$(gx resolve "$name")
+gx resolve --list | while IFS= read -r name; do
+  [ -n "$name" ] || continue
+  dir=$(gx resolve "$name") || continue
   if [ -n "$(git -C "$dir" status --porcelain)" ]; then
     echo "dirty: $dir"
   fi
@@ -53,12 +62,15 @@ done
 
 ```sh
 # Count lines of code across all projects
-gx resolve --list | while read -r name; do
-  dir=$(gx resolve "$name")
+gx resolve --list | while IFS= read -r name; do
+  [ -n "$name" ] || continue
+  dir=$(gx resolve "$name") || continue
   count=$(find "$dir" -type f \( -name '*.ts' -o -name '*.go' -o -name '*.rs' \) -print0 | xargs -0 wc -l 2>/dev/null | tail -1)
   echo "$name: $count"
 done
 ```
+
+`gx resolve <name>` records a visit, so these scripts also affect `gx recent`.
 
 The index is a plain JSON file at `~/.config/gx/index.json`, so you can also query it directly with `jq`:
 
@@ -111,8 +123,12 @@ Fuzzy matching means you don't need exact names:
 
 ```sh
 gx auth                  # matches auth-service
-gx ml                    # matches ml-pipeline
+gx ml-pip                # close enough to match ml-pipeline when unique
 ```
+
+Short queries such as `gx ml` can print suggestions and exit without jumping.
+Rerun with the exact project name (`gx ml-pipeline`). Multiple fuzzy candidates
+also require an explicit choice; the numbered list is not interactive.
 
 ---
 
@@ -122,8 +138,9 @@ gx ml                    # matches ml-pipeline
 
 ```sh
 # Auto-detect and scaffold each project
-for name in $(gx resolve --list); do
-  dir=$(gx resolve "$name")
+gx resolve --list | while IFS= read -r name; do
+  [ -n "$name" ] || continue
+  dir=$(gx resolve "$name") || continue
   (cd "$dir" && gx init 2>/dev/null && echo "scaffolded: $name")
 done
 ```
@@ -157,6 +174,7 @@ gx open dotfiles --editor nvim
 ```sh
 #!/bin/bash
 # deploy.sh — uses gx resolve for consistent path lookup
+set -e
 
 API_DIR=$(gx resolve api-server)
 WEB_DIR=$(gx resolve dashboard)
@@ -181,8 +199,9 @@ cp "$INFRA_DIR/k8s/prod.yaml" /tmp/deploy.yaml
 
 ```sh
 # Projects with uncommitted changes
-gx resolve --list | while read -r name; do
-  dir=$(gx resolve "$name")
+gx resolve --list | while IFS= read -r name; do
+  [ -n "$name" ] || continue
+  dir=$(gx resolve "$name") || continue
   dirty=$(git -C "$dir" status --porcelain 2>/dev/null | wc -l)
   if [ "$dirty" -gt 0 ]; then
     echo "$name: $dirty uncommitted files"
@@ -192,8 +211,9 @@ done
 
 ```sh
 # Projects with unpushed commits
-gx resolve --list | while read -r name; do
-  dir=$(gx resolve "$name")
+gx resolve --list | while IFS= read -r name; do
+  [ -n "$name" ] || continue
+  dir=$(gx resolve "$name") || continue
   ahead=$(git -C "$dir" rev-list --count @{u}..HEAD 2>/dev/null)
   if [ "$ahead" -gt 0 ] 2>/dev/null; then
     echo "$name: $ahead unpushed commits"
@@ -203,8 +223,9 @@ done
 
 ```sh
 # Projects not touched in 30+ days
-gx resolve --list | while read -r name; do
-  dir=$(gx resolve "$name")
+gx resolve --list | while IFS= read -r name; do
+  [ -n "$name" ] || continue
+  dir=$(gx resolve "$name") || continue
   last=$(git -C "$dir" log -1 --format=%ct 2>/dev/null)
   if [ -n "$last" ]; then
     age=$(( ($(date +%s) - last) / 86400 ))
@@ -221,8 +242,9 @@ done
 
 ```sh
 # Generate a project manifest for an AI prompt
-echo "My projects:" && gx resolve --list | while read -r name; do
-  dir=$(gx resolve "$name")
+echo "My projects:" && gx resolve --list | while IFS= read -r name; do
+  [ -n "$name" ] || continue
+  dir=$(gx resolve "$name") || continue
   lang=""
   [ -f "$dir/package.json" ] && lang="TypeScript/JS"
   [ -f "$dir/Cargo.toml" ] && lang="Rust"
@@ -284,7 +306,7 @@ gxc() { gx clone "$1" && gx init; }
 ```sh
 # Check all three repos for dirty state
 for repo in shared-lib api-server dashboard; do
-  dir=$(gx resolve "$repo")
+  dir=$(gx resolve "$repo") || continue
   branch=$(git -C "$dir" branch --show-current)
   dirty=$(git -C "$dir" status --porcelain | wc -l)
   echo "$repo ($branch): $dirty files changed"

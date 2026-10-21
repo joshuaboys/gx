@@ -62,6 +62,24 @@ Options:
     )
 }
 
+fn command_help(command: &str) -> Option<&'static str> {
+    Some(match command {
+        "clone" => "Usage: gx clone <repo> [dest]\nClone and index a repository. Shell integration enters the destination.",
+        "open" => "Usage: gx open [name] [--editor <editor>]\nOpen an indexed project or the current directory in an editor.",
+        "init" => "Usage: gx init [--type <type>] [--force]\nWrite .claude/CLAUDE.md and plan/review commands in the current directory.\nTypes: typescript-bun, typescript-node, rust, go, python, generic\n--force overwrites existing generated files.",
+        "index" => "Usage: gx index [path...]\nAdd repositories from the project directory or explicit repository roots.",
+        "rebuild" => "Usage: gx rebuild\nRescan the project directory, removing stale entries in that scope.",
+        "recent" => "Usage: gx recent [-n <count>]\nList projects by most recent visit, falling back to their clone/index time.",
+        "resume" => "Usage: gx resume <name>\nShow Git context and print the project path. Shell integration enters it.",
+        "doctor" => "Usage: gx doctor\nCheck installation, shell configuration and indexed paths without changing them.",
+        "ls" => "Usage: gx ls\nList indexed project names and paths.",
+        "config" => "Usage: gx config | gx config set <key> <value>\nKeys: projectDir, defaultHost, defaultOwner, structure, shallow, similarityThreshold, editor",
+        "shell-init" => "Usage: gx shell-init [zsh|bash|fish|powershell]\nPrint shell integration code for your shell configuration.",
+        "resolve" => "Usage: gx resolve <name> | gx resolve --list\nPrint a project path and record a visit, or list all indexed names.",
+        _ => return None,
+    })
+}
+
 /// `parseFlag(args, flag)`: value following `flag`, or `None` if absent,
 /// missing, or itself a flag (`-`-prefixed).
 fn parse_flag<'a>(args: &'a [String], flag: &str) -> Option<&'a str> {
@@ -111,6 +129,13 @@ fn dispatch(args: &[String]) -> GxResult<()> {
         _ => {}
     }
     let command = command.expect("non-help command present");
+
+    if args[1..].iter().any(|arg| arg == "--help" || arg == "-h") {
+        if let Some(help) = command_help(command) {
+            println!("{help}");
+            return Ok(());
+        }
+    }
 
     let config_path = get_config_path();
     let index_path = index_path();
@@ -180,13 +205,18 @@ fn dispatch(args: &[String]) -> GxResult<()> {
             Ok(())
         }
         "config" => {
-            if args.get(1).map(String::as_str) == Some("set")
+            if args.len() == 1 {
+                config_cmd::show_config(&config_path)
+            } else if args.len() == 4
+                && args.get(1).map(String::as_str) == Some("set")
                 && args.get(2).is_some_and(|v| !v.is_empty())
                 && args.get(3).is_some_and(|v| !v.is_empty())
             {
                 config_cmd::set_config(&config_path, &args[2], &args[3])
             } else {
-                config_cmd::show_config(&config_path)
+                Err(GxError::command(
+                    "Usage: gx config | gx config set <key> <value>",
+                ))
             }
         }
         "shell-init" => shell_init::shell_init(args.get(1).map(String::as_str)),

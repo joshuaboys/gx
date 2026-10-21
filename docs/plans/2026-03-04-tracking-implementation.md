@@ -1,5 +1,10 @@
 # Tracking Implementation Plan
 
+> Historical design context, retained for provenance. Implementation paths,
+> commands and delivery status may be outdated after the Rust migration.
+> Use the [README](../../README.md), [contributor guide](../../CONTRIBUTING.md)
+> and [current APS plan](../../plans/index.aps.md) for current guidance.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Add project visit tracking to gx — `lastVisited` timestamps, `gx recent`, and `gx resume`.
