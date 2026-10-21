@@ -106,7 +106,7 @@ fn format_capture(cap: &Captured) -> String {
 /// Wrap a snapshot assertion with shared insta settings: snapshots live next
 /// to the test fixtures, no inline expressions, and `_GX_BIN`/relative-time
 /// noise is scrubbed before comparison.
-fn assert_snapshot(name: &str, value: &str) {
+fn snapshot_settings(name: &str) -> insta::Settings {
     let mut settings = insta::Settings::clone_current();
     settings.set_snapshot_path(snapshot_dir());
     settings.set_prepend_module_to_snapshot(false);
@@ -121,16 +121,24 @@ fn assert_snapshot(name: &str, value: &str) {
     // `gx doctor` reports paths under the isolated HOME TempDir. TempDir uses
     // platform-specific roots, so normalize Linux, macOS, and Windows forms.
     settings.add_filter(r"/tmp/\.tmp[A-Za-z0-9]+", "<HOME>");
-    settings.add_filter(r"/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+", "<HOME>");
-    settings.add_filter(r"/private/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+", "<HOME>");
+    settings.add_filter(
+        r"(?:/private)?/var/folders/[^\s,)]*/\.tmp[A-Za-z0-9]+",
+        "<HOME>",
+    );
     settings.add_filter(r"(?i)[A-Z]:\\[^\s,)]*?\\.tmp[A-Za-z0-9]+", "<HOME>");
     settings.add_filter(r"(?i)[A-Z]:/[^\s,)]*?/\.tmp[A-Za-z0-9]+", "<HOME>");
     // Remaining Windows separators after HOME substitution (doctor paths).
-    settings.add_filter(r"\\", "/");
+    if name.starts_with("doctor_") {
+        settings.add_filter(r"\\", "/");
+    }
     // `gx recent` prints relative times against Date.now(); normalize.
     settings.add_filter(r"\d+ (minute|hour|day|week|month)s? ago", "<TIME_AGO>");
     settings.add_filter(r"just now", "<TIME_AGO>");
-    settings.bind(|| insta::assert_snapshot!(name, value));
+    settings
+}
+
+fn assert_snapshot(name: &str, value: &str) {
+    snapshot_settings(name).bind(|| insta::assert_snapshot!(name, value));
 }
 
 // ---------------------------------------------------------------------------
@@ -459,4 +467,22 @@ fn snapshot_init_bad_type() {
         c
     });
     assert_snapshot("init_bad_type", &format_capture(&cap));
+}
+
+#[test]
+fn macos_home_spellings_normalize_identically() {
+    snapshot_settings("doctor_paths").bind(|| {
+        insta::assert_snapshot!("/private/var/folders/ab/cd/T/.tmpABC/file", @"<HOME>/file");
+        insta::assert_snapshot!("/var/folders/ab/cd/T/.tmpABC/file", @"<HOME>/file");
+    });
+}
+
+#[test]
+fn shell_snapshots_preserve_escape_characters() {
+    snapshot_settings("shell_init_bash").bind(|| {
+        insta::assert_snapshot!(r"printf '\n'", @r"printf '\n'");
+    });
+    snapshot_settings("doctor_paths").bind(|| {
+        insta::assert_snapshot!(r"C:\Users\tester\.tmpABC\.config\gx", @"<HOME>/.config/gx");
+    });
 }
