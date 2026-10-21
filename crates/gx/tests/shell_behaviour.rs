@@ -39,6 +39,15 @@ fn run_shell(shell: &str, home: &Path, body: &str) -> Output {
         .expect("execute shell")
 }
 
+// Shells may preserve a logical path (macOS /var -> /private/var). Compare
+// directory identity while still rejecting extra stdout or a missing directory.
+fn assert_directory(actual: &str, expected: &Path) {
+    assert_eq!(
+        Path::new(actual.trim()).canonicalize().unwrap(),
+        expected.canonicalize().unwrap()
+    );
+}
+
 fn shells() -> Vec<&'static str> {
     ["bash", "zsh", "fish"]
         .into_iter()
@@ -90,10 +99,7 @@ fn existing_clone_enters_destination_with_spaces() {
             "gx clone user/repo 'existing repo' && pwd",
         );
         assert!(out.status.success(), "{shell}: {out:?}");
-        assert_eq!(
-            String::from_utf8_lossy(&out.stdout).trim(),
-            project.canonicalize().unwrap().to_str().unwrap()
-        );
+        assert_directory(&String::from_utf8_lossy(&out.stdout), &project);
     }
 }
 
@@ -140,9 +146,12 @@ fn worktrunk_help_is_forwarded_after_navigation() {
             &format!("{prefix}\ngx project wt --help"),
         );
         assert!(out.status.success(), "{shell}: {out:?}");
-        assert_eq!(
-            String::from_utf8_lossy(&out.stdout).trim(),
-            format!("wt:--help\n{}", project.canonicalize().unwrap().display())
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        assert_directory(
+            stdout
+                .strip_prefix("wt:--help\n")
+                .expect("Worktrunk help output"),
+            &project,
         );
     }
 }
@@ -171,10 +180,7 @@ fn resume_enters_project_and_prints_context() {
         assert!(indexed.status.success(), "{indexed:?}");
         let out = run_shell(shell, home.path(), "gx resume 'project with spaces' && pwd");
         assert!(out.status.success(), "{shell}: {out:?}");
-        assert_eq!(
-            String::from_utf8_lossy(&out.stdout).trim(),
-            project.canonicalize().unwrap().to_str().unwrap()
-        );
+        assert_directory(&String::from_utf8_lossy(&out.stdout), &project);
         assert!(String::from_utf8_lossy(&out.stderr).contains("project with spaces ("));
     }
 }
@@ -235,8 +241,5 @@ esac
         !String::from_utf8_lossy(&out.stderr).contains("command not found"),
         "{out:?}"
     );
-    assert_eq!(
-        String::from_utf8_lossy(&out.stdout).trim(),
-        project.canonicalize().unwrap().to_str().unwrap()
-    );
+    assert_directory(&String::from_utf8_lossy(&out.stdout), &project);
 }
