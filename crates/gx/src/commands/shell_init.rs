@@ -105,19 +105,31 @@ _GX_BIN="__GX_BIN__"
 
 gx() {
     case "$1" in
+        clone|resume)
+            local arg
+            for arg in "$@"; do
+                case "$arg" in
+                    --help|-h) "$_GX_BIN" "$@"; return $? ;;
+                esac
+            done
+            ;;
+    esac
+    case "$1" in
         clone)
             local output
-            output=$("$_GX_BIN" clone "${@:2}")
+            output=$("$_GX_BIN" clone "${@:2}") || return $?
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
+            else
+                return 1
             fi
             ;;
         resume)
             local output
             output=$("$_GX_BIN" resume "${@:2}")
-            local status=$?
-            if [ "$status" -ne 0 ]; then
-                return "$status"
+            local cmd_status=$?
+            if [ "$cmd_status" -ne 0 ]; then
+                return "$cmd_status"
             fi
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
@@ -175,7 +187,7 @@ _gx() {
                 ;;
         esac
     elif (( CURRENT == 4 )) && [[ "${words[2]}" == "config" ]] && [[ "${words[3]}" == "set" ]]; then
-        compadd projectDir defaultHost structure shallow similarityThreshold editor
+        compadd projectDir defaultHost defaultOwner structure shallow similarityThreshold editor
     fi
 }
 (( $+functions[compdef] )) && compdef _gx gx"##;
@@ -187,11 +199,23 @@ _GX_BIN="__GX_BIN__"
 
 gx() {
     case "$1" in
+        clone|resume)
+            local arg
+            for arg in "$@"; do
+                case "$arg" in
+                    --help|-h) "$_GX_BIN" "$@"; return $? ;;
+                esac
+            done
+            ;;
+    esac
+    case "$1" in
         clone)
             local output
-            output=$("$_GX_BIN" clone "${@:2}")
+            output=$("$_GX_BIN" clone "${@:2}") || return $?
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"
+            else
+                return 1
             fi
             ;;
         resume)
@@ -259,7 +283,7 @@ _gx_completions() {
                 ;;
         esac
     elif [ "$COMP_CWORD" -eq 3 ] && [ "${COMP_WORDS[1]}" = "config" ] && [ "$prev" = "set" ]; then
-        COMPREPLY=($(compgen -W "projectDir defaultHost structure shallow similarityThreshold editor" -- "$cur"))
+        COMPREPLY=($(compgen -W "projectDir defaultHost defaultOwner structure shallow similarityThreshold editor" -- "$cur"))
     fi
 }
 complete -F _gx_completions gx"##;
@@ -270,11 +294,23 @@ const FISH: &str = r##"# gx — git project manager shell integration
 set -g _GX_BIN "__GX_BIN__"
 
 function gx
+    if contains -- "$argv[1]" clone resume
+        if contains -- --help $argv; or contains -- -h $argv
+            $_GX_BIN $argv
+            return $status
+        end
+    end
     switch $argv[1]
         case clone
             set -l output ($_GX_BIN clone $argv[2..])
+            set -l cmd_status $status
+            if test $cmd_status -ne 0
+                return $cmd_status
+            end
             if test -n "$output" -a -d "$output"
                 cd "$output"
+            else
+                return 1
             end
         case resume
             set -l output ($_GX_BIN resume $argv[2..])
@@ -314,7 +350,7 @@ complete -c gx -f
 complete -c gx -n "__fish_use_subcommand" -a "clone ls recent resume rebuild config resolve open init index doctor shell-init --help --version -h -v"
 complete -c gx -n "__fish_use_subcommand" -a "($_GX_BIN resolve --list 2>/dev/null)"
 complete -c gx -n "__fish_seen_subcommand_from config" -a "set"
-complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost structure shallow similarityThreshold editor"
+complete -c gx -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -a "projectDir defaultHost defaultOwner structure shallow similarityThreshold editor"
 complete -c gx -n "not __fish_seen_subcommand_from clone ls recent resume rebuild config resolve open init index doctor shell-init --help -h --version -v; and test (count (commandline -opc)) -eq 2" -a "wt""##;
 
 const POWERSHELL: &str = r##"# gx — git project manager shell integration
@@ -323,6 +359,11 @@ const POWERSHELL: &str = r##"# gx — git project manager shell integration
 $script:_GX_BIN = '__GX_BIN__'
 
 function global:gx {
+    if ($args.Count -gt 0 -and $args[0] -in 'clone','resume' -and
+        ($args -contains '--help' -or $args -contains '-h')) {
+        & $script:_GX_BIN @args
+        return
+    }
     if ($args.Count -eq 0) {
         & $script:_GX_BIN --help
         return
@@ -404,7 +445,7 @@ Register-ArgumentCompleter -CommandName gx -ScriptBlock {
         }
         if ($elements.Count -ge 4 -and $elements[2].Trim('"').Trim("'") -eq 'set') {
             @(
-                'projectDir','defaultHost','structure','shallow',
+                'projectDir','defaultHost','defaultOwner','structure','shallow',
                 'similarityThreshold','editor'
             ) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                 [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)

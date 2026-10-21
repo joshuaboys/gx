@@ -1,5 +1,10 @@
 # gx v3 & v4 Roadmap
 
+> Historical design context, retained for provenance. Implementation paths,
+> commands and delivery status may be outdated after the Rust migration.
+> Use the [README](../../README.md), [contributor guide](../../CONTRIBUTING.md)
+> and [current APS plan](../../plans/index.aps.md) for current guidance.
+
 ## Overview
 
 This document covers the design and phasing rationale for gx versions 3 and 4. v1 (core CLI) and v2 (fuzzy matching, editor integration, agent scaffolding) established the foundation. v3 adds project awareness — knowing *when* you last worked on something and *what state* it's in. v4 builds on that awareness to add automation, scaffolding, and interactive navigation.
