@@ -237,6 +237,8 @@ Editor resolution order: `--editor` flag > configured `editor` > `$VISUAL` >
 `$EDITOR` > `nano` on Unix. Windows requires an explicitly configured editor
 or environment variable. Set one with `gx config set editor code`.
 
+For terminal editors, `gx open` waits and returns the editor’s exit status.
+
 ### Scaffold AI agent config
 
 ```sh
@@ -244,6 +246,10 @@ gx init                    # auto-detect project type
 gx init --type rust        # override detection
 gx init --force            # overwrite the three generated files
 ```
+
+Without `--force`, init checks all three generated files before writing anything:
+`.claude/CLAUDE.md`, `.claude/commands/plan.md`, and `.claude/commands/review.md`.
+Existing files are preserved.
 
 Creates `.claude/CLAUDE.md` and `.claude/commands/` with plan and review slash commands. Supports project types: `typescript-bun`, `typescript-node`, `rust`, `go`, `python`, `generic`.
 
@@ -336,6 +342,13 @@ security boundary. Explicit clone destinations bypass this routing.
 </td>
 </tr>
 </table>
+
+## Release maintenance
+
+Tag builds upload binaries and checksums to a draft release, verify the uploaded
+contents, and generate provenance before publishing. A failed upload, verification,
+or attestation leaves the release as a draft; rerun the failed workflow to retry.
+The workflow refuses to replace assets on an already published release.
 
 ## Troubleshooting
 
