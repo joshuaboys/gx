@@ -86,7 +86,15 @@ pub fn shell_init(shell_arg: Option<&str>) -> GxResult<()> {
     let bin = resolve_gx_bin();
     let bin = match shell {
         Shell::Pwsh => bin.replace('\'', "''"),
-        _ => bin,
+        Shell::Bash | Shell::Zsh => bin
+            .replace('\\', "\\\\")
+            .replace('"', "\\\"")
+            .replace('$', "\\$")
+            .replace('\u{60}', "\\\u{60}"),
+        Shell::Fish => bin
+            .replace('\\', "\\\\")
+            .replace('"', "\\\"")
+            .replace('$', "\\$"),
     };
     let template = match shell {
         Shell::Zsh => ZSH,
@@ -219,11 +227,11 @@ gx() {
             fi
             ;;
         resume)
-            local output status
+            local output cmd_status
             output=$("$_GX_BIN" resume "${@:2}")
-            status=$?
-            if [ "$status" -ne 0 ]; then
-                return "$status"
+            cmd_status=$?
+            if [ "$cmd_status" -ne 0 ]; then
+                return "$cmd_status"
             fi
             if [ -n "$output" ] && [ -d "$output" ]; then
                 cd "$output"

@@ -186,10 +186,16 @@ pub fn open_project(
             .map_err(|e| GxError::Other(format!("spawn {cmd}: {e}")))?;
         eprintln!("Opened {project_path} in {editor_name}");
     } else {
-        Command::new(&program)
+        let status = Command::new(&program)
             .arg(&project_path)
             .status()
             .map_err(|e| GxError::Other(format!("spawn {cmd}: {e}")))?;
+        if !status.success() {
+            return Err(GxError::command_with_code(
+                format!("Editor '{cmd}' failed: {status}"),
+                status.code().unwrap_or(1),
+            ));
+        }
     }
     Ok(())
 }

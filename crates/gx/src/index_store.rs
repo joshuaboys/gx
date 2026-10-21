@@ -117,7 +117,7 @@ impl ProjectIndex {
                 b.1.last_visited
                     .as_deref()
                     .unwrap_or(b.1.cloned_at.as_str());
-            tb.cmp(ta)
+            crate::time::parse_iso_ms(tb).cmp(&crate::time::parse_iso_ms(ta))
         });
         if let Some(n) = limit {
             entries.truncate(n);
@@ -149,9 +149,10 @@ impl ProjectIndex {
 
     /// Drop every project and scan `project_dir` for git repos.
     pub fn rebuild(&mut self, project_dir: &Path) -> GxResult<()> {
-        self.data.projects.clear();
+        let mut replacement = Self::default();
         let mut visited = HashSet::new();
-        scan_for_repos(self, project_dir, 0, &mut visited);
+        scan_for_repos(&mut replacement, project_dir, 0, &mut visited)?;
+        *self = replacement;
         Ok(())
     }
 
@@ -173,19 +174,23 @@ impl ProjectIndex {
                 Some(name.clone())
             })
             .collect();
+        let mut replacement = self.clone();
         for name in to_delete {
-            self.data.projects.shift_remove(&name);
+            replacement.data.projects.shift_remove(&name);
         }
         let mut visited = HashSet::new();
-        scan_for_repos(self, scope_dir, 0, &mut visited);
+        scan_for_repos(&mut replacement, scope_dir, 0, &mut visited)?;
+        *self = replacement;
         Ok(())
     }
 
     /// Scan `project_dir` and add any newly discovered repos without
     /// removing existing entries.
     pub fn additive_scan(&mut self, project_dir: &Path) -> GxResult<()> {
+        let mut replacement = self.clone();
         let mut visited = HashSet::new();
-        scan_for_repos(self, project_dir, 0, &mut visited);
+        scan_for_repos(&mut replacement, project_dir, 0, &mut visited)?;
+        *self = replacement;
         Ok(())
     }
 
@@ -222,31 +227,30 @@ fn scan_for_repos(
     dir: &Path,
     depth: usize,
     visited: &mut HashSet<PathBuf>,
-) {
+) -> GxResult<()> {
     if depth > MAX_SCAN_DEPTH {
-        return;
+        return Ok(());
     }
-    let Ok(real) = fs::canonicalize(dir) else {
-        return;
-    };
+    let scan_error = |e| GxError::Other(format!("scan {}: {e}", dir.display()));
+    let real = fs::canonicalize(dir).map_err(scan_error)?;
     if !visited.insert(real) {
-        return;
+        return Ok(());
     }
 
-    let Ok(read) = fs::read_dir(dir) else {
-        return;
-    };
-    let entries: Vec<_> = read.flatten().collect();
+    let read = fs::read_dir(dir).map_err(scan_error)?;
+    let entries = read
+        .collect::<std::io::Result<Vec<_>>>()
+        .map_err(scan_error)?;
 
     // First pass: detect a real git work tree and stop — do not descend.
     // An empty `.git` directory or a file that is not a `gitdir:` pointer is
     // not a repo. Treating those as a boundary hid nested projects, so they never took the right name.
     for entry in &entries {
-        let Ok(ft) = entry.file_type() else { continue };
+        let ft = entry.file_type().map_err(scan_error)?;
         if entry.file_name() != ".git" {
             continue;
         }
-        if !is_git_worktree_marker(&entry.path(), &ft) {
+        if !is_git_worktree_marker(&entry.path(), &ft)? {
             continue;
         }
         let name = dir
@@ -269,13 +273,13 @@ fn scan_for_repos(
                 last_visited: None,
             },
         );
-        return;
+        return Ok(());
     }
 
     // Second pass: recurse into subdirectories that are visible and not in
     // the skip list.
     for entry in &entries {
-        let Ok(ft) = entry.file_type() else { continue };
+        let ft = entry.file_type().map_err(scan_error)?;
         if !ft.is_dir() {
             continue;
         }
@@ -287,25 +291,29 @@ fn scan_for_repos(
         if skip_dirs().contains(&name_s.as_ref()) {
             continue;
         }
-        scan_for_repos(idx, &dir.join(&name), depth + 1, visited);
+        scan_for_repos(idx, &dir.join(&name), depth + 1, visited)?;
     }
+    Ok(())
 }
 
 /// True when `path` is a git work-tree marker: a `.git` directory that
 /// contains `HEAD`, or a worktree `.git` file whose contents start with
 /// `gitdir:`.
-fn is_git_worktree_marker(path: &Path, ft: &fs::FileType) -> bool {
+fn is_git_worktree_marker(path: &Path, ft: &fs::FileType) -> GxResult<bool> {
+    let marker_error = |e| GxError::Other(format!("inspect {}: {e}", path.display()));
     if ft.is_dir() {
-        return path.join("HEAD").is_file();
+        return match fs::metadata(path.join("HEAD")) {
+            Ok(meta) => Ok(meta.is_file()),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(false),
+            Err(e) => Err(marker_error(e)),
+        };
     }
     if ft.is_file() {
-        let Ok(bytes) = fs::read(path) else {
-            return false;
-        };
+        let bytes = fs::read(path).map_err(marker_error)?;
         let text = String::from_utf8_lossy(&bytes);
-        return text.trim_start().starts_with("gitdir:");
+        return Ok(text.trim_start().starts_with("gitdir:"));
     }
-    false
+    Ok(false)
 }
 
 /// `new Date().toISOString()` parity: `YYYY-MM-DDTHH:MM:SS.sssZ`. Public so
@@ -342,6 +350,75 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
 mod tests {
     use super::*;
     use tempfile::TempDir;
+
+    #[test]
+    fn recent_orders_instants_with_mixed_representations() {
+        let mut idx = ProjectIndex::default();
+        for (name, stamp) in [
+            ("older-offset", "2026-01-01T12:00:00+02:00"),
+            ("newer-utc", "2026-01-01T11:00:00Z"),
+            ("newest-fraction", "2026-01-01T11:00:00.1Z"),
+        ] {
+            let mut e = entry(name);
+            e.last_visited = Some(stamp.into());
+            idx.add(name, e);
+        }
+        assert_eq!(
+            idx.recent(Some(2))
+                .iter()
+                .map(|(n, _)| n.as_str())
+                .collect::<Vec<_>>(),
+            ["newest-fraction", "newer-utc"]
+        );
+    }
+
+    #[test]
+    fn failed_rebuild_preserves_index() {
+        let root = tempfile::tempdir().unwrap();
+        for scope in [
+            root.path().join("missing"),
+            root.path().join("not-a-directory"),
+        ] {
+            if scope.ends_with("not-a-directory") {
+                fs::write(&scope, "file").unwrap();
+            }
+            for scoped in [false, true] {
+                let mut idx = ProjectIndex::default();
+                idx.add("saved", entry(&scope.join("saved").to_string_lossy()));
+                let before = serde_json::to_string(&idx.data).unwrap();
+                let result = if scoped {
+                    idx.scoped_rebuild(&scope)
+                } else {
+                    idx.rebuild(&scope)
+                };
+                assert!(result.is_err());
+                assert_eq!(serde_json::to_string(&idx.data).unwrap(), before);
+            }
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn nested_scan_failure_preserves_index() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = tempfile::tempdir().unwrap();
+        let nested = root.path().join("unreadable");
+        fs::create_dir(&nested).unwrap();
+        let permissions = fs::metadata(&nested).unwrap().permissions();
+        fs::set_permissions(&nested, fs::Permissions::from_mode(0o000)).unwrap();
+        // Root may bypass mode bits; exercise this boundary as an unprivileged user.
+        if fs::read_dir(&nested).is_ok() {
+            fs::set_permissions(&nested, permissions).unwrap();
+            return;
+        }
+        let mut idx = ProjectIndex::default();
+        idx.add("saved", entry(&root.path().join("saved").to_string_lossy()));
+        let before = serde_json::to_string(&idx.data).unwrap();
+        let result = idx.scoped_rebuild(root.path());
+        fs::set_permissions(&nested, permissions).unwrap();
+        assert!(result.is_err());
+        assert_eq!(serde_json::to_string(&idx.data).unwrap(), before);
+    }
 
     fn entry(path: &str) -> IndexEntry {
         IndexEntry {
