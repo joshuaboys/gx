@@ -37,8 +37,22 @@ fn binary_path() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_gx"))
 }
 
-fn git(args: &[&str], cwd: &Path) {
-    let status = Command::new("git")
+fn isolated_git_environment<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
+    for (name, _) in std::env::vars_os() {
+        if name.to_string_lossy().starts_with("GIT_") {
+            command.env_remove(name);
+        }
+    }
+    command
+        .env("HOME", home)
+        .env("USERPROFILE", home)
+        .env("XDG_CONFIG_HOME", home.join(".config"))
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_CONFIG_GLOBAL", home.join(".gitconfig"))
+}
+
+fn git_at(args: &[&str], cwd: &Path, home: &Path) {
+    let status = isolated_git_environment(&mut Command::new("git"), home)
         .args(args)
         .current_dir(cwd)
         .status()
@@ -58,17 +72,21 @@ impl Env {
     fn new() -> Self {
         let home = TempDir::new().expect("temp HOME");
         let root = home.path();
+        let git = |args: &[&str], cwd: &Path| git_at(args, cwd, root);
         fs::create_dir_all(root.join(".config/gx")).expect("mkdir .config/gx");
 
         let origin = root.join("origin/juev");
         fs::create_dir_all(&origin).expect("mkdir origin");
         let bare = origin.join("gclone.git");
         git(&["init", "-q", "--bare", bare.to_str().unwrap()], root);
+        git(&["symbolic-ref", "HEAD", "refs/heads/main"], &bare);
 
         // Seed the bare repo with one commit so clone produces a worktree.
         let seed = root.join("seed");
         fs::create_dir_all(&seed).expect("mkdir seed");
         git(&["init", "-q", "."], &seed);
+        fs::write(seed.join("seed.txt"), "seeded content\n").unwrap();
+        git(&["add", "seed.txt"], &seed);
         git(
             &[
                 "-c",
@@ -77,7 +95,6 @@ impl Env {
                 "user.name=test",
                 "commit",
                 "-q",
-                "--allow-empty",
                 "-m",
                 "init",
             ],
@@ -132,7 +149,7 @@ impl Env {
     }
 
     fn clone(&self, args: &[&str]) -> (bool, String, String) {
-        let out = Command::new(binary_path())
+        let out = isolated_git_environment(&mut Command::new(binary_path()), self.home.path())
             .arg("clone")
             .args(args)
             .current_dir(&self.work)
@@ -151,6 +168,23 @@ impl Env {
         )
     }
 
+    fn assert_checkout(&self, path: &Path) {
+        assert_eq!(
+            fs::read_to_string(path.join("seed.txt")).unwrap(),
+            "seeded content\n"
+        );
+        let head = |dir: &Path| {
+            let out = isolated_git_environment(&mut Command::new("git"), self.home.path())
+                .args(["rev-parse", "HEAD"])
+                .current_dir(dir)
+                .output()
+                .unwrap();
+            assert!(out.status.success());
+            out.stdout
+        };
+        assert_eq!(head(path), head(&self.home.path().join("seed")));
+    }
+
     fn index(&self) -> String {
         fs::read_to_string(self.home.path().join(".config/gx/index.json")).expect("read index.json")
     }
@@ -165,6 +199,7 @@ fn no_dest_uses_configured_layout() {
     let expected = env.project_dir.join("juev").join("gclone");
     assert_path_eq(&stdout, &expected);
     assert!(expected.join(".git").is_dir(), "no .git at {expected:?}");
+    env.assert_checkout(&expected);
 
     // Indexed under the repo name, as before.
     let index = env.index();
@@ -202,6 +237,7 @@ fn absolute_dest_is_honoured() {
     assert_path_eq(&stdout, &dest);
     // Missing parents are created, same as the default path.
     assert!(dest.join(".git").is_dir(), "no .git at {dest:?}");
+    env.assert_checkout(&dest);
     assert!(env.index().contains("\"repo\""));
 }
 
@@ -230,5 +266,26 @@ fn existing_clone_at_dest_is_skipped() {
     assert!(
         stderr.contains("already exists"),
         "expected skip notice, got: {stderr}"
+    );
+}
+
+#[test]
+fn fixture_ignores_ambient_git_configuration() {
+    let outer = tempfile::tempdir().unwrap();
+    let config = outer.path().join("host.gitconfig");
+    fs::write(&config, "[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = nonexistent-gx-test-signer\n[init]\n\tdefaultBranch = master\n").unwrap();
+    let out = Command::new(std::env::current_exe().unwrap())
+        .args(["--exact", "no_dest_uses_configured_layout", "--nocapture"])
+        .env("GIT_CONFIG_GLOBAL", &config)
+        .env("GIT_CONFIG_COUNT", "1")
+        .env("GIT_CONFIG_KEY_0", "commit.gpgSign")
+        .env("GIT_CONFIG_VALUE_0", "true")
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}\n{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
     );
 }
