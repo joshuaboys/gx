@@ -13,7 +13,10 @@ fn re_https() -> &'static Regex {
 fn re_ssh() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
     R.get_or_init(|| {
-        Regex::new(r"^(?:ssh://)?[^@]+@([^/:]+)(?::\d+)?[:/](.+?)(?:\.git)?/?$").unwrap()
+        // Username must not start with `-`: otherwise option-like inputs such as
+        // `--template=...@host:owner/repo.git` would be preserved and passed to
+        // `git clone` as a repository argument.
+        Regex::new(r"^(?:ssh://)?[^-@][^@]*@([^/:]+)(?::\d+)?[:/](.+?)(?:\.git)?/?$").unwrap()
     })
 }
 
@@ -71,6 +74,11 @@ pub fn parse_url(input: &str, default_host: &str, default_owner: &str) -> GxResu
     let trimmed = input.trim();
     if trimmed.is_empty() {
         return Err(GxError::command("Empty repository URL"));
+    }
+    if looks_like_cli_option(trimmed) {
+        return Err(GxError::command(format!(
+            "Cannot parse repository URL: {trimmed}"
+        )));
     }
 
     if let Some(c) = re_https().captures(trimmed) {
@@ -141,6 +149,10 @@ pub fn to_clone_url(parsed: &ParsedRepo) -> String {
     }
 }
 
+pub(crate) fn looks_like_cli_option(value: &str) -> bool {
+    value.starts_with('-')
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -173,6 +185,17 @@ mod tests {
     fn arbitrary_ssh_username_preserved() {
         let input = "alice@example.com:team/repo.git";
         assert_eq!(to_clone_url(&parse(input)), input);
+    }
+
+    #[test]
+    fn option_like_ssh_username_rejected() {
+        for input in [
+            "--template=/tmp/template@example.com:team/repo.git",
+            "-oProxyCommand=evil@example.com:team/repo.git",
+            "ssh://--upload-pack=evil@example.com/team/repo.git",
+        ] {
+            assert!(parse_url(input, "github.com", "").is_err(), "{input}");
+        }
     }
 
     fn parse(s: &str) -> ParsedRepo {

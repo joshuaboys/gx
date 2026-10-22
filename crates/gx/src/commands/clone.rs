@@ -12,7 +12,20 @@ use crate::errors::{GxError, GxResult};
 use crate::index_store::{iso_now, ProjectIndex};
 use crate::path::{lexical_resolve, to_path_for};
 use crate::types::{Config, IndexEntry, ParsedRepo};
-use crate::url::{parse_url, to_clone_url};
+use crate::url::{looks_like_cli_option, parse_url, to_clone_url};
+
+fn git_clone_args(shallow: bool, clone_url: &str, dest: &str) -> Vec<String> {
+    let mut args = vec!["clone".to_string()];
+    if shallow {
+        args.push("--depth=1".to_string());
+    }
+    // Separate options from the repository/destination so a leading-dash URL
+    // or dest cannot be interpreted as a git option.
+    args.push("--".to_string());
+    args.push(clone_url.to_string());
+    args.push(dest.to_string());
+    args
+}
 
 /// Where a clone lands and what it is called in the index.
 ///
@@ -84,12 +97,12 @@ pub fn clone_repo(
 
     // Clone (stdout/stderr inherited so the user sees git's progress).
     let clone_url = to_clone_url(&parsed);
-    let mut args: Vec<String> = vec!["clone".to_string()];
-    if config.shallow {
-        args.push("--depth=1".to_string());
+    if looks_like_cli_option(&clone_url) || looks_like_cli_option(&target_str) {
+        return Err(GxError::command(format!(
+            "refusing option-like git clone argument: {clone_url} -> {target_str}"
+        )));
     }
-    args.push(clone_url.clone());
-    args.push(target_str.clone());
+    let args = git_clone_args(config.shallow, &clone_url, &target_str);
 
     let status = Command::new("git")
         .args(&args)
@@ -213,6 +226,28 @@ mod tests {
             "a bad destination is user input, not a runtime failure: {err:?}"
         );
         assert_eq!(err.exit_code(), 1);
+    }
+
+    #[test]
+    fn clone_args_put_option_separator_before_url_and_dest() {
+        assert_eq!(
+            git_clone_args(false, "git@example.com:team/repo.git", "/tmp/dest"),
+            vec!["clone", "--", "git@example.com:team/repo.git", "/tmp/dest"]
+        );
+        assert_eq!(
+            git_clone_args(
+                true,
+                "--template=/tmp/template@example.com:team/repo.git",
+                "/tmp/dest"
+            ),
+            vec![
+                "clone",
+                "--depth=1",
+                "--",
+                "--template=/tmp/template@example.com:team/repo.git",
+                "/tmp/dest"
+            ]
+        );
     }
 
     #[test]
