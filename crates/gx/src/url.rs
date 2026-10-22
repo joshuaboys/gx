@@ -13,10 +13,10 @@ fn re_https() -> &'static Regex {
 fn re_ssh() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
     R.get_or_init(|| {
-        // Username must not start with `-`: otherwise option-like inputs such as
-        // `--template=...@host:owner/repo.git` would be preserved and passed to
-        // `git clone` as a repository argument.
-        Regex::new(r"^(?:ssh://)?[^-@][^@]*@([^/:]+)(?::\d+)?[:/](.+?)(?:\.git)?/?$").unwrap()
+        // Username must not start with `-`, and must not swallow an `ssh://`
+        // prefix (otherwise `ssh://--upload-pack=...@host/repo` would match
+        // with username `sh://--upload-pack=...`).
+        Regex::new(r"^(?:ssh://)?(?:[^-@:][^@/]*@)([^/:]+)(?::\d+)?[:/](.+?)(?:\.git)?/?$").unwrap()
     })
 }
 
@@ -96,6 +96,11 @@ pub fn parse_url(input: &str, default_host: &str, default_owner: &str) -> GxResu
         );
     }
     if let Some(c) = re_ssh().captures(trimmed) {
+        if ssh_username(trimmed).is_some_and(looks_like_cli_option) {
+            return Err(GxError::command(format!(
+                "Cannot parse repository URL: {trimmed}"
+            )));
+        }
         return build_parsed(
             c.get(1).map(|m| m.as_str()).unwrap_or(""),
             c.get(2).map(|m| m.as_str()).unwrap_or(""),
@@ -151,6 +156,16 @@ pub fn to_clone_url(parsed: &ParsedRepo) -> String {
 
 pub(crate) fn looks_like_cli_option(value: &str) -> bool {
     value.starts_with('-')
+}
+
+fn ssh_username(input: &str) -> Option<&str> {
+    let rest = input.strip_prefix("ssh://").unwrap_or(input);
+    let user = rest.split_once('@')?.0;
+    if user.is_empty() {
+        None
+    } else {
+        Some(user)
+    }
 }
 
 #[cfg(test)]
