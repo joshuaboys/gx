@@ -155,18 +155,24 @@ fn terminal_editor_exit_status_is_reported() {
 
 #[test]
 fn aps_relative_invocation_ignores_cdpath() {
+    // APS uses associative arrays; macOS system Bash predates that feature.
+    let bash = std::env::var_os("GX_TEST_APS_BASH").unwrap_or_else(|| "bash".into());
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
         .unwrap();
-    let baseline = Command::new("bash")
+    let baseline = Command::new(&bash)
         .args(["bin/aps", "--help"])
         .current_dir(&root)
         .env_remove("CDPATH")
         .output()
         .unwrap();
-    assert!(baseline.status.success());
-    let out = Command::new("bash")
+    assert!(
+        baseline.status.success(),
+        "APS baseline failed: {}",
+        String::from_utf8_lossy(&baseline.stderr)
+    );
+    let out = Command::new(&bash)
         .args(["bin/aps", "--help"])
         .current_dir(&root)
         .env("CDPATH", &root)
@@ -190,7 +196,7 @@ fn aps_relative_invocation_ignores_cdpath() {
         .unwrap()
         .to_owned()
         + "/aps";
-    let out = Command::new("bash")
+    let out = Command::new(&bash)
         .arg(relative)
         .arg("--help")
         .current_dir(parent)

@@ -31,10 +31,17 @@ cargo test --workspace
 
 Use `cargo fmt` to apply formatting. CI runs on Linux, macOS and Windows.
 On Unix, install zsh and fish (`sudo apt-get install zsh fish` on Ubuntu;
-`brew install fish` on macOS, where zsh is included). Local shell tests skip
+`brew install bash fish` on macOS, where zsh is included). Local shell tests skip
 unavailable shells with a diagnostic; CI requires all three. Windows runs the
 portable Rust tests, PowerShell output snapshots and a native PowerShell help
 test, but not the Unix shell execution tests.
+
+The APS launcher regression needs Bash 4 or newer. On macOS, select Homebrew
+Bash for that test while keeping the other shell tests on the system shell:
+
+```sh
+GX_TEST_APS_BASH="$(brew --prefix bash)/bin/bash" cargo test --workspace
+```
 
 Integration tests use temporary home directories and local Git repositories.
 The installer test substitutes local downloads and needs no network access.

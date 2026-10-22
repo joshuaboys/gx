@@ -32,7 +32,9 @@ jobs:
 
       - name: Install shells for integration tests (macOS)
         if: runner.os == 'macOS'
-        run: brew install fish
+        run: |
+          brew install bash fish
+          echo "GX_TEST_APS_BASH=$(brew --prefix bash)/bin/bash" >> "$GITHUB_ENV"
 
       - name: Format check
         run: cargo fmt --check
