@@ -270,6 +270,28 @@ fn existing_clone_at_dest_is_skipped() {
 }
 
 #[test]
+fn option_like_ssh_username_is_rejected() {
+    let env = Env::new();
+    let (ok, _, stderr) = env.clone(&["--template=/tmp/template@example.com:team/repo.git"]);
+    assert!(!ok, "option-like SSH URL must not clone: {stderr}");
+    assert!(
+        stderr.contains("Cannot parse repository URL")
+            || stderr.contains("option-like git clone argument"),
+        "expected a parse/option rejection, got: {stderr}"
+    );
+}
+
+#[test]
+fn dest_starting_with_dash_is_not_treated_as_git_option() {
+    let env = Env::new();
+    let (ok, stdout, stderr) = env.clone(&["juev/gclone", "-dash-dest"]);
+    assert!(ok, "clone into dash dest failed: {stderr}");
+    let expected = env.work.join("-dash-dest");
+    assert_path_eq(&stdout, &expected);
+    env.assert_checkout(&expected);
+}
+
+#[test]
 fn fixture_ignores_ambient_git_configuration() {
     let outer = tempfile::tempdir().unwrap();
     let config = outer.path().join("host.gitconfig");

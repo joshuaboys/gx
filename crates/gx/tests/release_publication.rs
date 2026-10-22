@@ -4,6 +4,20 @@
 use std::os::unix::fs::PermissionsExt;
 use std::{fs, path::PathBuf, process::Command};
 
+/// POSIX single-quote a path for `bash -c`, including embedded apostrophes.
+fn shell_quote(value: &str) -> String {
+    let mut out = String::from("'");
+    for ch in value.chars() {
+        if ch == '\'' {
+            out.push_str("'\\''");
+        } else {
+            out.push(ch);
+        }
+    }
+    out.push('\'');
+    out
+}
+
 struct ReleaseEnv {
     dir: tempfile::TempDir,
 }
@@ -97,9 +111,10 @@ esac
                 run.to_string()
             };
             // Scripts live in the source checkout; assets/state are isolated.
+            // Quote so checkout paths with spaces or apostrophes stay one word.
             let body = body.replace(
                 "scripts/release.sh",
-                &root.join("scripts/release.sh").to_string_lossy(),
+                &shell_quote(&root.join("scripts/release.sh").to_string_lossy()),
             );
             let paths = std::env::join_paths(
                 std::iter::once(self.dir.path().join("bin"))
@@ -129,6 +144,29 @@ esac
             .trim()
             .to_string()
     }
+}
+
+#[test]
+fn shell_quote_preserves_spaces_and_apostrophes_for_bash_c() {
+    assert_eq!(
+        shell_quote("/tmp/my checkout/it's/scripts/release.sh"),
+        "'/tmp/my checkout/it'\\''s/scripts/release.sh'"
+    );
+    let dir = tempfile::tempdir().unwrap();
+    let script = dir.path().join("my checkout").join("it's").join("ok.sh");
+    fs::create_dir_all(script.parent().unwrap()).unwrap();
+    fs::write(&script, "#!/bin/bash\necho quoted-ok\n").unwrap();
+    fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+    let out = Command::new("bash")
+        .args(["-e", "-c", &shell_quote(&script.to_string_lossy())])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "quoted-ok");
 }
 
 #[test]
